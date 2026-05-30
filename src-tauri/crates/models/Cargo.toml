@@ -1,0 +1,20 @@
+[package]
+name = "models"
+version = "0.1.0"
+edition = "2021"
+description = "LLM provider bots, HTTP client, and sessions (mirrors Python models/)"
+
+[dependencies]
+async-trait = "0.1"
+bytes = "1"
+futures-util = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tiktoken-rs = "0.6"
+tokio = { version = "1", features = ["sync", "time"] }
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
