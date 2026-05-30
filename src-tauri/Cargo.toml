@@ -1,3 +1,7 @@
+[workspace]
+resolver = "2"
+members = [".", "crates/models", "crates/agent"]
+
 [package]
 name = "tauri-app"
 version = "0.1.0"
@@ -25,3 +29,6 @@ schemars = { version = "0.8", features = ["preserve_order"] }
 url = "2"
 directories = "5"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+uuid = { version = "1", features = ["v4"] }
+models = { path = "crates/models" }
+agent = { path = "crates/agent" }

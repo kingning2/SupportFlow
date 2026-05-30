@@ -1,5 +1,15 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+const UTC8_OFFSET_SECS: u64 = 8 * 3600;
+
+fn current_unix_secs_utc8() -> u64 {
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    now.saturating_add(UTC8_OFFSET_SECS)
+}
+
 /// 判断闰年
 fn is_leap_year(year: i32) -> bool {
     (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
@@ -7,10 +17,10 @@ fn is_leap_year(year: i32) -> bool {
 
 /// 获取当前日期字符串 YYYY-MM-DD
 pub fn current_date_string() -> String {
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+    let now_secs = current_unix_secs_utc8();
 
     // Unix 时间戳秒数
-    let days_since_epoch = now.as_secs() / 86_400;
+    let days_since_epoch = now_secs / 86_400;
 
     // 1970-01-01 为 epoch，转换成年月日
     let mut year = 1970;
@@ -49,8 +59,7 @@ pub fn current_date_string() -> String {
 
 /// 获取当前时间字符串 HH:mm:ss
 pub fn current_hms_string() -> String {
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
-    let total_secs = now.as_secs() % 86_400; // 一天 86400 秒
+    let total_secs = current_unix_secs_utc8() % 86_400; // 一天 86400 秒
     let h = total_secs / 3600;
     let m = (total_secs % 3600) / 60;
     let s = total_secs % 60;
@@ -58,7 +67,7 @@ pub fn current_hms_string() -> String {
     format!("{:02}:{:02}:{:02}", h, m, s)
 }
 
-/// 获取当前日期时间字符串 YYYY-MM-DDTHH:mm:ssZ
+/// 获取当前日期时间字符串 YYYY-MM-DD HH:mm:ss
 pub fn current_datetime_string() -> String {
-    format!("{}T{}Z", current_date_string(), current_hms_string())
+    format!("{} {}", current_date_string(), current_hms_string())
 }

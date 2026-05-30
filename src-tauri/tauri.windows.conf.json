@@ -9,6 +9,7 @@
         "height": 800,
         "decorations": false,
         "transparent": true,
+        "backgroundColor": "#00000000",
         "shadow": false,
         "resizable": false
       }
