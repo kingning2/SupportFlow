@@ -1,0 +1,163 @@
+import { invokeWrapper } from "@/cmd/invoke";
+import { TauriCmd } from "@/enums";
+import type {
+  AgentClearProviderRequest,
+  AgentConsoleState,
+  AgentSendMessageRequest,
+  AgentSendMessageResponse,
+  AgentSetChatModelRequest,
+  AgentUpdateProviderRequest
+} from "@/generated/contracts";
+
+export type { AgentConsoleState, AgentSendMessageRequest, AgentSendMessageResponse };
+
+export function getAgentConsoleState() {
+  return invokeWrapper<AgentConsoleState>(TauriCmd.AgentGetConsoleState);
+}
+
+export function sendAgentMessage(body: AgentSendMessageRequest) {
+  return invokeWrapper<AgentSendMessageResponse>(TauriCmd.AgentSendMessage, { body });
+}
+
+export function cancelAgentMessage(requestId: string) {
+  return invokeWrapper<void>(TauriCmd.AgentCancel, { body: { requestId } });
+}
+
+export function clearAgentContext() {
+  return invokeWrapper<void>(TauriCmd.AgentClearContext);
+}
+
+export function newAgentSession() {
+  return invokeWrapper<string>(TauriCmd.AgentNewSession);
+}
+
+export function refreshAgentSkills() {
+  return invokeWrapper<AgentConsoleState["skills"]>(TauriCmd.AgentRefreshSkills);
+}
+
+export function updateAgentProvider(body: AgentUpdateProviderRequest) {
+  return invokeWrapper<void>(TauriCmd.AgentUpdateProvider, { body });
+}
+
+export function clearAgentProvider(body: AgentClearProviderRequest) {
+  return invokeWrapper<void>(TauriCmd.AgentClearProvider, { body });
+}
+
+export function setAgentChatModel(body: AgentSetChatModelRequest) {
+  return invokeWrapper<void>(TauriCmd.AgentSetChatModel, { body });
+}
+
+export interface AgentSessionSummary {
+  id: string;
+  title: string;
+  updatedAt: string;
+}
+
+export interface AgentMemoryItem {
+  filename: string;
+  type: string;
+  size: number;
+  updatedAt: string;
+}
+
+export interface AgentMemoryReadResult {
+  filename: string;
+  content: string;
+}
+
+export interface AgentKnowledgeFile {
+  path: string;
+  title: string;
+}
+
+export interface AgentKnowledgeGraphNode {
+  id: string;
+  label: string;
+  category: string;
+}
+
+export interface AgentKnowledgeGraphLink {
+  source: string;
+  target: string;
+}
+
+export interface AgentChannelSummary {
+  name: string;
+  active: boolean;
+  label: string;
+}
+
+export interface AgentTaskSummary {
+  id: string;
+  name: string;
+  enabled: boolean;
+  nextRunAt?: string;
+}
+
+export interface AgentLogsStatus {
+  enabled: boolean;
+  source: string;
+}
+
+export interface AgentReadLogsRequest {
+  limit?: number;
+}
+
+export interface AgentReadLogsResult {
+  source: string;
+  content: string;
+}
+
+export function listAgentSessions() {
+  return invokeWrapper<AgentSessionSummary[]>(TauriCmd.AgentListSessions);
+}
+
+export function listAgentMemory() {
+  return invokeWrapper<AgentMemoryItem[]>(TauriCmd.AgentListMemory);
+}
+
+export function readAgentMemory(filename: string) {
+  return invokeWrapper<AgentMemoryReadResult>(TauriCmd.AgentReadMemory, {
+    body: { filename }
+  });
+}
+
+export function listAgentKnowledge() {
+  return invokeWrapper<AgentKnowledgeFile[]>(TauriCmd.AgentListKnowledge);
+}
+
+export function readAgentKnowledge(path: string) {
+  return invokeWrapper<{ path: string; content: string }>(TauriCmd.AgentReadKnowledge, {
+    body: { path }
+  });
+}
+
+export function getAgentKnowledgeGraph() {
+  return invokeWrapper<{ nodes: AgentKnowledgeGraphNode[]; links: AgentKnowledgeGraphLink[] }>(
+    TauriCmd.AgentGetKnowledgeGraph
+  );
+}
+
+export function listAgentChannels() {
+  return invokeWrapper<AgentChannelSummary[]>(TauriCmd.AgentListChannels);
+}
+
+export function listAgentTasks() {
+  return invokeWrapper<AgentTaskSummary[]>(TauriCmd.AgentListTasks);
+}
+
+export function getAgentLogsStatus() {
+  return invokeWrapper<AgentLogsStatus>(TauriCmd.AgentGetLogsStatus);
+}
+
+export function readAgentLogs(body?: AgentReadLogsRequest) {
+  return invokeWrapper<AgentReadLogsResult>(TauriCmd.AgentReadLogs, { body });
+}
+
+export function startAgentLogStream() {
+  return invokeWrapper<void>(TauriCmd.AgentStartLogStream);
+}
+
+export function stopAgentLogStream() {
+  return invokeWrapper<void>(TauriCmd.AgentStopLogStream);
+}
