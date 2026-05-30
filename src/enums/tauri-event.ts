@@ -5,5 +5,8 @@ export enum TauriEvent {
   ModalClosed = "modal/closed",
   ModalOpenPanel = "modal/open-panel",
   FeLog = "fe/log",
-  FeLogReq = "fe/log-req"
+  FeLogReq = "fe/log-req",
+  AgentStreamChunk = "agent/stream-chunk",
+  AgentRunFinished = "agent/run-finished",
+  AgentLogStream = "agent/log-stream"
 }

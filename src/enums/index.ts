@@ -7,3 +7,5 @@ export { ModalPanel, isModalPanel } from "./modal-panel";
 export { FeLogLevel } from "./fe-log-level";
 export { ReduxSlice } from "./redux-slice";
 export { AppRoute } from "./app-route";
+export { AgentStreamChunkType, isAgentStreamChunkType } from "./agent-stream-chunk-type";
+export { ConsoleView, isConsoleView } from "./console-view";
