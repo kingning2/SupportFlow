@@ -28,6 +28,7 @@ out
 tsconfig.tsbuildinfo
 graphify-out
 graphify.*
+.env
 
 # Agent secrets (use src-tauri/resources/config-template.json in repo)
 config.json

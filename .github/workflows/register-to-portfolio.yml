@@ -1,10 +1,13 @@
 # 向 kingning2/xiaoman-projects 注册/更新资产卡片。
 #
-# 触发：push 到 main、手动 workflow_dispatch、或「Deploy to GitHub Pages」成功后。
+# 触发：
+#   - workflow_run：「Deploy to GitHub Pages」在 main 上成功后
+#   - workflow_dispatch：手动
+#   - push：main 分支（未配置 Pages 部署时也可同步卡片元数据）
 #
-# Secrets（Settings → Actions，勿写入代码）：
-#   PORTFOLIO_PAT
-#   PORTFOLIO_REGISTER_KEY
+# Secrets（本仓库 Settings → Actions，勿写入代码）：
+#   PORTFOLIO_PAT — 向 xiaoman-projects 主人索取
+#   PORTFOLIO_REGISTER_KEY — 同上；粘贴 Secret 时勿带末尾换行
 
 name: Register to portfolio
 
@@ -22,7 +25,7 @@ jobs:
     if: |
       github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Send asset to xiaoman-projects
@@ -34,34 +37,40 @@ jobs:
           script: |
             const wr = context.payload.workflow_run;
             const repo = wr?.head_repository ?? context.repo;
-            const repoId = repo.name ?? repo.repo;
-            const repoFullName = repo.full_name ?? `${repo.owner}/${repo.repo}`;
 
-            const ASSET_TYPE = "project";
+            // --- 按本仓库定制 ---
+            const ASSET_TYPE = "project"; // "project" | "tool"
             const ASSET_NAME = "MobiXpert";
             const ASSET_DESCRIPTION =
-              "Tauri 2 + Next.js 桌面工具启动器：圆角无边框主窗、Rust 创建的系统 Modal 子窗口，Command/Event 双通道 IPC。";
+              "Tauri 2 + Next.js 桌面端，内置 CowAgent 控制台（AI Elements 流式对话、Rust agent runtime），Command/Event IPC 与 Modal 子窗口。";
             const ASSET_TAGS = [
               "Tauri",
               "Next.js",
-              "TypeScript",
+              "CowAgent",
+              "AI Elements",
               "Rust",
               "Desktop",
             ];
+            const ASSET_PROBLEM_SOLVED = ""; // ASSET_TYPE 为 tool 时必填
+            // --- end customize ---
 
             const updatedRaw = wr?.updated_at || new Date().toISOString();
             const updatedAt = String(updatedRaw).slice(0, 10);
 
             const payload = {
               registerKey: (process.env.PORTFOLIO_REGISTER_KEY || "").trim(),
-              id: repoId,
+              id: repo.name ?? repo.repo,
               type: ASSET_TYPE,
               name: ASSET_NAME,
               description: ASSET_DESCRIPTION,
-              githubUrl: `https://github.com/${repoFullName}`,
+              githubUrl: `https://github.com/${repo.full_name ?? `${repo.owner}/${repo.repo}`}`,
               tags: ASSET_TAGS,
               updatedAt,
             };
+
+            if (ASSET_TYPE === "tool") {
+              payload.problemSolved = ASSET_PROBLEM_SOLVED;
+            }
 
             if (!payload.registerKey) {
               core.setFailed("PORTFOLIO_REGISTER_KEY secret is missing");
