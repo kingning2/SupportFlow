@@ -11,6 +11,7 @@
 | [backend-rust.md](./backend-rust.md)                       | Tauri / Rust 分层与实现                           |
 | [fullstack-ipc.md](./fullstack-ipc.md)                     | Command / Event / typeshare 契约                  |
 | [review-checklist.md](./review-checklist.md)               | 提交 PR 前自检清单                                |
+| **[agent-console.md](../agent-console.md)**                | **CowAgent 控制台：AI Elements、目录、IPC、扩展** |
 
 ## 相关资源
 
