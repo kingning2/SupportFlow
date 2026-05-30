@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "node_modules/**",
     "src-tauri/**",
+    "src/components/ai-elements/**",
     ".cursor/**",
     ".agents/**"
   ]),
