@@ -44,8 +44,13 @@ pub async fn get_language_resource_bundle(
             )
             .map_err(|e| e.to_string())?;
 
-        let file = fs::File::open(&resource_path).map_err(|e| e.to_string())?;
-        let bundle: serde_json::Value = serde_json::from_reader(file).map_err(|e| e.to_string())?;
+        let mut content = fs::read_to_string(&resource_path).map_err(|e| e.to_string())?;
+        // Windows editors / PowerShell may write UTF-8 BOM; serde_json rejects it.
+        if content.starts_with('\u{FEFF}') {
+            content = content.trim_start_matches('\u{FEFF}').to_string();
+        }
+        let bundle: serde_json::Value =
+            serde_json::from_str(&content).map_err(|e| e.to_string())?;
         Ok(bundle)
     })
 }

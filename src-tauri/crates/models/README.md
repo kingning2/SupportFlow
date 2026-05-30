@@ -1,6 +1,6 @@
-# models
+﻿# models
 
-Rust port of [`models/`](../../../../CowAgent/models/) — same module layout, split by vendor.
+Rust port of Python `models/` — same module layout, split by vendor.
 
 ## Layout
 

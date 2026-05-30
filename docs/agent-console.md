@@ -1,7 +1,7 @@
-# Agent 控制台（CowAgent Web → Tauri + AI Elements）
+﻿# Agent 控制台（SupportFlow Web → Tauri + AI Elements）
 
-本文档记录主窗 **CowAgent 控制台** 的前端架构、目录约定、IPC 契约与扩展方式。  
-UI 基于 [Vercel AI Elements](https://elements.ai-sdk.dev)（shadcn/ui 注册表），布局视觉对齐 CowAgent `channel/web/chat.html` 的深色侧栏。
+本文档记录主窗 **SupportFlow 控制台** 的前端架构、目录约定、IPC 契约与扩展方式。  
+UI 基于 [Vercel AI Elements](https://elements.ai-sdk.dev)（shadcn/ui 注册表），布局视觉对齐 SupportFlow `channel/web/chat.html` 的深色侧栏。
 
 ---
 
@@ -66,7 +66,7 @@ src/components/agent-console/
 ├── constants/
 │   ├── sidebar-nav.ts               # 侧栏分组、视图路由、占位视图集合
 │   └── example-prompts.ts           # 欢迎页示例卡片
-├── styles/console.css               # CowAgent 侧栏 / 会话面板样式
+├── styles/console.css               # SupportFlow 侧栏 / 会话面板样式
 ├── layout/
 │   ├── agent-console-app.tsx        # 根壳：视图切换、主题、加载/错误态
 │   ├── console-sidebar.tsx          # 深色侧栏 #0A0A0A
@@ -92,7 +92,7 @@ src/hooks/
 src/lib/agent-console/
 ├── stream-reducer.ts                 # chunk → messages（纯函数，易单测）
 ├── map-tool-state.ts                 # ToolStep → AI Elements Tool state
-├── theme-sync.ts                     # CowAgent 主题 localStorage
+├── theme-sync.ts                     # SupportFlow 主题 localStorage
 └── provider-labels.ts                # bot_type → i18n key
 
 src/types/agent-chat.ts              # 前端消息模型
@@ -112,7 +112,7 @@ src/cmd/agent.ts                     # IPC 封装（禁止组件内裸 invoke）
 
 ## AI Elements 组件映射
 
-| CowAgent 功能       | AI Elements                                                 | 封装位置             |
+| SupportFlow 功能    | AI Elements                                                 | 封装位置             |
 | ------------------- | ----------------------------------------------------------- | -------------------- |
 | 消息列表 + 自动滚动 | `Conversation` / `ConversationContent`                      | `chat-thread.tsx`    |
 | 用户 / 助手气泡     | `Message` / `MessageContent`                                | `message-blocks.tsx` |
@@ -201,7 +201,7 @@ bunx shadcn@latest add \
 
 ## 主题与布局
 
-- **CowAgent 主题**：`LocalCacheKey.CowTheme`（`light` / `dark`，默认 `dark`），同步到 `<html class="dark">`
+- **SupportFlow 主题**：`LocalCacheKey.CowTheme`（`light` / `dark`，默认 `dark`），同步到 `<html class="dark">`
 - **主色**：`#35A85B`（按钮、侧栏 active 图标 `#4ABE6E`）
 - **侧栏**：固定 `#0A0A0A`，宽 `w-52`（`console-sidebar.tsx` + `styles/console.css`）
 - **主窗布局**：页面使用 `-m-3` 抵消 `MainProvider` 内边距，全屏铺满控制台；内部链路透传 `min-h-0` + `overflow-hidden`
@@ -217,13 +217,13 @@ bunx shadcn@latest add \
 
 ---
 
-## 与 CowAgent HTML 版的区别
+## 与 SupportFlow HTML 版的区别
 
-|         | CowAgent `chat.html`               | Tauri 桌面版                                                       |
-| ------- | ---------------------------------- | ------------------------------------------------------------------ |
-| 后端    | Python `web_channel.py` HTTP + SSE | Rust `agent` + `models` crate，Tauri IPC + Event                   |
-| 配置    | CowAgent 目录下 `config.json`      | **同一份** `config.json`（工作区自动探测或 `COW_AGENT_WORKSPACE`） |
-| AI 调用 | Python Bot → 厂商 API              | Rust Bot → 厂商 API（真实 HTTP，非 mock）                          |
+|         | SupportFlow `chat.html`            | Tauri 桌面版                                                          |
+| ------- | ---------------------------------- | --------------------------------------------------------------------- |
+| 后端    | Python `web_channel.py` HTTP + SSE | Rust `agent` + `models` crate，Tauri IPC + Event                      |
+| 配置    | SupportFlow 目录下 `config.json`   | **同一份** `config.json`（工作区自动探测或 `SUPPORT_FLOW_WORKSPACE`） |
+| AI 调用 | Python Bot → 厂商 API              | Rust Bot → 厂商 API（真实 HTTP，非 mock）                             |
 
 **AI 已对接。** 若聊天返回 `401` 或 `null (Status: 401, …)`，表示请求已发出但 **API Key 无效或未配置**，不是 UI 未接 AI。
 
@@ -237,7 +237,7 @@ bunx shadcn@latest add \
 | `src-tauri/resources/config-template.json` | 仓库模板，随 Tauri 打包                                                    |
 | `{workspace}/config.json`                  | 启动时从 resources **镜像**一份，供工具读取；**不要**在项目根目录放 config |
 
-工作区（skills / memory / mcp）默认为 `{app_data}/cowagent`，可用 `COW_AGENT_WORKSPACE` 覆盖，**但不改变 config 来源**。
+工作区（skills / memory / mcp）默认为 `{app_data}/SupportFlow`，可用 `SUPPORT_FLOW_WORKSPACE` 覆盖，**但不改变 config 来源**。
 
 修改 `src-tauri/resources/config.json` 后 **重启** `bun run tauri dev`。
 
@@ -297,6 +297,6 @@ Agent 初始化依赖工作目录下的 `config.json` 与对应厂商 API Key；
 
 ## 变更记录
 
-| 日期    | 说明                                                                                        |
-| ------- | ------------------------------------------------------------------------------------------- |
-| 2026-05 | 自 CowAgent `chat.html` 迁移；采用 AI Elements；删除旧手写 markdown-it 控制台，重建分层目录 |
+| 日期    | 说明                                                                                           |
+| ------- | ---------------------------------------------------------------------------------------------- |
+| 2026-05 | 自 SupportFlow `chat.html` 迁移；采用 AI Elements；删除旧手写 markdown-it 控制台，重建分层目录 |

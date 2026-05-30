@@ -1,4 +1,4 @@
-//! `agent/tools/mcp/mcp_client.py` — JSON-RPC 2.0 over stdio / SSE / streamable HTTP.
+﻿//! `agent/tools/mcp/mcp_client.py` — JSON-RPC 2.0 over stdio / SSE / streamable HTTP.
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -344,7 +344,7 @@ impl McpClient {
         let init_params = json!({
             "protocolVersion": PROTOCOL_VERSION,
             "capabilities": {},
-            "clientInfo": { "name": "CowAgent", "version": "1.0" }
+            "clientInfo": { "name": "SupportFlow", "version": "1.0" }
         });
 
         let resp = match self.send_request("initialize", init_params).await {

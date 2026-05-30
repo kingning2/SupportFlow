@@ -1,4 +1,4 @@
-/** CowAgent console sidebar views (mirrors `data-view` in chat.html). */
+﻿/** SupportFlow console sidebar views (mirrors `data-view` in chat.html). */
 export enum ConsoleView {
   Chat = "chat",
   Config = "config",

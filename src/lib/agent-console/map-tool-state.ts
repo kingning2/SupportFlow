@@ -1,8 +1,8 @@
-import type { DynamicToolUIPart } from "ai";
+﻿import type { DynamicToolUIPart } from "ai";
 
 import type { ToolStepStatus } from "@/types/agent-chat";
 
-/** Map CowAgent tool step status → AI Elements `ToolUIPart` state. */
+/** Map SupportFlow tool step status → AI Elements `ToolUIPart` state. */
 export function mapToolStepState(status: ToolStepStatus): DynamicToolUIPart["state"] {
   switch (status) {
     case "running":

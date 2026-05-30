@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  BookOpen,
-  ChevronRight,
-  ExternalLink,
-  Globe,
-  History,
-  Home,
-  Menu,
-  Moon,
-  Sun
-} from "lucide-react";
+import { ChevronRight, ExternalLink, Globe, History, Menu, Moon, Sun } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { CONSOLE_BRAND, getBreadcrumbKeys } from "@/components/agent-console/constants/sidebar-nav";
@@ -90,18 +80,6 @@ export function ConsoleHeader({
         ) : (
           <Moon className="size-4 text-slate-500" />
         )}
-      </Button>
-
-      <Button type="button" variant="ghost" size="icon-sm" asChild>
-        <a href={CONSOLE_BRAND.docsUrl} target="_blank" rel="noopener noreferrer">
-          <BookOpen className="size-4 text-slate-500" />
-        </a>
-      </Button>
-
-      <Button type="button" variant="ghost" size="icon-sm" asChild>
-        <a href={CONSOLE_BRAND.siteUrl} target="_blank" rel="noopener noreferrer">
-          <Home className="size-4 text-slate-500" />
-        </a>
       </Button>
 
       <Button type="button" variant="ghost" size="icon-sm" asChild>

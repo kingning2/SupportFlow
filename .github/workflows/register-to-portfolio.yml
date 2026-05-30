@@ -1,4 +1,4 @@
-# 向 kingning2/xiaoman-projects 注册/更新资产卡片。
+﻿# 向 kingning2/xiaoman-projects 注册/更新资产卡片。
 #
 # 触发：
 #   - workflow_run：「Deploy to GitHub Pages」在 main 上成功后
@@ -40,13 +40,13 @@ jobs:
 
             // --- 按本仓库定制 ---
             const ASSET_TYPE = "project"; // "project" | "tool"
-            const ASSET_NAME = "MobiXpert";
+            const ASSET_NAME = "SupportFlow";
             const ASSET_DESCRIPTION =
-              "Tauri 2 + Next.js 桌面端，内置 CowAgent 控制台（AI Elements 流式对话、Rust agent runtime），Command/Event IPC 与 Modal 子窗口。";
+              "Tauri 2 + Next.js 桌面端，内置 SupportFlow 控制台（AI Elements 流式对话、Rust agent runtime），Command/Event IPC 与 Modal 子窗口。";
             const ASSET_TAGS = [
               "Tauri",
               "Next.js",
-              "CowAgent",
+              "SupportFlow",
               "AI Elements",
               "Rust",
               "Desktop",

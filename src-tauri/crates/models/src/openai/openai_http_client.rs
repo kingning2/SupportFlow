@@ -1,4 +1,4 @@
-//! `models/openai/openai_http_client.py` — OpenAI-compatible HTTP + SSE.
+﻿//! `models/openai/openai_http_client.py` — OpenAI-compatible HTTP + SSE.
 
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -13,8 +13,8 @@ use super::openai_compat::OpenAiHttpError;
 pub const DEFAULT_API_BASE: &str = "https://api.openai.com/v1";
 pub const DEFAULT_TIMEOUT_SECS: u64 = 600;
 
-const APP_TITLE: &str = "CowAgent";
-const APP_REFERER: &str = "https://github.com/zhayujie/CowAgent";
+const APP_TITLE: &str = "SupportFlow";
+const APP_REFERER: &str = "https://github.com/kingning2/SupportFlow";
 
 /// Minimal HTTP client for OpenAI-compatible chat completions.
 #[derive(Debug, Clone)]

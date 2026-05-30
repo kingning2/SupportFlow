@@ -1,6 +1,6 @@
-# agent
+﻿# agent
 
-Rust port of Python [`agent/`](../../../../CowAgent/agent/), **incremental** — one slice per PR.
+Rust port of Python `agent/`, **incremental** — one slice per PR.
 
 ## Step 1: `protocol` foundations
 
@@ -90,7 +90,7 @@ PDF/Office: returns same “library not installed” style errors until native e
 
 `Agent::new` starts `McpToolLoader::ensure_background_load()` when `workspace_dir` is set; `run_stream` calls `refresh_if_changed()`.
 
-Config: `{workspace}/mcp.json` with `mcpServers` (same as CowAgent).
+Config: `{workspace}/mcp.json` with `mcpServers` (same as SupportFlow).
 
 ## Step 9 (next)
 

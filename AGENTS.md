@@ -1,4 +1,4 @@
-# Agent / 协作者说明
+﻿# Agent / 协作者说明
 
 本仓库为 **Tauri 2 + Next.js** 桌面应用模板。编写或审查代码前请先读：
 
@@ -7,7 +7,7 @@
 - **前端**：[`docs/development-rules/frontend.md`](docs/development-rules/frontend.md)
 - **Rust 后端**：[`docs/development-rules/backend-rust.md`](docs/development-rules/backend-rust.md)
 - **IPC 契约**：[`docs/development-rules/fullstack-ipc.md`](docs/development-rules/fullstack-ipc.md)
-- **Agent 控制台**：[`docs/agent-console.md`](docs/agent-console.md)（AI Elements、CowAgent 布局、IPC 流式）
+- **Agent 控制台**：[`docs/agent-console.md`](docs/agent-console.md)（AI Elements、SupportFlow 布局、IPC 流式）
 - **PR 自检**：[`docs/development-rules/review-checklist.md`](docs/development-rules/review-checklist.md)
 
 ## 不可违反的三条

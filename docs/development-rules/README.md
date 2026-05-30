@@ -1,17 +1,17 @@
-# 开发规范（前后端）
+﻿# 开发规范（前后端）
 
 本目录为**与 IDE / AI 工具无关**的编写约定，适用于人工 Code Review、Onboarding、Copilot、Cursor、Claude Code 等场景。
 
 ## 文档索引
 
-| 文档                                                       | 适用场景                                          |
-| ---------------------------------------------------------- | ------------------------------------------------- |
-| **[roles-and-directories.md](./roles-and-directories.md)** | **按职位看「该改哪个文件夹」**（新人 / 协作必读） |
-| [frontend.md](./frontend.md)                               | Next.js / React / Redux / UI                      |
-| [backend-rust.md](./backend-rust.md)                       | Tauri / Rust 分层与实现                           |
-| [fullstack-ipc.md](./fullstack-ipc.md)                     | Command / Event / typeshare 契约                  |
-| [review-checklist.md](./review-checklist.md)               | 提交 PR 前自检清单                                |
-| **[agent-console.md](../agent-console.md)**                | **CowAgent 控制台：AI Elements、目录、IPC、扩展** |
+| 文档                                                       | 适用场景                                             |
+| ---------------------------------------------------------- | ---------------------------------------------------- |
+| **[roles-and-directories.md](./roles-and-directories.md)** | **按职位看「该改哪个文件夹」**（新人 / 协作必读）    |
+| [frontend.md](./frontend.md)                               | Next.js / React / Redux / UI                         |
+| [backend-rust.md](./backend-rust.md)                       | Tauri / Rust 分层与实现                              |
+| [fullstack-ipc.md](./fullstack-ipc.md)                     | Command / Event / typeshare 契约                     |
+| [review-checklist.md](./review-checklist.md)               | 提交 PR 前自检清单                                   |
+| **[agent-console.md](../agent-console.md)**                | **SupportFlow 控制台：AI Elements、目录、IPC、扩展** |
 
 ## 相关资源
 

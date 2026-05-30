@@ -1,11 +1,11 @@
-//! Runtime configuration for model providers (mirrors `config.json` keys).
+﻿//! Runtime configuration for model providers (mirrors `config.json` keys).
 
 use serde::Deserialize;
 use std::path::Path;
 
 use crate::const_::BotType;
 
-/// Subset of CowAgent `config.json` used by the models layer.
+/// Subset of SupportFlow `config.json` used by the models layer.
 #[derive(Debug, Clone, Deserialize, Default)]
 #[serde(rename_all = "snake_case", default)]
 pub struct ModelsConfig {
@@ -41,7 +41,7 @@ pub struct ModelsConfig {
 }
 
 impl ModelsConfig {
-    /// Load from a CowAgent-style `config.json` file.
+    /// Load from a SupportFlow-style `config.json` file.
     pub fn from_json_file(path: impl AsRef<Path>) -> Result<Self, String> {
         let text =
             std::fs::read_to_string(path.as_ref()).map_err(|e| format!("read config: {e}"))?;

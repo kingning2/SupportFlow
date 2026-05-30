@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -42,7 +42,7 @@ export function ConsoleSidebar({
             <span className="text-xs font-bold text-white">C</span>
           </div>
           <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-semibold text-white">CowAgent</span>
+            <span className="truncate text-sm font-semibold text-white">SupportFlow</span>
             <span className="text-xs text-neutral-500">{t("console")}</span>
           </div>
         </div>
@@ -92,7 +92,7 @@ export function ConsoleSidebar({
         <div className="shrink-0 border-t border-white/10 px-4 py-3">
           <div className="flex items-center gap-2 text-xs text-neutral-600">
             <span className="size-1.5 rounded-full bg-[#4ABE6E]" />
-            <span>CowAgent Desktop</span>
+            <span>SupportFlow Desktop</span>
           </div>
         </div>
       </aside>

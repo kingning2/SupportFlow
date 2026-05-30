@@ -1,4 +1,4 @@
-import { ConsoleView } from "@/enums";
+﻿import { ConsoleView } from "@/enums";
 import {
   BookOpen,
   Brain,
@@ -97,8 +97,6 @@ export const PLACEHOLDER_CONSOLE_VIEWS = new Set<ConsoleView>([
 ]);
 
 export const CONSOLE_BRAND = {
-  name: "CowAgent",
-  docsUrl: "https://docs.cowagent.ai",
-  siteUrl: "https://cowagent.ai",
-  githubUrl: "https://github.com/zhayujie/chatgpt-on-wechat"
+  name: "SupportFlow",
+  githubUrl: "https://github.com/kingning2/SupportFlow"
 } as const;

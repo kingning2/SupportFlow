@@ -1,4 +1,4 @@
-use std::sync::Arc;
+﻿use std::sync::Arc;
 
 use models::{create_bot, BotType, CallWithToolsRequest, ModelsConfig, OpenAICompatibleBot};
 
@@ -19,7 +19,7 @@ fn create_deepseek_bot_from_type() {
 #[ignore = "requires network and API key"]
 async fn deepseek_call_with_tools_smoke() {
     let config = Arc::new(
-        ModelsConfig::from_json_file("../../../../../CowAgent/config.json").unwrap_or_default(),
+        ModelsConfig::from_json_file("../../../resources/config.json").unwrap_or_default(),
     );
     let bot = create_bot(BotType::Deepseek, config).expect("factory");
     let req = CallWithToolsRequest {

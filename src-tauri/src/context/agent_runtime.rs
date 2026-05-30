@@ -1,4 +1,4 @@
-//! In-process agent runtime for Tauri IPC (no Python HTTP).
+﻿//! In-process agent runtime for Tauri IPC (no Python HTTP).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -71,7 +71,7 @@ fn resolve_bundled_config(app: &AppHandle) -> Result<PathBuf, String> {
 
 /// Writable workspace for agent tools (skills, memory, mcp.json). Config is NOT loaded from here.
 fn resolve_workspace_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    const ENV_KEY: &str = "COW_AGENT_WORKSPACE";
+    const ENV_KEY: &str = "SUPPORT_FLOW_WORKSPACE";
 
     if let Ok(raw) = std::env::var(ENV_KEY) {
         let trimmed = raw.trim();
@@ -87,7 +87,7 @@ fn resolve_workspace_dir(app: &AppHandle) -> Result<PathBuf, String> {
 
     app.path()
         .app_data_dir()
-        .map(|p| p.join("cowagent"))
+        .map(|p| p.join("SupportFlow"))
         .map_err(|e| e.to_string())
 }
 
@@ -145,7 +145,7 @@ fn build_agent(workspace: PathBuf, config: &ModelsConfig) -> Result<Agent, Strin
     };
     let model: Arc<dyn LlmModel> = Arc::new(BotLlmModel::new(bot, bridge.clone()));
     let mut agent = Agent::new(
-        "You are CowAgent, a helpful desktop assistant.",
+        "You are SupportFlow, a helpful desktop assistant.",
         model,
         bridge,
     );
