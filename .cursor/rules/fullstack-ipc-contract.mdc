@@ -1,0 +1,39 @@
+---
+description: 改 Tauri Command/Event/Modal/语言 时触发的全栈契约清单；完整版见 docs/development-rules/fullstack-ipc.md
+globs:
+  - src/enums/**/*
+  - src/cmd/**/*
+  - src/types/tauri-payloads.ts
+  - src/generated/**/*
+  - src-tauri/src/cmd/**/*
+  - src-tauri/src/events/**/*
+  - src-tauri/src/context/**/*
+alwaysApply: false
+---
+
+# 全栈 IPC 契约（摘要）
+
+完整清单：[`docs/development-rules/fullstack-ipc.md`](../../docs/development-rules/fullstack-ipc.md)
+
+## Command vs Event
+
+- **要返回值 / 错误处理** → Command + `TauriCmd` + `invokeWrapper`
+- **多 Webview 广播、进度、生命周期** → Event + `TauriEvent`
+- **前端写 Rust 日志** → Event（`FeLog`），不要新 invoke
+
+## 新增 Command 必改 6 处
+
+1. `src-tauri/src/cmd/*.rs`
+2. `src-tauri/src/cmd/mod.rs`
+3. `src-tauri/src/lib.rs`（`generate_handler!`）
+4. `src/enums/tauri-cmd.ts`
+5. `src/cmd/*.ts`（`invokeWrapper`）
+6. 若共享类型：`#[typeshare]` + `bun run generate:contracts`
+
+## 新增 Event 必改
+
+`events/names.rs` ↔ `src/enums/tauri-event.ts` ↔ 发射/订阅处 ↔ 可选 `tauri-payloads.ts` ↔ `events::setup`
+
+## 一致性
+
+Rust 蛇形命令名 = `TauriCmd` 字符串值。禁止 Rust、TS、配置文件各写不同拼写。

@@ -1,0 +1,5 @@
+version: 1
+agent:
+  name: tauri-next-coding-notes
+  style: concise
+  goal: keep implementation aligned with this repo architecture

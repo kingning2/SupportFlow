@@ -1,0 +1,76 @@
+# 向 kingning2/xiaoman-projects 注册/更新资产卡片。
+#
+# 触发：push 到 main、手动 workflow_dispatch、或「Deploy to GitHub Pages」成功后。
+#
+# Secrets（Settings → Actions，勿写入代码）：
+#   PORTFOLIO_PAT
+#   PORTFOLIO_REGISTER_KEY
+
+name: Register to portfolio
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Deploy to GitHub Pages"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  register:
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send asset to xiaoman-projects
+        uses: actions/github-script@v7
+        env:
+          PORTFOLIO_REGISTER_KEY: ${{ secrets.PORTFOLIO_REGISTER_KEY }}
+        with:
+          github-token: ${{ secrets.PORTFOLIO_PAT }}
+          script: |
+            const wr = context.payload.workflow_run;
+            const repo = wr?.head_repository ?? context.repo;
+            const repoId = repo.name ?? repo.repo;
+            const repoFullName = repo.full_name ?? `${repo.owner}/${repo.repo}`;
+
+            const ASSET_TYPE = "project";
+            const ASSET_NAME = "MobiXpert";
+            const ASSET_DESCRIPTION =
+              "Tauri 2 + Next.js 桌面工具启动器：圆角无边框主窗、Rust 创建的系统 Modal 子窗口，Command/Event 双通道 IPC。";
+            const ASSET_TAGS = [
+              "Tauri",
+              "Next.js",
+              "TypeScript",
+              "Rust",
+              "Desktop",
+            ];
+
+            const updatedRaw = wr?.updated_at || new Date().toISOString();
+            const updatedAt = String(updatedRaw).slice(0, 10);
+
+            const payload = {
+              registerKey: (process.env.PORTFOLIO_REGISTER_KEY || "").trim(),
+              id: repoId,
+              type: ASSET_TYPE,
+              name: ASSET_NAME,
+              description: ASSET_DESCRIPTION,
+              githubUrl: `https://github.com/${repoFullName}`,
+              tags: ASSET_TAGS,
+              updatedAt,
+            };
+
+            if (!payload.registerKey) {
+              core.setFailed("PORTFOLIO_REGISTER_KEY secret is missing");
+              return;
+            }
+
+            await github.rest.repos.createDispatchEvent({
+              owner: "kingning2",
+              repo: "xiaoman-projects",
+              event_type: "upsert-asset",
+              client_payload: payload,
+            });

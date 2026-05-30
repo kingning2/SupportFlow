@@ -1,0 +1,36 @@
+---
+description: Rust/Tauri 编写规范 — cmd/context/utils 分层、command 注册、typeshare、事件；完整版见 docs/development-rules/backend-rust.md
+globs:
+  - src-tauri/src/**/*
+alwaysApply: false
+---
+
+# 后端编写规范（摘要）
+
+完整文档：[`docs/development-rules/backend-rust.md`](../../docs/development-rules/backend-rust.md)  
+分层细则：[`tauri-rust-layering.mdc`](./tauri-rust-layering.mdc)
+
+## 分层
+
+| 目录 | 职责 |
+|------|------|
+| `cmd/` | `#[tauri::command]` 薄入口，委托 `context` 或 `utils` |
+| `context/` | `.manage` 跨 Webview Store；可 emit，不写平台细节 |
+| `utils/` | 无 Store 业务逻辑；可回调 `context` 更新并广播 |
+| `utils/platform/{windows,macos}/` | 平台实现；门面模块只做 `#[cfg]` 转发 |
+
+## 必守
+
+- 新 command：`cmd/mod.rs` + `lib.rs` `generate_handler!` + 前端 `TauriCmd` + `src/cmd/*.ts`（见 [`fullstack-ipc.md`](../../docs/development-rules/fullstack-ipc.md)）。
+- 事件名仅 `events/names.rs`，与 `src/enums/tauri-event.ts` 一致。
+- 共享 DTO：`#[typeshare]` → `bun run generate:contracts`。
+- 新 `pub fn` 写文档注释（功能、参数、返回值）。
+- Command 优先 `Result<T, String>`；避免把 `unwrap` 暴露给用户路径。
+
+## 反例
+
+```rust
+// ❌ cmd 内写注册表/下载细节
+// ❌ SessionStore 放在 utils/
+// ✅ cmd 一行委托；Store 在 context/；平台逻辑在 platform/
+```

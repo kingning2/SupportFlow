@@ -1,0 +1,35 @@
+{
+  "home": {
+    "title": "Tauri + Next.js Template",
+    "description": "Desktop shell with a main window, modal sub-window, i18n, and cross-webview session sync. Replace this page with your app.",
+    "open_demo_modal": "Open demo modal"
+  },
+  "title_bar": {
+    "app_name": "Tauri Template",
+    "menu": "Menu",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "close": "Close",
+    "menu_language": "Language",
+    "menu_feedback": "Feedback",
+    "menu_contact_support": "Contact support",
+    "menu_online_help": "Online help",
+    "menu_check_updates": "Check for updates",
+    "menu_about": "About"
+  },
+  "common": {
+    "error_title": "Something went wrong",
+    "error_retry": "Try again",
+    "error_back_home": "Back to home",
+    "error_close": "Close window",
+    "error_digest": "Error ID: {{digest}}"
+  },
+  "modal_window": {
+    "title": "Window",
+    "demo_title": "Demo modal",
+    "demo_body": "This panel is registered in `src/components/modal/panels`. Add your own panels and open them via `openModal`.",
+    "unknown_panel": "Unknown panel: {{name}}",
+    "shared_session": "Shared session with main window. Language: {{lang}}",
+    "hint": "Closing this window removes the overlay on the main window."
+  }
+}

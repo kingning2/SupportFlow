@@ -1,0 +1,12 @@
+.next
+out
+build
+node_modules
+src-tauri
+.cursor
+.agents
+bun.lock
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+next-env.d.ts

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "checks": [
+    {
+      "name": "has-rules-folder",
+      "type": "path_exists",
+      "path": ".agents/skills/tauri-next-coding-notes/rules"
+    },
+    {
+      "name": "has-skill-frontmatter",
+      "type": "contains",
+      "path": ".agents/skills/tauri-next-coding-notes/SKILL.md",
+      "text": "name: tauri-next-coding-notes"
+    }
+  ]
+}

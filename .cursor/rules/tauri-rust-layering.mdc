@@ -1,0 +1,71 @@
+---
+description: Rust 分层 — cmd 薄封装、context 跨 Webview 态、utils 业务、platform 分平台实现
+globs:
+  - src-tauri/src/cmd/**/*.rs
+  - src-tauri/src/context/**/*.rs
+  - src-tauri/src/utils/**/*.rs
+alwaysApply: false
+---
+
+# Tauri Rust：`cmd`、`context` 与 `utils` 写入约定
+
+在修改或新增 **`src-tauri/src/cmd/`**、**`src-tauri/src/context/`** 与 **`src-tauri/src/utils/`** 下的 Rust 代码时遵守以下分层。
+并且函数要用文档注释描述功能和参数
+```rust
+/// 获取当前语言会话
+///
+/// # Arguments
+///
+/// * `app` - Tauri 应用句柄
+///
+/// # Returns
+///
+/// * `AppSession` - 当前语言会话
+pub fn get_session(app: &AppHandle) -> Result<AppSession, String> {
+    let store = app.state::<SessionStore>();
+    let guard = store.0.lock().map_err(|e| e.to_string())?;
+    Ok(guard.clone())
+}
+
+## `cmd/`
+
+- **只做** Tauri 入口：`#[tauri::command]`、参数/返回值类型、以及一行委托到 `context` 或 `utils`（或 `opener` 等插件）。
+- **不要**在 `cmd` 里写清单遍历、注册表解析、下载流程等平台或业务细节。
+
+## `context/`
+
+- **跨 Webview 共享应用态**：由 `lib.rs` 中 `.manage(...)` 持有，各 Webview 通过 command 读取、`events` 广播同步（类似前端 Redux）。
+- 示例：`context/session.rs`（语言会话）、`context/tools_download.rs`（工具下载进度快照）。
+- Store 的读写、快照构造、以及 `push_*_to_webview` / `broadcast_*` 放在 `context/`；**不要**把这类状态塞进 `utils/`。
+- `context` 可调用 `events` 发射；**不要**在 `context` 里写注册表、HTTP、文件下载等平台/流程细节（仍委托 `utils`）。
+
+## `utils/`
+
+- **无全局 Store 的业务与可复用逻辑**放在此处（例如 `utils/tools.rs`：安装态聚合、按 `tool_id` 解析路径）。
+- 与平台无关的通用代码放在 `utils` 根下模块（如 `download`、`log`）。
+- 下载/安装流程中需要更新共享态时，由 `utils` 调用 `context`（例如进度回调里 `context::tools_download::sync_progress_and_broadcast`）。
+
+## `utils/platform/`
+
+- **跨平台门面**：对外单一 API，内部用 `#[cfg(target_os = "...")]` 转发到具体实现（若仅二选一，保持分发层很薄）。
+- **平台专有实现**放在对应子目录，避免在共享文件里堆长 `cfg` 分支：
+  - Windows：`utils/platform/windows/*.rs`（如 `open_tool.rs` + `tool_launch.rs` + `registry.rs`）。
+  - macOS：`utils/platform/macos/*.rs`（同上模式）。
+- 共享 **IPC / 序列化 DTO**（如 `OpenToolExecutableArgs`）可留在 `platform/open_tool.rs`，解析逻辑在 `windows/open_tool.rs` / `macos/open_tool.rs`。
+
+## 反例
+
+```rust
+// ❌ 在 cmd/foo.rs 里实现注册表读写或遍历 tools_manifest
+// ✅ cmd 调用 utils::tools::gather_install_state()
+```
+
+```rust
+// ❌ 把 SessionStore / ToolsDownloadStore 放在 utils/
+// ✅ 放在 context/，cmd 只委托 context::session::get_session 等
+```
+
+```rust
+// ❌ 在 platform/open_tool.rs 里写一大段 #[cfg(target_os = "macos")] { ... }
+// ✅ 放到 platform/macos/open_tool.rs，由门面转发
+```

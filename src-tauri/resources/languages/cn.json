@@ -1,0 +1,35 @@
+{
+  "home": {
+    "title": "Tauri + Next.js 模板",
+    "description": "桌面壳层示例：主窗、Modal 子窗、国际化与跨 Webview 会话同步。请在此替换为你的应用内容。",
+    "open_demo_modal": "打开示例弹窗"
+  },
+  "title_bar": {
+    "app_name": "Tauri 模板",
+    "menu": "選單",
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "close": "關閉",
+    "menu_language": "語言",
+    "menu_feedback": "反饋",
+    "menu_contact_support": "聯絡支援",
+    "menu_online_help": "在線幫助",
+    "menu_check_updates": "檢查更新",
+    "menu_about": "關於"
+  },
+  "common": {
+    "error_title": "出錯了",
+    "error_retry": "重試",
+    "error_back_home": "返回首頁",
+    "error_close": "關閉視窗",
+    "error_digest": "錯誤編號：{{digest}}"
+  },
+  "modal_window": {
+    "title": "視窗",
+    "demo_title": "示例彈窗",
+    "demo_body": "此面板在 `src/components/modal/panels` 註冊。可新增自己的面板並透過 `openModal` 打開。",
+    "unknown_panel": "未知面板：{{name}}",
+    "shared_session": "與主窗共享會話。當前語言：{{lang}}",
+    "hint": "關閉此視窗後，主窗蒙層會一併消失。"
+  }
+}
