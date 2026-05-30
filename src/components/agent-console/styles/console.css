@@ -1,0 +1,130 @@
+/* CowAgent console — layout tokens & sidebar (mirrors channel/web/static/css/console.css) */
+
+.agent-console {
+  --cow-primary-400: #4abe6e;
+  --cow-primary-500: #35a85b;
+  --cow-sidebar-bg: #0a0a0a;
+  --cow-surface: #1a1a1a;
+  --cow-page-bg: #111111;
+}
+
+.agent-console .sidebar-item.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.agent-console .sidebar-item.active .item-icon {
+  color: var(--cow-primary-400);
+}
+
+.agent-console .session-panel {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+  border-right: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.dark .agent-console .session-panel {
+  background: var(--cow-page-bg);
+  border-right-color: rgba(255, 255, 255, 0.08);
+}
+
+.agent-console .session-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.dark .agent-console .session-panel-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.agent-console .session-panel-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 12px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px dashed #d1d5db;
+  background: none;
+  color: #6b7280;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+  flex-shrink: 0;
+}
+
+.dark .agent-console .session-panel-new {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #9ca3af;
+}
+
+.agent-console .session-panel-new:hover {
+  border-color: #9ca3af;
+  color: #374151;
+  background: #f9fafb;
+}
+
+.dark .agent-console .session-panel-new:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #e5e5e5;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.agent-console .session-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px;
+}
+
+.agent-console .session-empty {
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.agent-console .example-card:hover {
+  border-color: color-mix(in srgb, var(--cow-primary-400) 60%, transparent);
+}
+
+.agent-console .composer-shell {
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+}
+
+.dark .agent-console .composer-shell {
+  background: var(--cow-surface);
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.agent-console .menu-group-items {
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+}
+
+.agent-console .menu-group:not(.open) .menu-group-items {
+  max-height: 0;
+}
+
+.agent-console .menu-group.open .menu-group-items {
+  max-height: 600px;
+}
+
+.agent-console .menu-group:not(.open) .chevron {
+  transform: rotate(0deg);
+}
+
+.agent-console .menu-group.open .chevron {
+  transform: rotate(90deg);
+}
