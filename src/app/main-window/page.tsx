@@ -1,34 +1,12 @@
 "use client";
 
-import { useTranslation } from "react-i18next";
+import { AgentConsoleApp } from "@/components/agent-console";
 
-import { useModalWindow } from "@/components/modal";
-import { Button } from "@/components/ui/button";
-import { ModalPanel } from "@/enums";
-
-export default function MainWindowHome() {
-  const { t } = useTranslation("home");
-  const { openModal } = useModalWindow();
-
+/** CowAgent 控制台（AI Elements + Tauri Agent IPC） */
+export default function MainWindowPage() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6">
-      <h1 className="text-foreground text-2xl font-semibold tracking-tight">{t("title")}</h1>
-      <p className="text-muted-foreground max-w-md text-center text-sm leading-relaxed">
-        {t("description")}
-      </p>
-      <Button
-        type="button"
-        onClick={() =>
-          void openModal({
-            name: ModalPanel.Demo,
-            title: t("open_demo_modal"),
-            width: 480,
-            height: 360
-          })
-        }
-      >
-        {t("open_demo_modal")}
-      </Button>
+    <div className="-m-3 flex min-h-0 flex-1 flex-col overflow-hidden">
+      <AgentConsoleApp />
     </div>
   );
 }
