@@ -1,0 +1,31 @@
+[package]
+name = "agent"
+version = "0.1.0"
+edition = "2021"
+description = "Agent runtime (mirrors Python agent/, incremental port)"
+
+[dependencies]
+async-trait = "0.1"
+chrono = { version = "0.4", features = ["clock"] }
+futures-util = "0.3"
+md5 = "0.7"
+models = { path = "../models" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["io-util", "process", "sync", "time"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+sha2 = "0.10"
+dirs = "6"
+regex = "1"
+shlex = "1"
+similar = "2"
+tracing = "0.1"
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+async-trait = "0.1"
+futures-util = "0.3"
+models = { path = "../models" }
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
