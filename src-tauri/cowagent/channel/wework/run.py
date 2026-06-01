@@ -19,8 +19,6 @@ except ImportError:
 
 # Lazy singleton; do not instantiate at import time.
 wework = None
-# True after open()/attach() in this process — never call open twice.
-_hook_started = False
 
 DEFAULT_WEWORK_VERSION = "4.0.8.6027"
 _WEWORK_EXE_NAMES = ("WXWork.exe", "wework.exe", "WeCom.exe")
@@ -155,98 +153,11 @@ def _apply_ntwork_path_from_config() -> None:
         ntwork.set_wework_exe_path(None, version)
 
 
-def _find_running_wework_pids() -> list:
-    """
-    Return WXWork.exe PIDs with desktop UI processes first.
-
-    tasklist order often hits a background process (no login session) before the
-    main window; prefer Get-Process entries that have MainWindowTitle.
-    """
-    if sys.platform != "win32":
-        return []
-
-    pids: list = []
-    try:
-        import subprocess
-
-        out = subprocess.check_output(
-            [
-                "powershell",
-                "-NoProfile",
-                "-Command",
-                "Get-Process WXWork -ErrorAction SilentlyContinue | "
-                "Where-Object { $_.MainWindowTitle } | "
-                "Sort-Object WorkingSet64 -Descending | "
-                "ForEach-Object { $_.Id }",
-            ],
-            text=True,
-            errors="replace",
-            timeout=15,
-        )
-        for line in out.strip().splitlines():
-            token = line.strip()
-            if token.isdigit():
-                pids.append(int(token))
-    except Exception as exc:
-        logger.debug("[Wework] list UI WXWork PIDs: %s", exc)
-
-    if pids:
-        return pids
-
-    try:
-        import subprocess
-
-        out = subprocess.check_output(
-            ["tasklist", "/FI", "IMAGENAME eq WXWork.exe", "/FO", "CSV", "/NH"],
-            text=True,
-            errors="replace",
-            timeout=10,
-        )
-        for line in out.strip().splitlines():
-            parts = [p.strip('"') for p in line.split('","')]
-            if len(parts) >= 2 and parts[0].lower() == "wxwork.exe":
-                pid = int(parts[1])
-                if pid not in pids:
-                    pids.append(pid)
-    except Exception as exc:
-        logger.debug("[Wework] find WXWork.exe pid: %s", exc)
-    return pids
-
-
-def _find_running_wework_pid() -> int:
-    """Return the best PID to hook, or 0."""
-    found = _find_running_wework_pids()
-    return found[0] if found else 0
-
-
-def _wait_client_bind(client, timeout: float) -> bool:
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        if getattr(client, "client_id", 0):
-            return True
-        time.sleep(0.2)
-    return False
-
-
-def _apply_login_info(client, info: dict) -> dict:
-    """Mirror ntwork MT_USER_LOGIN_MSG side effects for already-logged-in desktop."""
-    if not isinstance(info, dict) or not info.get("user_id"):
-        return info
-    client.login_status = True
-    try:
-        client._WeWork__login_info = info  # noqa: SLF001
-        client._WeWork__wait_login_event.set()
-    except Exception:
-        pass
-    return info
-
-
 def reset_wework_client() -> None:
     """Drop client so the next get_wework() reapplies config (channel restart)."""
-    global wework, _handlers_registered_for, _hook_started
+    global wework, _handlers_registered_for
     wework = None
     _handlers_registered_for = None
-    _hook_started = False
     if ntwork is None:
         return
     try:
@@ -270,169 +181,16 @@ def get_wework():
     return wework
 
 
-def wework_login_info(client=None):
-    """Return login_info dict when ntwork already received MT_USER_LOGIN_MSG."""
-    client = client if client is not None else wework
-    if client is None:
-        return None
-    try:
-        info = client.get_login_info()
-        if isinstance(info, dict) and info.get("user_id"):
-            return info
-    except Exception:
-        pass
-    return None
-
-
-def _fetch_login_via_api(client, timeout: float = 30.0):
-    """
-    After hook bind, ask the desktop client for self profile.
-    Works when the user logged in before we attached (no MT_USER_LOGIN_MSG).
-
-    ntwork gates get_self_info on login_status; set it after client_id bind.
-    """
-    try:
-        from ntwork.exception import WeWorkNotLoginError
-    except ImportError:
-        WeWorkNotLoginError = Exception  # type: ignore
-
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        if not getattr(client, "client_id", 0):
-            time.sleep(0.3)
-            continue
-        if not client.login_status:
-            client.login_status = True
-        try:
-            info = client.get_self_info()
-            if isinstance(info, dict) and info.get("user_id"):
-                return _apply_login_info(client, info)
-        except WeWorkNotLoginError:
-            client.login_status = False
-        except Exception as exc:
-            logger.debug("[Wework] get_self_info: %s", exc)
-        time.sleep(0.3)
-    return None
-
-
 def wework_session_ready() -> bool:
-    """True when the global ntwork client is hooked and logged in."""
+    """True when the global ntwork client has valid login info."""
     client = wework
     if client is None:
         return False
-    if wework_login_info(client):
-        return True
-    return _fetch_login_via_api(client, timeout=1.0) is not None
-
-
-def _hook_wework_client(client, smart: bool, timeout: float) -> None:
-    """
-    Hook the desktop client. Try one attach to the main-window WXWork.exe, then
-    open(smart) (same as upstream CowAgent). Avoid attach/detach loops — wcprobe
-    can crash when hopping between PIDs.
-    """
-    if smart:
-        pids = _find_running_wework_pids()
-        if pids:
-            pid = pids[0]
-            if client.attach(pid):
-                logger.info(
-                    "[Wework] Attached to WXWork.exe pid=%s (desktop UI)", pid
-                )
-                bind_budget = min(20.0, timeout * 0.25)
-                if _wait_client_bind(client, bind_budget):
-                    if _fetch_login_via_api(
-                        client, timeout=min(15.0, timeout * 0.2)
-                    ):
-                        return
-                logger.warning(
-                    "[Wework] attach(pid=%s) bound but no login session yet; "
-                    "falling back to open(smart=True)",
-                    pid,
-                )
-            else:
-                logger.warning("[Wework] attach(pid=%s) returned false", pid)
-
-    if smart:
-        logger.info("[Wework] open(smart=True)")
-    else:
-        logger.info("[Wework] open(smart=False) — new WeCom instance")
-    if not client.open(smart):
-        raise RuntimeError("WeCom open() returned pid=0")
-    logger.info("[Wework] open(smart=%s) pid=%s", smart, client.pid)
-
-
-def ensure_wework_login(client, smart: bool = True, timeout: float = 120.0) -> dict:
-    """
-    Hook WeCom once per process. Prefer attach() to the desktop UI WXWork.exe;
-    fall back to open(smart) like upstream CowAgent when attach cannot see a session.
-    """
-    global _hook_started
-
-    started_at = time.time()
-
-    info = wework_login_info(client)
-    if info:
-        logger.info(
-            "[Wework] Reuse in-process login user_id=%s",
-            info.get("user_id"),
-        )
-        return info
-
-    api_info = _fetch_login_via_api(client, timeout=1.0)
-    if api_info:
-        logger.info(
-            "[Wework] Reuse hooked session via get_self_info user_id=%s",
-            api_info.get("user_id"),
-        )
-        return api_info
-
-    if not _hook_started:
-        _hook_wework_client(client, smart, timeout)
-        _hook_started = True
-    else:
-        logger.info("[Wework] Hook already started in this process (pid=%s)", client.pid)
-
-    bind_left = max(5.0, min(30.0, timeout - (time.time() - started_at)))
-    if not _wait_client_bind(client, bind_left):
-        raise RuntimeError(
-            "WeCom hook bind timeout (client_id is still 0). "
-            "Quit all WXWork.exe processes, start a single WeCom 4.0.8.6027 client, "
-            "log in, then restart the channel."
-        )
-
-    api_info = _fetch_login_via_api(
-        client, timeout=max(10.0, timeout - (time.time() - started_at) - 5.0)
-    )
-    if api_info:
-        logger.info(
-            "[Wework] Logged in via desktop session user_id=%s",
-            api_info.get("user_id"),
-        )
-        return api_info
-
-    info = wework_login_info(client)
-    if info:
-        return info
-
-    remain = max(5.0, timeout - (time.time() - started_at))
-    logger.info("[Wework] Waiting for WeCom login event (%.0fs max)...", remain)
-    client.wait_login(timeout=remain)
-
-    info = wework_login_info(client) or {}
-    if info.get("user_id"):
-        return info
-
-    api_info = _fetch_login_via_api(client, timeout=10.0)
-    if api_info:
-        return api_info
-
-    raise RuntimeError(
-        "WeCom hook connected but login_info is empty. "
-        "If you are already logged in, quit every WXWork.exe (Task Manager), open one "
-        "WeCom 4.0.8.6027 window, log in again, then restart the channel. "
-        "Multiple WXWork processes or hooking a background pid causes this."
-    )
+    try:
+        info = client.get_login_info()
+        return bool(info and info.get("user_id"))
+    except Exception:
+        return False
 
 
 def init_wework_client():

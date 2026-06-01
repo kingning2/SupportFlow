@@ -23,12 +23,10 @@ from bridge.reply import Reply, ReplyType
 from channel.chat_channel import ChatChannel
 from channel.chat_message import ChatMessage
 from channel.wework.run import (
-    ensure_wework_login,
     get_wework,
     init_wework_client,
     register_message_handlers,
     run_until_stopped,
-    wework_session_ready,
 )
 from channel.wework.wework_message import WeworkMessage, get_with_retry
 from common.expired_dict import ExpiredDict
@@ -141,20 +139,12 @@ class WeworkChannel(ChatChannel):
         super().__init__()
         self._stop_event = threading.Event()
         self.received_msgs = ExpiredDict(conf().get("expires_in_seconds", 3600))
-        self._login_status = "unknown"
-        self.user_id = None
 
     @property
     def login_status(self) -> str:
         if getattr(self, "user_id", None):
             return "logged_in"
-        if wework_session_ready():
-            return "logged_in"
-        return self._login_status
-
-    @login_status.setter
-    def login_status(self, value: str) -> None:
-        self._login_status = value or "unknown"
+        return "unknown"
 
     def startup(self):
         self._stop_event.clear()
@@ -180,16 +170,18 @@ class WeworkChannel(ChatChannel):
 
         smart = conf().get("wework_smart", True)
         try:
-            login_info = ensure_wework_login(client, smart)
+            client.open(smart)
+            logger.info("[Wework] Waiting for WeCom desktop login...")
+            client.wait_login()
         except Exception as e:
             err = f"WeCom login failed: {e}"
             logger.error(f"[Wework] {err}")
             self.report_startup_error(err)
             return
 
+        login_info = client.get_login_info()
         self.user_id = login_info.get("user_id", "")
         self.name = login_info.get("nickname") or login_info.get("username", "")
-        self.login_status = "logged_in"
         logger.info(f"[Wework] Logged in user_id={self.user_id} name={self.name}")
 
         init_wait = int(conf().get("wework_init_wait_seconds", 60))
@@ -237,38 +229,35 @@ class WeworkChannel(ChatChannel):
     def stop(self):
         logger.info("[Wework] stop() called")
         self._stop_event.set()
-        client = get_wework()
-        if client is None or ntwork is None:
-            return
-        try:
-            if conf().get("wework_smart", True) and getattr(client, "pid", 0):
-                client.detach()
-                logger.info("[Wework] detached from pid=%s (desktop client kept running)", client.pid)
-            else:
+        if ntwork is not None:
+            try:
                 ntwork.exit_()
-        except Exception as e:
-            logger.warning(f"[Wework] stop hook cleanup error: {e}")
+            except Exception as e:
+                logger.warning(f"[Wework] ntwork.exit_ error: {e}")
 
     def _should_skip(self, cmsg: ChatMessage) -> bool:
-        msg_id = cmsg.msg_id
-        if msg_id in self.received_msgs:
+        """Return True if this message should be ignored."""
+        if not cmsg.msg_id:
             return True
-        self.received_msgs[msg_id] = True
-        create_time = cmsg.create_time
-        if create_time is not None and int(create_time) < int(time.time()) - 60:
-            logger.debug(f"[Wework] history message {msg_id} skipped")
+        if cmsg.msg_id in self.received_msgs:
+            logger.debug(f"[Wework] duplicate message, skip id={cmsg.msg_id}")
             return True
+        self.received_msgs[cmsg.msg_id] = True
+        if cmsg.ctype == ContextType.TEXT:
+            if not cmsg.content.strip():
+                return True
         return False
 
     @time_checker
     def handle_single(self, cmsg: ChatMessage):
         if self._should_skip(cmsg):
             return
-        if cmsg.from_user_id == cmsg.to_user_id:
+        if self.user_id and cmsg.actual_user_id == self.user_id:
+            logger.debug("[Wework] skip own single message")
             return
         if cmsg.ctype == ContextType.VOICE and not conf().get("speech_recognition"):
             return
-        logger.debug(f"[Wework] single msg ctype={cmsg.ctype}")
+        logger.info(f"[Wework] single msg ctype={cmsg.ctype}")
         context = self._compose_context(cmsg.ctype, cmsg.content, isgroup=False, msg=cmsg)
         if context:
             self.produce(context)
