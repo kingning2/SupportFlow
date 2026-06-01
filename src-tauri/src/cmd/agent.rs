@@ -248,6 +248,58 @@ pub struct AgentChannelSummary {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
+pub struct AgentChannelField {
+    pub key: String,
+    pub label: String,
+    #[serde(rename = "type")]
+    pub field_type: String,
+    pub value: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_value: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub placeholder: Option<String>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentChannelDetail {
+    pub name: String,
+    pub label_key: String,
+    pub active: bool,
+    pub fields: Vec<AgentChannelField>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hint_key: Option<String>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentChannelActionRequest {
+    pub action: String,
+    pub channel: String,
+    #[serde(default)]
+    pub config: std::collections::HashMap<String, serde_json::Value>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentChannelActionResponse {
+    pub channel_type: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentChannelConsoleApiRequest {
+    pub path: String,
+    pub method: String,
+    #[serde(default)]
+    pub body: serde_json::Value,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct AgentTaskSummary {
     pub id: String,
     pub name: String,
@@ -288,11 +340,19 @@ pub struct AgentLogStreamState {
 }
 
 #[tauri::command]
-/// List persisted sessions (placeholder implementation for now).
+/// List persisted sessions from workspace index.
 pub async fn agent_list_sessions(
-    _runtime: State<'_, Arc<AgentRuntime>>,
+    runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<Vec<AgentSessionSummary>, String> {
-    Ok(Vec::new())
+    let rows = runtime.list_sessions().await?;
+    Ok(rows
+        .into_iter()
+        .map(|s| AgentSessionSummary {
+            id: s.id,
+            title: s.title,
+            updated_at: s.updated_at,
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -326,42 +386,107 @@ pub async fn agent_read_memory(
 }
 
 #[tauri::command]
-/// List knowledge documents (placeholder implementation for now).
+/// List knowledge documents under workspace/knowledge.
 pub async fn agent_list_knowledge(
-    _runtime: State<'_, Arc<AgentRuntime>>,
+    runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<Vec<AgentKnowledgeFile>, String> {
-    Ok(Vec::new())
+    let rows = runtime.list_knowledge_files().await?;
+    Ok(rows
+        .into_iter()
+        .map(|f| AgentKnowledgeFile {
+            path: f.path,
+            title: f.title,
+        })
+        .collect())
 }
 
 #[tauri::command]
 /// Read one knowledge document by relative path.
 pub async fn agent_read_knowledge(
-    _runtime: State<'_, Arc<AgentRuntime>>,
+    runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentKnowledgeReadRequest,
 ) -> Result<AgentKnowledgeReadResult, String> {
+    let content = runtime.read_knowledge_file(&body.path).await?;
     Ok(AgentKnowledgeReadResult {
         path: body.path,
-        content: String::new(),
+        content,
     })
 }
 
 #[tauri::command]
-/// Return knowledge graph nodes and links (placeholder implementation for now).
+/// Return knowledge graph nodes and links from markdown cross-references.
 pub async fn agent_get_knowledge_graph(
-    _runtime: State<'_, Arc<AgentRuntime>>,
+    runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<AgentKnowledgeGraph, String> {
+    let graph = runtime.knowledge_graph().await?;
     Ok(AgentKnowledgeGraph {
-        nodes: Vec::new(),
-        links: Vec::new(),
+        nodes: graph
+            .nodes
+            .into_iter()
+            .map(|n| AgentKnowledgeGraphNode {
+                id: n.id,
+                label: n.label,
+                category: n.category,
+            })
+            .collect(),
+        links: graph
+            .links
+            .into_iter()
+            .map(|l| AgentKnowledgeGraphLink {
+                source: l.source,
+                target: l.target,
+            })
+            .collect(),
     })
 }
 
 #[tauri::command]
-/// List connected channel summaries (placeholder implementation for now).
+/// List active channel summaries (legacy/simple list).
 pub async fn agent_list_channels(
-    _runtime: State<'_, Arc<AgentRuntime>>,
+    runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<Vec<AgentChannelSummary>, String> {
-    Ok(Vec::new())
+    let rows = runtime.list_channels().await?;
+    Ok(rows
+        .into_iter()
+        .map(|c| AgentChannelSummary {
+            name: c.name,
+            active: c.active,
+            label: c.label,
+        })
+        .collect())
+}
+
+#[tauri::command]
+/// Channel catalog proxied to CowAgent Python `GET /api/channels`.
+pub async fn agent_get_channel_catalog(
+    runtime: State<'_, Arc<AgentRuntime>>,
+) -> Result<serde_json::Value, String> {
+    runtime.cow_python_channels_get().await
+}
+
+#[tauri::command]
+/// Channel connect/disconnect/save proxied to CowAgent Python `POST /api/channels`.
+pub async fn agent_channel_action(
+    runtime: State<'_, Arc<AgentRuntime>>,
+    body: AgentChannelActionRequest,
+) -> Result<serde_json::Value, String> {
+    let payload = serde_json::json!({
+        "action": body.action,
+        "channel": body.channel,
+        "config": body.config,
+    });
+    runtime.cow_python_channels_post(payload).await
+}
+
+#[tauri::command]
+/// Channel console APIs (QR login, Feishu register) proxied to Python sidecar.
+pub async fn agent_channel_console_api(
+    runtime: State<'_, Arc<AgentRuntime>>,
+    body: AgentChannelConsoleApiRequest,
+) -> Result<serde_json::Value, String> {
+    runtime
+        .cow_channel_console_api(&body.path, &body.method, body.body)
+        .await
 }
 
 #[tauri::command]
