@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [".", "crates/models", "crates/agent"]
+members = [".", "crates/models", "crates/agent", "crates/channel_runtime"]
 
 [package]
 name = "tauri-app"
@@ -32,3 +32,4 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 uuid = { version = "1", features = ["v4"] }
 models = { path = "crates/models" }
 agent = { path = "crates/agent" }
+channel_runtime = { path = "crates/channel_runtime" }

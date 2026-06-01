@@ -1,4 +1,4 @@
-﻿//! In-process agent runtime for Tauri IPC (no Python HTTP).
+//! In-process agent runtime for Tauri IPC (no Python HTTP).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -22,6 +22,8 @@ use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::Mutex;
 
+use crate::context::channel_bridge::ChannelBridge;
+use crate::context::workspace_console;
 use crate::events::names::{AGENT_LOG_STREAM, AGENT_RUN_FINISHED, AGENT_STREAM_CHUNK};
 use crate::events::payloads::{
     AgentConsoleState, AgentLogStreamPayload, AgentRunFinished, AgentStreamChunk,
@@ -154,6 +156,7 @@ fn build_agent(workspace: PathBuf, config: &ModelsConfig) -> Result<Agent, Strin
 }
 
 pub struct AgentRuntime {
+    app: tauri::AppHandle,
     pub workspace: PathBuf,
     pub config_path: PathBuf,
     config: tokio::sync::RwLock<ModelsConfig>,
@@ -161,6 +164,9 @@ pub struct AgentRuntime {
     agent: Mutex<Option<Agent>>,
     session_id: Mutex<String>,
     log_streaming: tokio::sync::RwLock<bool>,
+    cow_sidecar:
+        tokio::sync::Mutex<Option<Arc<crate::context::cow_python_sidecar::CowPythonSidecar>>>,
+    channel_bridge: Arc<ChannelBridge>,
 }
 
 #[derive(Clone, Debug)]
@@ -208,7 +214,11 @@ impl AgentRuntime {
         let mcp_loader = McpToolLoader::new(workspace.clone());
         mcp_loader.ensure_background_load();
         let session_id = format!("session_{}", uuid::Uuid::new_v4());
+        let _ = workspace_console::upsert_session_index(&workspace, &session_id, Some("New Chat"));
+        let channel_bridge = Arc::new(ChannelBridge::new());
+        let _ = channel_bridge.sync_from_config_file(&config_path);
         Ok(Self {
+            app: app.clone(),
             workspace,
             config_path,
             config: tokio::sync::RwLock::new(config),
@@ -216,7 +226,134 @@ impl AgentRuntime {
             agent: Mutex::new(None),
             session_id: Mutex::new(session_id),
             log_streaming: tokio::sync::RwLock::new(false),
+            cow_sidecar: tokio::sync::Mutex::new(None),
+            channel_bridge,
         })
+    }
+
+    /// Start Python channel sidecar after the desktop shell is up (non-blocking for Tauri setup).
+    pub async fn start_sidecar_deferred(self: Arc<Self>) {
+        const DEFAULT_DELAY: Duration = Duration::from_secs(2);
+        tokio::time::sleep(DEFAULT_DELAY).await;
+        if self.cow_sidecar.lock().await.is_some() {
+            return;
+        }
+        match crate::context::cow_python_sidecar::spawn_sidecar(&self.app, &self.config_path).await
+        {
+            Ok(sidecar) => {
+                sidecar
+                    .register_runtime(std::sync::Arc::downgrade(&self))
+                    .await;
+                *self.cow_sidecar.lock().await = Some(sidecar);
+                crate::log_info!("Channel sidecar ready (deferred start)");
+            }
+            Err(e) => {
+                crate::log_warn!("Channel sidecar deferred start failed: {e}");
+            }
+        }
+    }
+
+    async fn ensure_sidecar(
+        self: &Arc<Self>,
+    ) -> Result<Arc<crate::context::cow_python_sidecar::CowPythonSidecar>, String> {
+        if let Some(sidecar) = self.cow_sidecar.lock().await.clone() {
+            return Ok(sidecar);
+        }
+        let sidecar =
+            crate::context::cow_python_sidecar::spawn_sidecar(&self.app, &self.config_path).await?;
+        sidecar
+            .register_runtime(std::sync::Arc::downgrade(self))
+            .await;
+        *self.cow_sidecar.lock().await = Some(sidecar.clone());
+        Ok(sidecar)
+    }
+
+    /// LLM reply for external channels (Python sidecar calls via `agent.reply` RPC).
+    pub async fn channel_reply(&self, params: &serde_json::Value) -> Result<String, String> {
+        let query = params
+            .get("query")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "agent.reply: query required".to_string())?;
+        let clear_history = params
+            .get("clear_history")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        self.ensure_agent().await?;
+        let mut guard = self.agent.lock().await;
+        let agent = guard
+            .as_mut()
+            .ok_or_else(|| "agent not initialized".to_string())?;
+        agent.mcp_registry = Some(self.mcp_loader.registry.clone());
+        agent.mcp_loader = Some(self.mcp_loader.clone());
+
+        agent
+            .run_stream(
+                query,
+                RunStreamOptions {
+                    on_event: None,
+                    clear_history,
+                    cancel: None,
+                    skill_filter: None,
+                },
+            )
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    /// Channel-agnostic message processing moved into Rust crate (`crates/channel_runtime`).
+    pub async fn channel_process(
+        &self,
+        params: &serde_json::Value,
+    ) -> Result<serde_json::Value, String> {
+        let ctx_v = params
+            .get("context")
+            .cloned()
+            .ok_or_else(|| "channel.process: missing context".to_string())?;
+        let cfg_v = params
+            .get("config")
+            .cloned()
+            .ok_or_else(|| "channel.process: missing config".to_string())?;
+
+        let ctx: channel_runtime::ChannelRuntimeContext =
+            serde_json::from_value(ctx_v).map_err(|e| format!("channel.process context: {e}"))?;
+        let cfg: channel_runtime::ChannelRuntimeConfig =
+            serde_json::from_value(cfg_v).map_err(|e| format!("channel.process config: {e}"))?;
+        let result = channel_runtime::process_message(&ctx, &cfg);
+        let out = serde_json::to_value(result).map_err(|e| e.to_string())?;
+        Ok(out)
+    }
+
+    /// Decorate plain text using Rust channel-runtime rules.
+    pub async fn channel_decorate_text(
+        &self,
+        params: &serde_json::Value,
+    ) -> Result<String, String> {
+        let text = params
+            .get("text")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "channel.decorate_text: missing text".to_string())?;
+        let meta_v = params
+            .get("meta")
+            .cloned()
+            .ok_or_else(|| "channel.decorate_text: missing meta".to_string())?;
+        let meta: channel_runtime::ChannelRuntimeResult = serde_json::from_value(meta_v)
+            .map_err(|e| format!("channel.decorate_text meta: {e}"))?;
+        Ok(channel_runtime::decorate_text(text, &meta))
+    }
+
+    /// Extract media URLs from text in Rust.
+    pub async fn channel_extract_media(
+        &self,
+        params: &serde_json::Value,
+    ) -> Result<serde_json::Value, String> {
+        let text = params
+            .get("text")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "channel.extract_media: missing text".to_string())?;
+        let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(5) as usize;
+        let items = channel_runtime::extract_media_urls(text, limit);
+        serde_json::to_value(items).map_err(|e| e.to_string())
     }
 
     /// Return a cloned config snapshot for readonly command responses.
@@ -328,6 +465,19 @@ impl AgentRuntime {
             return Err("message is empty".into());
         }
 
+        let title_hint = if message.chars().count() > 30 {
+            format!("{}...", message.chars().take(30).collect::<String>())
+        } else {
+            message.clone()
+        };
+        let session_id_for_index = self.session_id().await;
+        let workspace = self.workspace.clone();
+        let _ = workspace_console::upsert_session_index(
+            &workspace,
+            &session_id_for_index,
+            Some(&title_hint),
+        );
+
         self.ensure_agent().await?;
         let session_id = self.session_id().await;
 
@@ -424,9 +574,77 @@ impl AgentRuntime {
     pub async fn new_session(&self) -> String {
         let id = format!("session_{}", uuid::Uuid::new_v4());
         *self.session_id.lock().await = id.clone();
+        let _ = workspace_console::upsert_session_index(&self.workspace, &id, Some("New Chat"));
         let mut guard = self.agent.lock().await;
         *guard = None;
         id
+    }
+
+    /// List persisted session summaries for the console sidebar.
+    pub async fn list_sessions(&self) -> Result<Vec<workspace_console::SessionRow>, String> {
+        let current = self.session_id().await;
+        workspace_console::list_session_summaries(&self.workspace, Some(&current))
+    }
+
+    /// List knowledge markdown files under workspace.
+    pub async fn list_knowledge_files(
+        &self,
+    ) -> Result<Vec<workspace_console::KnowledgeFileRow>, String> {
+        workspace_console::list_knowledge_files(&self.workspace)
+    }
+
+    /// Read one knowledge file by relative path.
+    pub async fn read_knowledge_file(&self, path: &str) -> Result<String, String> {
+        workspace_console::read_knowledge_file(&self.workspace, path)
+    }
+
+    /// Build knowledge graph nodes and links.
+    pub async fn knowledge_graph(&self) -> Result<workspace_console::KnowledgeGraphData, String> {
+        workspace_console::build_knowledge_graph(&self.workspace)
+    }
+
+    /// List configured channels from bundled config.
+    pub async fn list_channels(&self) -> Result<Vec<workspace_console::ChannelRow>, String> {
+        workspace_console::list_channels_from_config(&self.config_path)
+    }
+
+    /// Channel catalog via CowAgent Python stdio RPC.
+    pub async fn cow_python_channels_get(self: &Arc<Self>) -> Result<serde_json::Value, String> {
+        let sidecar = self.ensure_sidecar().await?;
+        sidecar.channels_get().await
+    }
+
+    /// Channel connect/disconnect/save via CowAgent Python stdio RPC.
+    pub async fn cow_channel_console_api(
+        self: &Arc<Self>,
+        path: &str,
+        method: &str,
+        body: serde_json::Value,
+    ) -> Result<serde_json::Value, String> {
+        let sidecar = self.ensure_sidecar().await?;
+        sidecar.console_api(path, method, body).await
+    }
+
+    pub async fn cow_python_channels_post(
+        self: &Arc<Self>,
+        payload: serde_json::Value,
+    ) -> Result<serde_json::Value, String> {
+        let action = payload
+            .get("action")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let channel = payload
+            .get("channel")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let sidecar = self.ensure_sidecar().await?;
+        let result = sidecar.channels_post(payload).await?;
+        self.reload_config_from_disk().await?;
+        self.channel_bridge
+            .on_action_result(&self.config_path, &action, &channel, &result)?;
+        Ok(result)
     }
 
     /// Enable or disable background log streaming flag.
@@ -526,7 +744,11 @@ impl AgentRuntime {
                     continue;
                 }
 
-                let delta = text[previous_len..].to_string();
+                let mut slice_start = previous_len.min(text.len());
+                while slice_start > 0 && !text.is_char_boundary(slice_start) {
+                    slice_start -= 1;
+                }
+                let delta = text[slice_start..].to_string();
                 previous_len = text.len();
                 if delta.trim().is_empty() {
                     continue;

@@ -24,6 +24,10 @@ pub fn run() {
             let runtime = std::sync::Arc::new(context::agent_runtime::AgentRuntime::initialize(
                 app.handle(),
             )?);
+            let runtime_bg = runtime.clone();
+            tauri::async_runtime::spawn(async move {
+                runtime_bg.start_sidecar_deferred().await;
+            });
             app.manage(runtime);
             events::setup(app.handle());
             Ok(())
@@ -55,6 +59,9 @@ pub fn run() {
             cmd::agent::agent_read_knowledge,
             cmd::agent::agent_get_knowledge_graph,
             cmd::agent::agent_list_channels,
+            cmd::agent::agent_get_channel_catalog,
+            cmd::agent::agent_channel_action,
+            cmd::agent::agent_channel_console_api,
             cmd::agent::agent_list_tasks,
             cmd::agent::agent_get_logs_status,
             cmd::agent::agent_read_logs,

@@ -128,3 +128,81 @@
 .agent-console .menu-group.open .chevron {
   transform: rotate(90deg);
 }
+
+/* Channels view — mirrors channel/web/static/css/console.css */
+.agent-console .cfg-dropdown {
+  position: relative;
+  outline: none;
+}
+.agent-console .cfg-dropdown-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 0.875rem;
+  color: #1e293b;
+  cursor: pointer;
+  user-select: none;
+}
+.dark .agent-console .cfg-dropdown-selected {
+  border-color: #475569;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+.agent-console .cfg-dropdown.open .cfg-dropdown-selected {
+  border-color: #4abe6e;
+  box-shadow: 0 0 0 3px rgba(74, 190, 110, 0.12);
+}
+.agent-console .cfg-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 240px;
+  overflow-y: auto;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 4px;
+}
+.dark .agent-console .cfg-dropdown-menu {
+  border-color: #334155;
+  background: #1e1e1e;
+}
+.agent-console .cfg-dropdown.open .cfg-dropdown-menu {
+  display: block;
+}
+.agent-console .cfg-dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #334155;
+  cursor: pointer;
+}
+.dark .agent-console .cfg-dropdown-item {
+  color: #cbd5e1;
+}
+.agent-console .cfg-dropdown-item:hover {
+  background: #f1f5f9;
+}
+.dark .agent-console .cfg-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.agent-console .cfg-dropdown-item.active {
+  background: rgba(74, 190, 110, 0.1);
+  color: #228547;
+  font-weight: 500;
+}
+.agent-console .cfg-key-masked {
+  -webkit-text-security: disc;
+  text-security: disc;
+}

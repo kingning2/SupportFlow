@@ -19,10 +19,15 @@
     "typecheck": "tsc --noEmit",
     "check": "bun run format:check && bun run lint && bun run typecheck",
     "check:rust": "cargo check --manifest-path src-tauri/Cargo.toml",
+    "bootstrap:sidecar-wheels": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/bootstrap-sidecar-wheels.ps1",
+    "setup:channel-sidecar-dev": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/build-channel-sidecar.ps1 -DepsOnly",
+    "build:channel-sidecar": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/build-channel-sidecar.ps1",
+    "finalize:channel-sidecar": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/finalize-channel-sidecar.ps1",
     "generate:contracts": "node scripts/generate-contracts.mjs",
     "check:contracts": "bun run generate:contracts && git diff --quiet -- src/generated/contracts.ts",
     "tauri": "tauri",
-    "prepare": "husky"
+    "prepare": "husky",
+    "tauri:dev": "tauri dev --no-watch"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.12",

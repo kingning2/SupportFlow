@@ -1,4 +1,4 @@
-﻿import { ConsoleView } from "@/enums";
+import { ConsoleView } from "@/enums";
 import {
   BookOpen,
   Brain,
@@ -88,13 +88,7 @@ export function getBreadcrumbKeys(view: ConsoleView) {
 }
 
 /** Placeholder views not yet wired to Rust IPC. */
-export const PLACEHOLDER_CONSOLE_VIEWS = new Set<ConsoleView>([
-  ConsoleView.Memory,
-  ConsoleView.Knowledge,
-  ConsoleView.Channels,
-  ConsoleView.Tasks,
-  ConsoleView.Logs
-]);
+export const PLACEHOLDER_CONSOLE_VIEWS = new Set<ConsoleView>([]);
 
 export const CONSOLE_BRAND = {
   name: "SupportFlow",

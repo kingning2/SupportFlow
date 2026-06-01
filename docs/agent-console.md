@@ -1,4 +1,4 @@
-﻿# Agent 控制台（SupportFlow Web → Tauri + AI Elements）
+# Agent 控制台（SupportFlow Web → Tauri + AI Elements）
 
 本文档记录主窗 **SupportFlow 控制台** 的前端架构、目录约定、IPC 契约与扩展方式。  
 UI 基于 [Vercel AI Elements](https://elements.ai-sdk.dev)（shadcn/ui 注册表），布局视觉对齐 SupportFlow `channel/web/chat.html` 的深色侧栏。
@@ -183,19 +183,19 @@ bunx shadcn@latest add \
 
 ## 视图与接入状态
 
-| ConsoleView | 侧栏 | 状态                            |
-| ----------- | ---- | ------------------------------- |
-| `chat`      | 对话 | ✅ 已接入（流式 + 工具 + 推理） |
-| `config`    | 配置 | ✅ 已接入（只读展示）           |
-| `models`    | 模型 | ✅ 已接入（只读展示）           |
-| `skills`    | 技能 | ✅ 已接入（含刷新）             |
-| `memory`    | 记忆 | ⏳ 占位（`PlaceholderView`）    |
-| `knowledge` | 知识 | ⏳ 占位                         |
-| `channels`  | 通道 | ⏳ 占位                         |
-| `tasks`     | 定时 | ⏳ 占位                         |
-| `logs`      | 日志 | ⏳ 占位                         |
+| ConsoleView | 侧栏 | 状态                                                                              |
+| ----------- | ---- | --------------------------------------------------------------------------------- |
+| `chat`      | 对话 | ✅ 已接入（流式 + 工具 + 推理）                                                   |
+| `config`    | 配置 | ✅ 已接入（只读展示）                                                             |
+| `models`    | 模型 | ✅ 已接入（只读展示）                                                             |
+| `skills`    | 技能 | ✅ 已接入（含刷新）                                                               |
+| `memory`    | 记忆 | ✅ 已接入（列表 + 读取）                                                          |
+| `knowledge` | 知识 | ✅ 已接入（文档列表/读取/图谱）                                                   |
+| `channels`  | 通道 | ✅ Python `channel/` 对接各渠道；LLM 回复走 Rust `AgentRuntime`；日志由 Rust 落盘 |
+| `tasks`     | 定时 | ✅ 已接入（scheduler 列表）                                                       |
+| `logs`      | 日志 | ✅ 已接入（读取 + 实时流）                                                        |
 
-占位视图集合：`PLACEHOLDER_CONSOLE_VIEWS`（`constants/sidebar-nav.ts`）。
+历史会话侧栏通过 `agent_list_sessions` 读取 `workspace/sessions/index.json`。
 
 ---
 
