@@ -1,19 +1,19 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-app",
+  "productName": "SupportFlow",
   "version": "0.1.0",
   "identifier": "com.polymerization.gybte",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "bun run build",
+    "beforeBuildCommand": "bun run build && bun run build:channel-sidecar",
     "frontendDist": "../out"
   },
   "app": {
     "windows": [
       {
         "label": "main",
-        "title": "Tauri Template",
+        "title": "SupportFlow",
         "width": 1200,
         "height": 800
       }
