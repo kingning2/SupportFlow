@@ -87,6 +87,33 @@ export interface AgentChannelSummary {
   label: string;
 }
 
+export interface AgentChannelField {
+  key: string;
+  label: string;
+  type: string;
+  value: string;
+  defaultValue?: string;
+  placeholder?: string;
+}
+
+export interface AgentChannelDetail {
+  name: string;
+  labelKey: string;
+  active: boolean;
+  fields: AgentChannelField[];
+  hintKey?: string;
+}
+
+export interface AgentChannelActionRequest {
+  action: "connect" | "disconnect" | "save";
+  channel: string;
+  config?: Record<string, string | number | boolean>;
+}
+
+export interface AgentChannelActionResponse {
+  channelType: string;
+}
+
 export interface AgentTaskSummary {
   id: string;
   name: string;
@@ -140,6 +167,21 @@ export function getAgentKnowledgeGraph() {
 
 export function listAgentChannels() {
   return invokeWrapper<AgentChannelSummary[]>(TauriCmd.AgentListChannels);
+}
+
+/** @deprecated Use `fetchCowChannels` from `@/cmd/cow-python-channels` (Python proxy). */
+export function getAgentChannelCatalog() {
+  return invokeWrapper<{ status: string; channels: AgentChannelDetail[] }>(
+    TauriCmd.AgentGetChannelCatalog
+  );
+}
+
+/** @deprecated Use `cowChannelAction` from `@/cmd/cow-python-channels` (Python proxy). */
+export function agentChannelAction(body: AgentChannelActionRequest) {
+  return invokeWrapper<AgentChannelActionResponse & { status: string }>(
+    TauriCmd.AgentChannelAction,
+    { body }
+  );
 }
 
 export function listAgentTasks() {
