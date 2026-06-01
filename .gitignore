@@ -33,3 +33,9 @@ graphify.*
 # Agent secrets (use src-tauri/resources/config-template.json in repo)
 config.json
 src-tauri/resources/config.json
+src-tauri/binaries/cowagent-channels-*
+src-tauri/cowagent/**/__pycache__/
+src-tauri/cowagent/**/*.pyc
+src-tauri/cowagent/build/
+src-tauri/cowagent/dist/
+src-tauri/cowagent/*.spec
