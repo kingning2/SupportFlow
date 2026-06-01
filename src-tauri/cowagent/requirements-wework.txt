@@ -1,0 +1,3 @@
+# wework channel (Windows only, Python 3.8-3.10)
+# ntwork is not on PyPI — install from a local .whl (see README / bootstrap-sidecar-wheels.ps1)
+pilk
