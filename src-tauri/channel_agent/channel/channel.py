@@ -25,13 +25,27 @@ class Channel(object):
         """
         raise NotImplementedError
 
+    def notify_channel_status(self, phase: str, **extra) -> None:
+        """Push lifecycle updates to the Tauri UI (no-op when not in sidecar mode)."""
+        if not self.channel_type:
+            return
+        try:
+            from channel.rust_ipc import notify_rust
+
+            params = {"channel": self.channel_type, "phase": phase, **extra}
+            notify_rust("channel.notify", params)
+        except Exception:
+            pass
+
     def report_startup_success(self):
         self._startup_error = None
         self._startup_event.set()
+        self.notify_channel_status("ready")
 
     def report_startup_error(self, error: str):
         self._startup_error = error
         self._startup_event.set()
+        self.notify_channel_status("error", message=error)
 
     def wait_startup(self, timeout: float = 3) -> (bool, str):
         """

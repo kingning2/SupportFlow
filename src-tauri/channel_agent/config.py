@@ -122,7 +122,7 @@ def load_config():
     if not isinstance(raw, dict):
         raise ValueError("config must be a JSON object")
     config = _merge_defaults(raw)
-    logger.info("[INIT] load channel config: %s", _mask_sensitive(config))
+    # logger.info("[INIT] load channel config: %s", _mask_sensitive(config))
 
 
 def conf():

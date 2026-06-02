@@ -25,10 +25,11 @@ use tokio::sync::Mutex;
 
 use crate::context::channel_bridge::ChannelBridge;
 use crate::context::workspace_console;
+use crate::events::channel_status_changed_all;
 use crate::events::names::{AGENT_LOG_STREAM, AGENT_RUN_FINISHED, AGENT_STREAM_CHUNK};
 use crate::events::payloads::{
     AgentConsoleState, AgentLogStreamPayload, AgentRunFinished, AgentStreamChunk,
-    ModelProviderDetail, ModelProviderItem, SkillItem, ToolItem,
+    ChannelStatusChangedPayload, ModelProviderDetail, ModelProviderItem, SkillItem, ToolItem,
 };
 
 fn skill_to_item(e: &SkillEntry) -> SkillItem {
@@ -38,6 +39,16 @@ fn skill_to_item(e: &SkillEntry) -> SkillItem {
         enabled: e.enabled,
         source: e.skill.source.clone(),
     }
+}
+
+/// Standalone wework / wechat apps connect only from the account UI.
+fn should_skip_deferred_channel_autostart() -> bool {
+    std::env::var("DEV_CHANNEL")
+        .map(|v| {
+            let v = v.trim();
+            v == "wework" || v == "wx"
+        })
+        .unwrap_or(false)
 }
 
 /// Bundled agent config (`src-tauri/resources/config.json` or template). Single source of truth.
@@ -241,7 +252,11 @@ impl AgentRuntime {
                     .await;
                 *self.channel_sidecar.lock().await = Some(sidecar.clone());
                 crate::log_info!("Channel sidecar ready (deferred start)");
-                if let Err(e) = sidecar.channels_autostart().await {
+                if should_skip_deferred_channel_autostart() {
+                    crate::log_info!(
+                        "Channel autostart skipped (DEV_CHANNEL manual-connect preset)"
+                    );
+                } else if let Err(e) = sidecar.channels_autostart().await {
                     crate::log_warn!("Channel autostart RPC failed: {e}");
                 } else if let Ok(status) = sidecar.channels_status().await {
                     let running = status
@@ -640,6 +655,43 @@ impl AgentRuntime {
     ) -> Result<serde_json::Value, String> {
         let sidecar = self.ensure_sidecar().await?;
         sidecar.channels_get().await
+    }
+
+    /// Push channel lifecycle updates from Python sidecar to all Webviews.
+    pub fn emit_channel_status_changed(&self, params: &serde_json::Value) {
+        let channel = params
+            .get("channel")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let phase = params
+            .get("phase")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        if channel.is_empty() || phase.is_empty() {
+            return;
+        }
+        let payload = ChannelStatusChangedPayload {
+            channel,
+            phase,
+            message: params
+                .get("message")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            user_id: params
+                .get("user_id")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            display_name: params
+                .get("display_name")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            wait_seconds: params.get("wait_seconds").and_then(|v| v.as_i64()),
+        };
+        if let Err(e) = channel_status_changed_all(&self.app, &payload) {
+            crate::log_warn!("channel status emit failed: {e}");
+        }
     }
 
     /// Sidecar channel health (configured vs running threads).

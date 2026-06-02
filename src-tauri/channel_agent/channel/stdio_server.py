@@ -63,8 +63,6 @@ def run_stdio_server() -> None:
     if hasattr(signal, "SIGTERM"):
         signal.signal(signal.SIGTERM, _sig)
 
-    logger.info("[ChannelStdio] ready (channels in Python, bridge in Rust)")
-
     # Tauri desktop calls `channels.autostart` over RPC after sidecar is up.
     # Built-in deferred autostart here would start the same channels twice
     # (each wework thread calls ntwork open() → multiple WeCom processes).
@@ -80,10 +78,10 @@ def run_stdio_server() -> None:
             name="channel-autostart",
             daemon=True,
         ).start()
-    else:
-        logger.info(
-            "[ChannelStdio] TAURI_CHANNEL_MODE=1: channel autostart deferred to Rust RPC"
-        )
+    # else:
+        # logger.info(
+        #     "[ChannelStdio] TAURI_CHANNEL_MODE=1: channel autostart deferred to Rust RPC"
+        # )
 
     while True:
         time.sleep(3600)

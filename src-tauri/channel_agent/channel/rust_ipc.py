@@ -51,6 +51,15 @@ def _stdin_loop() -> None:
             _event.set()
 
 
+def notify_rust(method: str, params: dict | None = None) -> None:
+    """Fire-and-forget notification to Rust (no response expected)."""
+    _ensure_reader()
+    payload = {"method": method, "params": params or {}}
+    with _lock:
+        sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
+        sys.stdout.flush()
+
+
 def call_rust(method: str, params: dict | None = None, timeout: float = 300.0) -> dict:
     _ensure_reader()
     params = params or {}

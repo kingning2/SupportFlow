@@ -41,3 +41,4 @@ models = { path = "crates/models" }
 agent = { path = "crates/agent" }
 channel_runtime = { path = "crates/channel_runtime" }
 bridge = { path = "crates/bridge" }
+rusqlite = { version = "0.32", features = ["bundled"] }

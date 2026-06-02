@@ -60,8 +60,14 @@ impl ChannelPythonSidecar {
             .env(
                 "CHANNEL_CONFIG_PATH",
                 self.config_path.to_string_lossy().to_string(),
-            )
-            .stdin(Stdio::piped())
+            );
+        if let Ok(dev) = std::env::var("DEV_CHANNEL") {
+            let trimmed = dev.trim();
+            if !trimmed.is_empty() {
+                cmd.env("DEV_CHANNEL", trimmed);
+            }
+        }
+        cmd.stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
@@ -148,21 +154,21 @@ impl ChannelPythonSidecar {
                 );
             }
         }
-        crate::log_info!(
-            "Channel sidecar started: {}",
-            if self.sidecar_exe.is_file() {
-                self.sidecar_exe.display().to_string()
-            } else {
-                format!(
-                    "python dev ({}, {})",
-                    resolve_python_executable(),
-                    self.dev_source_dir
-                        .as_ref()
-                        .map(|p| p.display().to_string())
-                        .unwrap_or_default()
-                )
-            }
-        );
+        // crate::log_info!(
+        //     "Channel sidecar started: {}",
+        //     if self.sidecar_exe.is_file() {
+        //         self.sidecar_exe.display().to_string()
+        //     } else {
+        //         format!(
+        //             "python dev ({}, {})",
+        //             resolve_python_executable(),
+        //             self.dev_source_dir
+        //                 .as_ref()
+        //                 .map(|p| p.display().to_string())
+        //                 .unwrap_or_default()
+        //         )
+        //     }
+        // );
         Ok(())
     }
 
@@ -282,6 +288,16 @@ impl ChannelPythonSidecar {
                     None => json!({ "id": id, "error": "AgentRuntime not registered" }),
                 }
             }
+            "channel.notify" => {
+                let runtime = self.runtime.lock().await.as_ref().and_then(|w| w.upgrade());
+                if let Some(rt) = runtime {
+                    rt.emit_channel_status_changed(&params);
+                }
+                json!({
+                    "id": id,
+                    "result": { "status": "success" }
+                })
+            }
             _ => json!({ "id": id, "error": format!("unknown method: {method}") }),
         };
         result
@@ -348,8 +364,9 @@ impl ChannelPythonSidecar {
                 .map_err(|e| format!("channel sidecar flush stdin: {e}"))?;
         }
 
-        let resp = rx
+        let resp = tokio::time::timeout(Duration::from_secs(30), rx)
             .await
+            .map_err(|_| format!("channel sidecar RPC timed out: {method}"))?
             .map_err(|_| "channel sidecar closed while waiting for response".to_string())?;
 
         if let Some(err) = resp.get("error").and_then(|v| v.as_str()) {

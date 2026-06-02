@@ -20,13 +20,28 @@ _WEWORK_RESTART_KEYS = frozenset(
     {"wework_exe_path", "wework_version", "wework_smart", "wework_init_wait_seconds"}
 )
 
+_WEWORK_CONNECT_DEFAULTS = {
+    "wework_version": "4.0.8.6027",
+    "wework_init_wait_seconds": 60,
+    "wework_smart": True,
+}
+_WEWORK_DEFAULT_VERSION = "4.0.8.6027"
+_WEWORK_DEFAULT_INIT_WAIT = 60
+
 
 def _wework_session_running() -> bool:
     try:
         from channel.wework.run import wework_session_ready
 
         mgr = channel_manager.get_channel_manager()
-        return bool(mgr and mgr.is_channel_running("wework") and wework_session_ready())
+        ch = mgr.get_channel("wework") if mgr else None
+        return bool(
+            mgr
+            and mgr.is_channel_running("wework")
+            and ch
+            and getattr(ch, "_channel_ready", False)
+            and wework_session_ready()
+        )
     except Exception:
         return False
 
@@ -117,32 +132,14 @@ class ChannelsHandler:
                             "label": {"zh": "企微程序路径", "en": "WeCom executable path"},
                             "type": "text",
                             "placeholder": {
-                                "zh": "如 D:\\WeCom408\\WXWork.exe 或安装目录",
-                                "en": "e.g. D:\\WeCom408\\WXWork.exe or install folder",
+                                "zh": "如 D:\\WXWork\\4.0.8.6027\\WXWork.exe",
+                                "en": "e.g. D:\\WXWork\\4.0.8.6027\\WXWork.exe",
                             },
                         },
-                        {
-                            "key": "wework_version",
-                            "label": {"zh": "企微版本号(可选)", "en": "WeCom version (optional)"},
-                            "type": "text",
-                            "placeholder": {"zh": "默认 4.0.8.6027", "en": "Default 4.0.8.6027"},
-                        },
-                        {
-                            "key": "wework_smart",
-                            "label": {"zh": "复用已登录客户端", "en": "Reuse logged-in client"},
-                            "type": "bool",
-                            "default": True,
-                        },
-                        {
-                            "key": "wework_init_wait_seconds",
-                            "label": {"zh": "登录后同步等待(秒)", "en": "Sync wait after login (s)"},
-                            "type": "number",
-                            "default": 60,
-                        },
                     ],
-                        "hint": {
-                        "zh": "需 Windows + 企业微信 PC 版 4.0.8.6027；本机装多个版本时请填写 wework_exe_path。Python 3.10；pip install ntwork pilk。",
-                        "en": "Windows + WeCom 4.0.8.6027; set wework_exe_path if multiple installs. Python 3.10; pip install ntwork pilk.",
+                    "hint": {
+                        "zh": "需 Windows 与企业微信 PC 4.0.8.6027；仅当本机有多个安装版本时再改路径。",
+                        "en": "Windows + WeCom 4.0.8.6027; change path only if multiple installs.",
                     },
                 },
             ),
@@ -205,6 +202,35 @@ class ChannelsHandler:
         return "unknown"
 
     @staticmethod
+    def _get_wework_login_profile() -> dict | None:
+        try:
+            mgr = channel_manager.get_channel_manager()
+            if mgr:
+                ch = mgr.get_channel("wework")
+                if ch and getattr(ch, "user_id", None):
+                    display = getattr(ch, "name", "") or ""
+                    return {
+                        "user_id": str(ch.user_id),
+                        "display_name": display,
+                    }
+            from channel.wework.run import get_wework, wework_session_ready
+
+            if wework_session_ready():
+                client = get_wework()
+                if client:
+                    info = client.get_login_info() or {}
+                    user_id = info.get("user_id")
+                    if user_id:
+                        display = info.get("nickname") or info.get("username") or ""
+                        return {
+                            "user_id": str(user_id),
+                            "display_name": str(display),
+                        }
+        except Exception:
+            pass
+        return None
+
+    @staticmethod
     def _mask_secret(value: str) -> str:
         if not value or len(value) <= 8:
             return value
@@ -217,6 +243,22 @@ class ChannelsHandler:
     @classmethod
     def _active_channel_set(cls) -> set:
         return set(cls._parse_channel_list(conf().get("channel_type", "")))
+
+    @classmethod
+    def _runtime_channel_active(cls, ch_name: str, in_config: bool) -> bool:
+        """Runtime IM channels: active = thread running (and wework session ready)."""
+        runtime_names = {"wework", "weixin", "wx"}
+        if ch_name not in runtime_names:
+            return in_config
+        if not in_config:
+            return False
+        mgr = channel_manager.get_channel_manager()
+        if not mgr or not mgr.is_channel_running(ch_name):
+            return False
+        if ch_name == "wework":
+            ch = mgr.get_channel("wework") if mgr else None
+            return bool(ch and getattr(ch, "_channel_ready", False))
+        return True
 
     def list_channels_dict(self) -> dict:
         local_config = conf()
@@ -239,16 +281,21 @@ class ChannelsHandler:
                         "default": f.get("default", ""),
                     }
                 )
+            in_config = ch_name in active_channels
             ch_info = {
                 "name": ch_name,
                 "label": ch_def["label"],
                 "icon": ch_def["icon"],
                 "color": ch_def["color"],
-                "active": ch_name in active_channels,
+                "active": self._runtime_channel_active(ch_name, in_config),
                 "fields": fields_out,
             }
-            if ch_name in ("weixin", "wx", "wework") and ch_name in active_channels:
+            if ch_name in ("weixin", "wx", "wework") and in_config:
                 ch_info["login_status"] = self._get_channel_login_status(ch_name)
+            if ch_name == "wework":
+                profile = self._get_wework_login_profile()
+                if profile:
+                    ch_info["login_profile"] = profile
             if "hint" in ch_def:
                 ch_info["hint"] = ch_def["hint"]
             channels.append(ch_info)
@@ -321,6 +368,11 @@ class ChannelsHandler:
             updates.setdefault("feishu_event_mode", "websocket")
             valid_keys.add("feishu_event_mode")
 
+        if channel_name == "wework":
+            for key, default in _WEWORK_CONNECT_DEFAULTS.items():
+                updates.setdefault(key, default)
+            valid_keys |= set(_WEWORK_CONNECT_DEFAULTS.keys())
+
         local_config = conf()
         applied = {}
         for key, value in updates.items():
@@ -370,16 +422,49 @@ class ChannelsHandler:
             try:
                 mgr = channel_manager.get_channel_manager()
                 if mgr is None:
-                    logger.warning("[Channels] ChannelManager not ready")
-                    return
-                if channel_name == "wework" and mgr.is_channel_running(channel_name):
-                    from channel.wework.run import wework_session_ready
+                    from channel.stdio_server import _start_configured_channels
 
-                    if wework_session_ready() and not (_WEWORK_RESTART_KEYS & set(applied.keys())):
+                    logger.info(
+                        "[Channels] ChannelManager missing; starting configured channels"
+                    )
+                    _start_configured_channels(first_start=False)
+                    return
+
+                restart_keys = _WEWORK_RESTART_KEYS & set(applied.keys())
+                if channel_name == "wework":
+                    from channel.wework.run import (
+                        wework_desktop_process_running,
+                        wework_session_ready,
+                    )
+
+                    if (
+                        mgr.is_channel_running(channel_name)
+                        and wework_session_ready()
+                        and not restart_keys
+                    ):
                         logger.info(
-                            "[Channels] wework thread alive with session; skip stop/restart"
+                            "[Channels] wework already running with session; skip start"
                         )
                         return
+                    if mgr.is_channel_running(channel_name) and not restart_keys:
+                        logger.info(
+                            "[Channels] wework channel thread already active; skip duplicate start"
+                        )
+                        return
+                    if wework_desktop_process_running() and not restart_keys:
+                        logger.info(
+                            "[Channels] WeCom desktop already up; start channel thread only"
+                        )
+                        mgr.start([channel_name], first_start=False)
+                        return
+                    if mgr.is_channel_running(channel_name):
+                        mgr.stop(channel_name)
+                        time.sleep(2)
+                    if restart_keys:
+                        clear_singleton_cache(channel_name)
+                    mgr.start([channel_name], first_start=False)
+                    return
+
                 existing_ch = mgr.get_channel(channel_name)
                 if existing_ch is not None:
                     mgr.stop(channel_name)

@@ -24,11 +24,14 @@ pub fn run() {
             let runtime = std::sync::Arc::new(context::agent_runtime::AgentRuntime::initialize(
                 app.handle(),
             )?);
+            let wework_accounts =
+                context::wework_accounts::WeworkAccountsStore::open(app.handle())?;
             let runtime_bg = runtime.clone();
             tauri::async_runtime::spawn(async move {
                 runtime_bg.start_sidecar_deferred().await;
             });
             app.manage(runtime);
+            app.manage(wework_accounts);
             events::setup(app.handle());
             Ok(())
         })
@@ -68,6 +71,11 @@ pub fn run() {
             cmd::agent::agent_read_logs,
             cmd::agent::agent_start_log_stream,
             cmd::agent::agent_stop_log_stream,
+            cmd::wework_accounts::wework_list_accounts,
+            cmd::wework_accounts::wework_upsert_account,
+            cmd::wework_accounts::wework_delete_account,
+            cmd::wework_accounts::wework_get_active_account_id,
+            cmd::wework_accounts::wework_set_active_account_id,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -139,6 +139,7 @@ class WeworkChannel(ChatChannel):
     def __init__(self):
         super().__init__()
         self._stop_event = threading.Event()
+        self._channel_ready = False
         self.received_msgs = ExpiredDict(conf().get("expires_in_seconds", 3600))
 
     @property
@@ -149,11 +150,15 @@ class WeworkChannel(ChatChannel):
 
     def startup(self):
         self._stop_event.clear()
+        self._channel_ready = False
+        self.notify_channel_status("starting")
 
         if ntwork is None:
             err = (
-                "ntwork is not installed. On Windows run: pip install ntwork pilk. "
-                "This channel hooks the desktop WeCom client (channel_type=wework)."
+                "ntwork is not installed (requires Python 3.10 on Windows, not on PyPI). "
+                "From repo root: pnpm run bootstrap:sidecar-wheels && pnpm run setup:channel-sidecar-dev, "
+                "set CHANNEL_PYTHON_EXECUTABLE to py -3.10, then restart tauri dev. "
+                "See src-tauri/channel_agent/README.md."
             )
             logger.error(f"[Wework] {err}")
             self.report_startup_error(err)
@@ -169,13 +174,19 @@ class WeworkChannel(ChatChannel):
 
         register_message_handlers(client)
 
+        from channel.wework.run import wework_desktop_process_running
+
         smart = conf().get("wework_smart", True)
+        self.notify_channel_status("waiting_login")
         try:
-            if wework_session_ready():
+            if wework_session_ready() or wework_desktop_process_running():
                 logger.info(
-                    "[Wework] WeCom session already active; skip client.open() "
-                    "(avoid launching another desktop instance)"
+                    "[Wework] WeCom desktop already running; skip client.open() "
+                    "(avoid launching another instance)"
                 )
+                if not wework_session_ready():
+                    logger.info("[Wework] Waiting for WeCom desktop login...")
+                    client.wait_login()
             else:
                 client.open(smart)
                 logger.info("[Wework] Waiting for WeCom desktop login...")
@@ -190,9 +201,15 @@ class WeworkChannel(ChatChannel):
         self.user_id = login_info.get("user_id", "")
         self.name = login_info.get("nickname") or login_info.get("username", "")
         logger.info(f"[Wework] Logged in user_id={self.user_id} name={self.name}")
+        self.notify_channel_status(
+            "logged_in",
+            user_id=str(self.user_id),
+            display_name=str(self.name),
+        )
 
         init_wait = int(conf().get("wework_init_wait_seconds", 60))
         if init_wait > 0:
+            self.notify_channel_status("syncing", wait_seconds=init_wait)
             logger.info(
                 f"[Wework] Waiting {init_wait}s for client data sync (do not operate WeCom)..."
             )
@@ -229,6 +246,7 @@ class WeworkChannel(ChatChannel):
             json.dump(result, f, ensure_ascii=False, indent=4)
 
         logger.info("[Wework] Channel ready (desktop client / ntwork)")
+        self._channel_ready = True
         self.report_startup_success()
         run_until_stopped(self._stop_event)
         logger.info("[Wework] Event loop ended")

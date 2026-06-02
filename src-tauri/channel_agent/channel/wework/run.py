@@ -193,6 +193,29 @@ def wework_session_ready() -> bool:
         return False
 
 
+def wework_desktop_process_running() -> bool:
+    """True when WeCom PC client process is already on this machine."""
+    if sys.platform != "win32":
+        return False
+    import subprocess
+
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    for image in _WEWORK_EXE_NAMES:
+        try:
+            out = subprocess.run(
+                ["tasklist", "/FI", f"IMAGENAME eq {image}", "/NH"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                creationflags=flags,
+            )
+            if out.returncode == 0 and image.lower() in (out.stdout or "").lower():
+                return True
+        except Exception:
+            continue
+    return False
+
+
 def init_wework_client():
     """Create client; raises with a readable message on failure."""
     try:

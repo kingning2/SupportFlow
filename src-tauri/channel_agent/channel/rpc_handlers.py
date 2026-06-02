@@ -57,7 +57,14 @@ def handle_rust_request(req: dict) -> dict:
             configured = parse_channel_type(conf().get("channel_type", ""))
             configured = [n for n in configured if n not in ("web", "terminal")]
             dev_channel = (os.environ.get("DEV_CHANNEL") or "").strip()
-            if dev_channel:
+            # Standalone desktop apps (wework / wx): connect only from UI, not on boot.
+            if dev_channel in ("wework", "wx"):
+                logger.info(
+                    "[ChannelStdio] autostart skipped for DEV_CHANNEL=%s (manual connect)",
+                    dev_channel,
+                )
+                configured = []
+            elif dev_channel:
                 configured = [n for n in configured if n == dev_channel]
             if mgr is None:
                 _start_configured_channels(first_start=False)
