@@ -66,6 +66,7 @@ void openModal({ name: ModalPanel.Demo });
 
 ## 组件与样式
 
+- **设计系统**：`@import "@supportflow/ui/design-system"`；渠道 flavor 见 `design-system/flavors/`；app 仅覆盖 CSS 变量，勿复制 `@theme`。详见 `packages/ui/src/design-system/README.md`。
 - 优先复用 `packages/ui` 与已有业务组件；新增 shadcn 组件用项目 CLI/技能流程，避免复制粘贴整份 Radix 实现。
 - 类名合并用 `cn()`（`@supportflow/shared`）。
 - 动画逻辑放在 `packages/ui` 动效封装处；尊重 `prefers-reduced-motion`。

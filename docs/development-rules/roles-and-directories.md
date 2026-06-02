@@ -93,12 +93,13 @@ Modal、新语言、新窗口 label 也有专属清单，见 [fullstack-ipc.md](
 
 ### UI / 动效
 
-| 主要工作区                         | 做什么                          |
-| ---------------------------------- | ------------------------------- |
-| `packages/ui/src/`                 | 控制台、shadcn、标题栏、Modal   |
-| `packages/ui/src/modal/motion/`    | GSAP 窗口动效                   |
-| `apps/full/src/assets/globals.css` | 完整控制台全局样式              |
-| `apps/full/components.json`        | shadcn 组件来源配置（full app） |
+| 主要工作区                         | 做什么                                 |
+| ---------------------------------- | -------------------------------------- |
+| `packages/ui/src/`                 | 控制台、shadcn、标题栏、Modal          |
+| `packages/ui/src/modal/motion/`    | GSAP 窗口动效                          |
+| `packages/ui/src/design-system/`   | 企业设计系统（CSS 变量 + Tailwind）    |
+| `apps/full/src/assets/globals.css` | 完整控制台入口（import design-system） |
+| `apps/full/components.json`        | shadcn 组件来源配置（full app）        |
 
 | 注意   |                                                             |
 | ------ | ----------------------------------------------------------- |
