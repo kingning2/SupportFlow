@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.polymerization.gybte",
   "build": {
-    "beforeDevCommand": "bun run dev",
+    "beforeDevCommand": "bun run --cwd apps/full dev",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "bun run build && bun run build:channel-sidecar",
-    "frontendDist": "../out"
+    "beforeBuildCommand": "bun run build:flavor:full && bun run build:channel-sidecar",
+    "frontendDist": "../apps/full/out"
   },
   "app": {
     "windows": [

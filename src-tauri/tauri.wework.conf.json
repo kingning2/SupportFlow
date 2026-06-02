@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SupportFlow 企微",
+  "build": {
+    "beforeDevCommand": "bun run --cwd apps/wework dev",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "bun run build:flavor:wework",
+    "frontendDist": "../apps/wework/out"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "SupportFlow · 企微个人号",
+        "width": 1200,
+        "height": 800
+      }
+    ]
+  }
+}
