@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 
-import StoreProvider from "@supportflow/shared/desktop-shell/providers/store";
-import TauriEventProvider from "@supportflow/shared/desktop-shell/providers/tauri-event-provider";
-
-import GlobalProvider from "./global-provider";
+import { DesktopAppRoot } from "@supportflow/ui/app-shell";
 
 import "@/assets/globals.css";
 
@@ -19,12 +16,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-Hant">
-      <body>
-        <StoreProvider>
-          <TauriEventProvider>
-            <GlobalProvider>{children}</GlobalProvider>
-          </TauriEventProvider>
-        </StoreProvider>
+      <body className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <DesktopAppRoot>{children}</DesktopAppRoot>
       </body>
     </html>
   );
