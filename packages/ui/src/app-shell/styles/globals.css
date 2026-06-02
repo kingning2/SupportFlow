@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --window-radius: 12px;
+  --app-bg: #eef4fb;
+  --main-window-bg: #f0f4f8;
+}
+
+html,
+body,
+#App {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+#App {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--app-bg);
+}
+
+.main-window {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cfg-key-masked {
+  -webkit-text-security: disc;
+}
