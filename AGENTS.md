@@ -19,11 +19,11 @@
 ## 常用命令
 
 ```bash
-bun run dev          # apps/full 前端
-bun run tauri dev    # 桌面调试（完整控制台）
-bun run check        # format + lint + typecheck
-bun run check:rust   # cargo check
-bun run generate:contracts
+pnpm run dev          # apps/full 前端
+pnpm run tauri dev    # 桌面调试（完整控制台）
+pnpm run check        # format + lint + typecheck
+pnpm run check:rust   # cargo check
+pnpm run generate:contracts
 ```
 
 前端 monorepo 见 [`apps/README.md`](apps/README.md)（`apps/full` · `apps/wework` · `apps/wechat`）。

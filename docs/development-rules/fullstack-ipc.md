@@ -19,7 +19,7 @@
 - [ ] `src-tauri/src/lib.rs` — `generate_handler!` 注册
 - [ ] `src/enums/tauri-cmd.ts` — `TauriCmd` 新成员（字符串 = Rust 命令名）
 - [ ] `src/cmd/<name>.ts` — `invokeWrapper(TauriCmd.Xxx, …)` 封装
-- [ ] 若参数/返回为共享 DTO：`#[typeshare]` + `bun run generate:contracts`
+- [ ] 若参数/返回为共享 DTO：`#[typeshare]` + `pnpm run generate:contracts`
 - [ ] 手动验证：主窗与相关 modal 窗均能调用
 
 ## 新增 Event 清单
@@ -59,6 +59,6 @@
 ## 契约变更工作流
 
 1. 先改 Rust 类型并加/改 `#[typeshare]`（如适用）。
-2. 运行 `bun run generate:contracts`，将 `contracts.ts` diff 一并提交。
+2. 运行 `pnpm run generate:contracts`，将 `contracts.ts` diff 一并提交。
 3. 再改前端 `cmd` 封装与调用方类型。
 4. PR 说明中列出触达的清单项，便于 Reviewer 对照。

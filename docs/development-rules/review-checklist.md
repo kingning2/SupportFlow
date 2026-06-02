@@ -5,7 +5,7 @@
 ## 通用
 
 - [ ] 改动范围与任务一致，无无关重构
-- [ ] `bun run check` 通过（format + lint + typecheck）
+- [ ] `pnpm run check` 通过（format + lint + typecheck）
 - [ ] 未提交 `.env`、密钥、本地路径等敏感信息
 - [ ] Commit message：`type(scope): 中文简述`（见 `.cursor/rules/git-commit-cn.mdc`）
 
@@ -22,13 +22,13 @@
 - [ ] 代码落在正确分层（`cmd` / `context` / `utils` / `platform`）
 - [ ] 新 command 已注册 `generate_handler!`
 - [ ] 公共函数有文档注释
-- [ ] `cargo check` / `bun run check:rust` 通过
+- [ ] `cargo check` / `pnpm run check:rust` 通过
 
 ## 跨前后端（若 touched IPC）
 
 - [ ] 已对照 [fullstack-ipc.md](./fullstack-ipc.md) 完整清单
 - [ ] `TauriCmd` / `TauriEvent` / `WindowLabel` 等与 Rust 一致
-- [ ] 若改 typeshare：`bun run generate:contracts` 且 `check:contracts` 无意外 diff
+- [ ] 若改 typeshare：`pnpm run generate:contracts` 且 `check:contracts` 无意外 diff
 - [ ] 在主窗 + 相关 modal 窗手动冒烟
 
 ## 可选（大范围功能）

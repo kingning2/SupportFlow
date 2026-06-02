@@ -2,16 +2,12 @@
   "name": "SupportFlow",
   "private": true,
   "version": "0.1.0",
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/kingning2/SupportFlow.git"
   },
   "type": "module",
-  "packageManager": "bun@1.3.11",
+  "packageManager": "pnpm@10.12.1",
   "scripts": {
     "typecheck": "turbo run typecheck",
     "dev": "turbo run dev --filter=@supportflow/app-full",
@@ -20,13 +16,13 @@
     "build:flavor:full": "node scripts/build-flavor.mjs full",
     "build:flavor:wework": "node scripts/build-flavor.mjs wework",
     "build:flavor:wechat": "node scripts/build-flavor.mjs wechat",
-    "start": "bun run --cwd apps/full start",
+    "start": "pnpm --filter @supportflow/app-full start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write . && cargo fmt --manifest-path src-tauri/Cargo.toml",
     "format:check": "prettier --check . && cargo fmt --manifest-path src-tauri/Cargo.toml -- --check",
     "typecheck:apps": "turbo run typecheck",
-    "check": "bun run format:check && bun run lint && bun run typecheck",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck",
     "check:rust": "cargo check --manifest-path src-tauri/Cargo.toml",
     "sf": "cargo run --manifest-path src-tauri/Cargo.toml -p supportflow-cli --",
     "bootstrap:sidecar-wheels": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/bootstrap-sidecar-wheels.ps1",
@@ -34,7 +30,7 @@
     "build:channel-sidecar": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/build-channel-sidecar.ps1",
     "finalize:channel-sidecar": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/finalize-channel-sidecar.ps1",
     "generate:contracts": "node scripts/generate-contracts.mjs",
-    "check:contracts": "bun run generate:contracts && git diff --quiet -- packages/shared/src/contracts/contracts.ts",
+    "check:contracts": "pnpm run generate:contracts && git diff --quiet -- packages/shared/src/contracts/contracts.ts",
     "tauri": "tauri",
     "prepare": "husky",
     "tauri:dev": "tauri dev --no-watch",

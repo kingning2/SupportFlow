@@ -67,7 +67,7 @@ src-tauri/          Rust 桌面端
 
 ## 前后端契约
 
-- Rust 类型标注 `#[typeshare]` → `bun run generate:contracts` 生成 `packages/shared/src/contracts/contracts.ts`。
+- Rust 类型标注 `#[typeshare]` → `pnpm run generate:contracts` 生成 `packages/shared/src/contracts/contracts.ts`。
 - IPC 共享类型：`@supportflow/shared/contracts`；事件载荷：`@supportflow/shared/contracts/tauri-payloads`。
 
 ## i18n 流程

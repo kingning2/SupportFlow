@@ -34,6 +34,6 @@ import { WeworkPage } from "@/wework-page";
 ## Turborepo
 
 ```bash
-bun run typecheck
-bun run generate:contracts   # → packages/shared/src/contracts/contracts.ts
+pnpm run typecheck
+pnpm run generate:contracts   # → packages/shared/src/contracts/contracts.ts
 ```

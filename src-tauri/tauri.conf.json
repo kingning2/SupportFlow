@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.polymerization.gybte",
   "build": {
-    "beforeDevCommand": "bun run --cwd apps/full dev",
+    "beforeDevCommand": "pnpm --filter @supportflow/app-full dev",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "bun run build:flavor:full && bun run build:channel-sidecar",
+    "beforeBuildCommand": "pnpm run build:flavor:full && pnpm run build:channel-sidecar",
     "frontendDist": "../apps/full/out"
   },
   "app": {

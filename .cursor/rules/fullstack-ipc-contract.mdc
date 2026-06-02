@@ -27,7 +27,7 @@ alwaysApply: false
 3. `src-tauri/src/lib.rs`（`generate_handler!`）
 4. `packages/shared/src/tauri-bridge/enums/tauri-cmd.ts`
 5. `packages/shared/src/tauri-bridge/cmd/*.ts`（`invokeWrapper`）
-6. 若共享类型：`#[typeshare]` + `bun run generate:contracts`
+6. 若共享类型：`#[typeshare]` + `pnpm run generate:contracts`
 
 ## 新增 Event 必改
 

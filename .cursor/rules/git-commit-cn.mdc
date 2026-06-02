@@ -27,7 +27,7 @@ docs: 补充工具清单字段说明
 
 ## 自动化校验（Husky）
 
-- **pre-commit**：先执行 `bun run format`（Prettier + `cargo fmt`），将格式化后的已跟踪文件 `git add -u` 回暂存区，再执行 `bun run lint`（全量 ESLint）；任一步失败则无法提交
+- **pre-commit**：先执行 `pnpm run format`（Prettier + `cargo fmt`），将格式化后的已跟踪文件 `git add -u` 回暂存区，再执行 `pnpm run lint`（全量 ESLint）；任一步失败则无法提交
 - **commit-msg**：由 `@commitlint/config-conventional` 校验，message 必须以 `feat` / `fix` / `chore` 等 type 开头，格式为 `<type>(<scope>): <简述>`
 
 跳过校验需显式使用 `git commit --no-verify`（默认禁止）。

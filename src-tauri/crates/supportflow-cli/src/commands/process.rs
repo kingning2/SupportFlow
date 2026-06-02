@@ -27,7 +27,7 @@ pub fn cmd_start(args: StartArgs) -> Result<()> {
 
     let exe = find_desktop_exe().ok_or_else(|| {
         anyhow!(
-            "desktop app binary not found. Build with `bun run tauri build`, set {env}, or run `bun run tauri:dev`",
+            "desktop app binary not found. Build with `pnpm run tauri build`, set {env}, or run `pnpm run tauri:dev`",
             env = paths::ENV_DESKTOP_APP
         )
     })?;
@@ -125,7 +125,7 @@ pub fn cmd_logs(lines: usize) -> Result<()> {
 
 pub fn cmd_update() -> Result<()> {
     println!("Update the desktop app via git pull + rebuild, or your OS installer.");
-    println!("  bun run tauri build");
+    println!("  pnpm run tauri build");
     Ok(())
 }
 

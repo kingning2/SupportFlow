@@ -380,7 +380,7 @@ fn forward_python_log_line(trimmed: &str) {
 
 fn sidecar_missing_message() -> String {
     format!(
-        "未找到通道 sidecar 可执行文件。请先运行: bun run build:channel-sidecar\n\
+        "未找到通道 sidecar 可执行文件。请先运行: pnpm run build:channel-sidecar\n\
          产物路径: src-tauri/binaries/channel-sidecar-{}{}",
         env!("BUILD_TARGET"),
         std::env::consts::EXE_SUFFIX

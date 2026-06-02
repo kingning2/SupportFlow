@@ -181,7 +181,7 @@
     "channels_loading": "Loading channels…",
     "channels_config_hint": "Channels are managed by the local SupportFlow Agent Python process (config.json + channel threads). Desktop agent chat still uses Rust.",
     "channels_python_unreachable_title": "Channel sidecar not ready",
-    "channels_python_unreachable_hint": "Run bun run build:channel-sidecar, or set CHANNEL_SIDECAR_EXE to the channel_agent-channels binary.",
+    "channels_python_unreachable_hint": "Run pnpm run build:channel-sidecar, or set CHANNEL_SIDECAR_EXE to the channel_agent-channels binary.",
     "channels_load_failed": "Failed to load channels",
     "channels_retry": "Retry",
     "channel_label_weixin": "WeChat (Official)",

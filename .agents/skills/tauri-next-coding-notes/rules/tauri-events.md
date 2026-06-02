@@ -23,7 +23,7 @@ Rust `src-tauri/src/events/names.rs` 与前端 `packages/shared/src/tauri-bridge
 ## Rust 侧改动清单
 
 1. 在 `events/names.rs` 增加常量
-2. 在 `events/payloads.rs` 定义载荷（需导出到 TS 时加 `#[typeshare]`，并 `bun run generate:contracts`）
+2. 在 `events/payloads.rs` 定义载荷（需导出到 TS 时加 `#[typeshare]`，并 `pnpm run generate:contracts`）
 3. **Rust → 前端**：在 `events/emit.rs` 增加函数，从 `context` / `cmd` 调用，不要散落 `app.emit_to`
 4. **前端 → Rust**：在 `events/handlers/` 增加 handler，并在 `register` 中注册
 5. `lib.rs` 的 `setup` 已调用 `events::setup`，一般无需再改

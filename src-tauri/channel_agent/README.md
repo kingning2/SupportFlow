@@ -14,11 +14,11 @@
 首次开发通道（尤其 **wework**）请在项目根执行：
 
 ```bash
-bun run bootstrap:sidecar-wheels   # 可选，pip 离线失败时先跑
-bun run setup:channel-sidecar-dev  # 用 py -3.10 安装 requests / ntwork / pilk 等
+pnpm run bootstrap:sidecar-wheels   # 可选，pip 离线失败时先跑
+pnpm run setup:channel-sidecar-dev  # 用 py -3.10 安装 requests / ntwork / pilk 等
 ```
 
-脚本会提示把 `CHANNEL_PYTHON_EXECUTABLE=...` 写入根目录 `.env`，然后**重新** `bun run tauri dev`（`build.rs` 会把 `.env` 编进二进制；未配置时 Windows 会自动尝试 `py -3.10`）。
+脚本会提示把 `CHANNEL_PYTHON_EXECUTABLE=...` 写入根目录 `.env`，然后**重新** `pnpm run tauri dev`（`build.rs` 会把 `.env` 编进二进制；未配置时 Windows 会自动尝试 `py -3.10`）。
 
 手动调试：
 
@@ -38,10 +38,10 @@ Tauri 启动时会注入 `CHANNEL_CONFIG_PATH` / `TAURI_CHANNEL_MODE=1`。
 
 ```bash
 # 1) 用可用的 pip（通常 python 3.12）预下载 PyInstaller、requests、渠道依赖、pilk 等 wheel
-bun run bootstrap:sidecar-wheels
+pnpm run bootstrap:sidecar-wheels
 
 # 2) 打包（自动下载 ntwork wheel + 安装 requirements-sidecar.txt + PyInstaller）
-bun run build:channel-sidecar
+pnpm run build:channel-sidecar
 ```
 
 `requirements-sidecar.txt` 列出打进 exe 的第三方库（`requests`、`wechatpy`、飞书/钉钉等）。未安装就打包容易出现 `No module named 'requests'`。
@@ -59,6 +59,6 @@ bun run build:channel-sidecar
 
 Release 构建时该 exe 会以 **`include_bytes` 嵌入 `tauri-app.exe`**，首次运行解压到应用缓存目录，安装包旁不再单独带 `channel-sidecar-*.exe`。
 
-若打包提示 **file is in use**，先退出应用，再执行 `bun run build:channel-sidecar` 或 `bun run finalize:channel-sidecar`。
+若打包提示 **file is in use**，先退出应用，再执行 `pnpm run build:channel-sidecar` 或 `pnpm run finalize:channel-sidecar`。
 
 注意：exe 里带上 ntwork 只解决 **Python 依赖**；用户机器仍须自行安装并登录 **企业微信 PC 客户端**。

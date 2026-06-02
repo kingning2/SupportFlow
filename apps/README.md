@@ -19,15 +19,15 @@ packages/
 ## 开发
 
 ```bash
-bun install
-bun run dev
-bun run typecheck
-bun run tauri:dev:wework
+pnpm install
+pnpm run dev
+pnpm run typecheck
+pnpm run tauri:dev:wework
 ```
 
 ## 构建
 
-| 命令                          | 产物               |
-| ----------------------------- | ------------------ |
-| `bun run build`               | `apps/full/out/`   |
-| `bun run build:flavor:wework` | `apps/wework/out/` |
+| 命令                           | 产物               |
+| ------------------------------ | ------------------ |
+| `pnpm run build`               | `apps/full/out/`   |
+| `pnpm run build:flavor:wework` | `apps/wework/out/` |

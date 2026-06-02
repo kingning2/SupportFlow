@@ -37,7 +37,7 @@ const env = {
 
 console.log(`[tauri-build-flavor] flavor=${flavor} config=${config}`);
 
-const result = spawnSync("bun", ["run", "tauri", "build", "--config", config], {
+const result = spawnSync("pnpm", ["run", "tauri", "build", "--config", config], {
   cwd: root,
   env,
   stdio: "inherit",

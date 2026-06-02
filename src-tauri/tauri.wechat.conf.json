@@ -2,9 +2,9 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "SupportFlow 微信",
   "build": {
-    "beforeDevCommand": "bun run --cwd apps/wechat dev",
+    "beforeDevCommand": "pnpm --filter @supportflow/app-wechat dev",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "bun run build:flavor:wechat",
+    "beforeBuildCommand": "pnpm run build:flavor:wechat",
     "frontendDist": "../apps/wechat/out"
   },
   "app": {

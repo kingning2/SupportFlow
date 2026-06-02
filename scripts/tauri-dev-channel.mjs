@@ -89,7 +89,7 @@ console.log(
     (standaloneConfig ? ` standalone=${standaloneConfig}` : " full-console")
 );
 
-const child = spawn("bun", tauriArgs, {
+const child = spawn("pnpm", tauriArgs, {
   cwd: root,
   env,
   stdio: "inherit",

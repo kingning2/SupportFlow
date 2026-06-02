@@ -74,7 +74,7 @@ void openModal({ name: ModalPanel.Demo });
 
 - IPC 与 Rust 共享类型优先 `@supportflow/shared/contracts`；事件载荷用 `contracts/tauri-payloads`。
 - 避免 `any`；语言等枚举用 `isLanguage()` 等类型守卫收窄。
-- 提交前：`bun run typecheck`（或 `bun run check`）。
+- 提交前：`pnpm run typecheck`（或 `pnpm run check`）。
 
 ## 错误与日志
 

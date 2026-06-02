@@ -10,7 +10,7 @@ cargo build --manifest-path src-tauri/Cargo.toml -p supportflow-cli --release
 cargo run --manifest-path src-tauri/Cargo.toml -p supportflow-cli -- --help
 
 # or
-bun run sf -- --help
+pnpm run sf -- --help
 ```
 
 Install the binary:

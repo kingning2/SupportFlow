@@ -107,7 +107,7 @@ DeepSeek · OpenAI / ChatGPT · Azure OpenAI · Claude · Google Gemini · 智�
 
 ### 环境
 
-- [Bun](https://bun.sh/)
+- [pnpm](https://pnpm.io/)（`corepack enable` 后由 `packageManager` 字段锁定版本）
 - [Rust](https://www.rust-lang.org/tools/install)
 - Windows 或 macOS
 
@@ -116,8 +116,8 @@ DeepSeek · OpenAI / ChatGPT · Azure OpenAI · Claude · Google Gemini · 智�
 ```bash
 git clone https://github.com/kingning2/SupportFlow.git
 cd SupportFlow
-bun install
-bun run tauri dev
+pnpm install
+pnpm run tauri dev
 ```
 
 ### 配置客服模型
@@ -153,9 +153,9 @@ SUPPORT_FLOW_WORKSPACE=D:/path/to/your-workspace
 架构约定与 IPC 说明见 [`AGENTS.md`](./AGENTS.md)、[`docs/agent-console.md`](./docs/agent-console.md)、[`docs/development-rules/README.md`](./docs/development-rules/README.md)。
 
 ```bash
-bun run check
-bun run check:rust
-bun run tauri dev
+pnpm run check
+pnpm run check:rust
+pnpm run tauri dev
 ```
 
 ## 相关链接

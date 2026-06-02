@@ -28,5 +28,5 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 console.log(`[build-flavor] ${spec.label}`);
 
 const appDir = path.join(root, spec.cwd);
-const result = spawnSync("bun", ["run", "build"], { cwd: appDir, stdio: "inherit", shell: true });
+const result = spawnSync("pnpm", ["run", "build"], { cwd: appDir, stdio: "inherit", shell: true });
 process.exit(result.status ?? 1);
