@@ -44,8 +44,9 @@ docs: 补充工具清单字段说明
 | 环境与示例配置 | `.env.example`、`.gitignore` | `env` / `chore` |
 | Rust 后端 | `src-tauri/src/`、`src-tauri/crates/`（非 channel_agent 业务树） | `tauri` |
 | Python Sidecar | `src-tauri/channel_agent/` | `tauri` 或 `sidecar` |
-| 前端 IPC / 枚举 | `src/cmd/`、`src/enums/`、`src/generated/` | `frontend` |
-| 控制台 UI | `src/components/agent-console/`、`src/hooks/` 相关 | `ui` / `frontend` |
+| 前端 IPC / 枚举 / 契约 | `packages/shared/src/tauri-bridge/`、`packages/shared/src/contracts/` | `frontend` |
+| 控制台 UI | `packages/ui/src/agent-console/`、`packages/ui/src/` 基础组件 | `ui` |
+| 应用壳 / 路由 | `apps/full/`、`apps/wework/`、`apps/wechat/` | `frontend` |
 | i18n | `src-tauri/resources/languages/` | `tauri` 或 `i18n` |
 | 文档 | `docs/`、`AGENTS.md` | `docs` |
 | 契约生成 | `scripts/generate-contracts.mjs` 及生成物 | `chore` / `build` |

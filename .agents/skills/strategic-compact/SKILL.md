@@ -133,4 +133,5 @@ Common sources of duplicate context:
 ## Project Notes (tauri-template)
 
 - Tauri 项目建议按阶段手动 `/compact`：先把“前端改动方案”固化到计划/文件，再紧跟“Rust/IPC 改动”，避免把前端推理和 Rust 细节混在同一阶段里。
-- 如果你在同一轮同时改了 `src/components/*` 与 `src-tauri/*`，通常需要在两者切换时 compact，减少重复上下文。 
+- 如果你在同一轮同时改了 `packages/ui/*`（或 `apps/full/src/*`）与 `src-tauri/*`，通常需要在两者切换时 compact，减少重复上下文。
+- 共享 IPC/枚举在 `packages/shared/src/tauri-bridge/`，改 Command/Event 时优先对照该目录与 `src-tauri/src/events/`。 

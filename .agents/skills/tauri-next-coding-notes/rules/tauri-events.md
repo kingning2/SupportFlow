@@ -7,11 +7,11 @@
 | 需要返回值 / `Result` 错误 | **Command** + `invokeWrapper(TauriCmd.…)` |
 | 跨 Webview 广播（会话、modal 蒙层） | **Event**（Rust `emit` / `emit_to`） |
 | 前端 → Rust 单向（如写日志） | **Event**（`tauriEmit` + Rust `listen`） |
-| 全局 Redux 同步（会话） | **`CrossWebviewSyncSubscriptions`**（`events/cross-webview-sync.ts`） |
+| 全局 Redux 同步（会话） | **`CrossWebviewSyncSubscriptions`**（`desktop-shell/events/cross-webview-sync.ts`） |
 
 ## 事件名（双端同步）
 
-Rust `src-tauri/src/events/names.rs` 与前端 `src/enums/tauri-event.ts`（`TauriEvent`）**字符串值必须一致**。
+Rust `src-tauri/src/events/names.rs` 与前端 `packages/shared/src/tauri-bridge/enums/tauri-event.ts`（`TauriEvent`）**字符串值必须一致**。
 
 当前约定：
 
@@ -30,11 +30,11 @@ Rust `src-tauri/src/events/names.rs` 与前端 `src/enums/tauri-event.ts`（`Tau
 
 ## 前端侧改动清单
 
-1. 在 `src/enums/tauri-event.ts` 增加 `TauriEvent` 成员（与 Rust 同值）
-2. 载荷类型加到 `src/types/tauri-payloads.ts`（或 `#[typeshare]` 生成）
+1. 在 `tauri-bridge/enums/tauri-event.ts` 增加 `TauriEvent` 成员（与 Rust 同值）
+2. 载荷类型加到 `contracts/tauri-payloads.ts`（或 `#[typeshare]` 生成）
 3. 发送：`tauriEmit(TauriEvent.Xxx, payload)` 或 `useTauriEventApi().emit`
-4. 全局订阅：扩展 `events/cross-webview-sync.ts`，或页面内 `tauriOn(TauriEvent.Xxx, …)`
-5. 根布局已包 `TauriEventProvider`（`src/app/layout.tsx`）
+4. 全局订阅：扩展 `desktop-shell/events/cross-webview-sync.ts`，或页面内 `tauriOn(TauriEvent.Xxx, …)`
+5. 根布局已包 `TauriEventProvider`（`apps/full/src/app/layout.tsx` 或渠道 app 的 `layout.tsx`）
 
 ## Incorrect
 
@@ -56,17 +56,17 @@ app.emit_to("main", "session/changed", &session)?;
 ## Correct
 
 ```ts
-import { FeLogLevel, TauriEvent } from '@/enums'
-import { tauriEmit } from '@/utils/tauri-event'
+import { FeLogLevel, TauriEvent } from "@supportflow/shared/tauri-bridge/enums";
+import { tauriEmit } from "@supportflow/shared/tauri-bridge/tauri-event";
 
-await tauriEmit(TauriEvent.FeLog, { level: FeLogLevel.Info, msg: 'ready' })
+await tauriEmit(TauriEvent.FeLog, { level: FeLogLevel.Info, msg: "ready" });
 ```
 
 ```ts
-import { TauriEvent } from '@/enums'
-import { tauriOn } from '@/utils/tauri-event'
+import { TauriEvent } from "@supportflow/shared/tauri-bridge/enums";
+import { tauriOn } from "@supportflow/shared/tauri-bridge/tauri-event";
 
-tauriOn(TauriEvent.SessionChanged, (event) => { /* … */ })
+tauriOn(TauriEvent.SessionChanged, (event) => { /* … */ });
 ```
 
 ```rust

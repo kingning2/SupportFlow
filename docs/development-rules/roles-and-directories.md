@@ -9,25 +9,21 @@
 
 ### 前端工程师（页面 / 组件 / 状态）
 
-| 主要工作区        | 做什么                                      |
-| ----------------- | ------------------------------------------- |
-| `src/app/`        | 路由与页面（`main-window`、`modal-window`） |
-| `src/components/` | 业务 UI；`components/ui/` 为 shadcn 基础件  |
-| `src/store/`      | Redux 全局态（语言、modal 蒙层等）          |
-| `src/hooks/`      | 可复用 React Hooks                          |
-| `src/assets/`     | 全局样式 `globals.css`                      |
-| `src/lib/`        | 纯工具（如 `cn()`）                         |
+| 主要工作区                             | 做什么                                          |
+| -------------------------------------- | ----------------------------------------------- |
+| `apps/full/src/app/`                   | 完整控制台路由（`main-window`、`modal-window`） |
+| `apps/full/src/components/`            | 应用私有 UI（如 modal panels）                  |
+| `apps/wework/src/`、`apps/wechat/src/` | 渠道页与 accent                                 |
+| `packages/ui/src/`                     | 控制台、shadcn、标题栏、Modal                   |
+| `packages/shared/src/desktop-shell/`   | Redux、Provider、守卫、跨 Webview 同步          |
 
-| 按需协作                        | 说明                                                    |
-| ------------------------------- | ------------------------------------------------------- |
-| `src/cmd/`                      | 新增/改 Tauri 调用封装（与 Rust 同步）                  |
-| `src/enums/`                    | 新增命令名、事件名、路由等固定字符串                    |
-| `src/types/`                    | 事件载荷等 TS 类型                                      |
-| `src/generated/`                | **只读**；改 Rust 契约后跑 `bun run generate:contracts` |
-| `src/config/`                   | 窗口、i18n 初始化、应用配置                             |
-| `src/guards/`、`src/providers/` | 启动、语言、事件总线等壳层                              |
-| `src/events/`                   | 跨 Webview → Redux 同步                                 |
-| `src/utils/`                    | 前端通用工具（缓存、Tauri event 辅助）                  |
+| 按需协作                                    | 说明                                                 |
+| ------------------------------------------- | ---------------------------------------------------- |
+| `packages/shared/src/tauri-bridge/cmd/`     | 新增/改 Tauri 调用封装（与 Rust 同步）               |
+| `packages/shared/src/tauri-bridge/enums/`   | 命令名、事件名、路由等固定字符串                     |
+| `packages/shared/src/contracts/`            | 事件载荷与 typeshare 生成物（**contracts.ts 只读**） |
+| `apps/full/src/config/`                     | 窗口行为配置                                         |
+| `packages/shared/src/desktop-shell/config/` | i18n 初始化、应用配置                                |
 
 | 通常不直接改                     | 原因                    |
 | -------------------------------- | ----------------------- |
@@ -55,10 +51,10 @@
 | `src-tauri/capabilities/`        | Tauri 2 权限能力                   |
 | `src-tauri/tauri.*.conf.json`    | 分平台打包配置                     |
 
-| 通常不直接改                  | 原因              |
-| ----------------------------- | ----------------- |
-| `src/components/`、`src/app/` | UI 属前端         |
-| `src/generated/contracts.ts`  | 由 typeshare 生成 |
+| 通常不直接改                                 | 原因              |
+| -------------------------------------------- | ----------------- |
+| `packages/ui/`、`apps/*/src/app/`            | UI 属前端         |
+| `packages/shared/src/contracts/contracts.ts` | 由 typeshare 生成 |
 
 ---
 
@@ -66,13 +62,13 @@
 
 改一项功能往往**同时**触及：
 
-| 前端                          | Rust                              | 必查文档                               |
-| ----------------------------- | --------------------------------- | -------------------------------------- |
-| `src/enums/tauri-cmd.ts`      | `src-tauri/src/cmd/*.rs`          | [fullstack-ipc.md](./fullstack-ipc.md) |
-| `src/cmd/*.ts`                | `src-tauri/src/lib.rs`（handler） | 同上                                   |
-| `src/enums/tauri-event.ts`    | `src-tauri/src/events/names.rs`   | 同上                                   |
-| `src/types/tauri-payloads.ts` | `events/payloads.rs`（若有）      | 同上                                   |
-| `src/generated/contracts.ts`  | `contracts.rs` + `typeshare.toml` | 跑 `generate:contracts`                |
+| 前端                                              | Rust                              | 必查文档                               |
+| ------------------------------------------------- | --------------------------------- | -------------------------------------- |
+| `packages/shared/.../enums/tauri-cmd.ts`          | `src-tauri/src/cmd/*.rs`          | [fullstack-ipc.md](./fullstack-ipc.md) |
+| `packages/shared/.../tauri-bridge/cmd/*.ts`       | `src-tauri/src/lib.rs`（handler） | 同上                                   |
+| `packages/shared/.../enums/tauri-event.ts`        | `src-tauri/src/events/names.rs`   | 同上                                   |
+| `packages/shared/.../contracts/tauri-payloads.ts` | `events/payloads.rs`（若有）      | 同上                                   |
+| `packages/shared/.../contracts/contracts.ts`      | `contracts.rs` + `typeshare.toml` | 跑 `generate:contracts`                |
 
 Modal、新语言、新窗口 label 也有专属清单，见 [fullstack-ipc.md](./fullstack-ipc.md)。
 
@@ -85,40 +81,40 @@ Modal、新语言、新窗口 label 也有专属清单，见 [fullstack-ipc.md](
 | `src-tauri/resources/languages/cn.json` | 简体中文文案 |
 | `src-tauri/resources/languages/en.json` | 英文文案     |
 
-| 需开发配合                        | 说明                       |
-| --------------------------------- | -------------------------- |
-| `src/enums/language.ts`           | 新增语言代码枚举           |
-| `src/config/app-config.ts`        | `supportLanguages` 列表    |
-| 页面 `useTranslation('命名空间')` | 命名空间需与 JSON 结构一致 |
+| 需开发配合                                               | 说明                       |
+| -------------------------------------------------------- | -------------------------- |
+| `packages/shared/.../enums/language.ts`                  | 新增语言代码枚举           |
+| `packages/shared/.../desktop-shell/config/app-config.ts` | `supportLanguages` 列表    |
+| 页面 `useTranslation('命名空间')`                        | 命名空间需与 JSON 结构一致 |
 
-**不要**把用户可见句子写进 `src/enums/`（enums 只放标识符，不放展示文案）。
+**不要**把用户可见句子写进 enums（enums 只放标识符，不放展示文案）。
 
 ---
 
 ### UI / 动效
 
-| 主要工作区                              | 做什么                    |
-| --------------------------------------- | ------------------------- |
-| `src/components/`、`src/components/ui/` | 布局与组件视觉            |
-| `src/animation/`                        | GSAP 时间轴、窗口动效封装 |
-| `src/assets/globals.css`                | 主题变量、全局样式        |
-| `components.json`                       | shadcn 组件来源配置       |
+| 主要工作区                         | 做什么                          |
+| ---------------------------------- | ------------------------------- |
+| `packages/ui/src/`                 | 控制台、shadcn、标题栏、Modal   |
+| `packages/ui/src/modal/motion/`    | GSAP 窗口动效                   |
+| `apps/full/src/assets/globals.css` | 完整控制台全局样式              |
+| `apps/full/components.json`        | shadcn 组件来源配置（full app） |
 
-| 注意   |                                                              |
-| ------ | ------------------------------------------------------------ |
-| 主窗   | 遵守「外层不滚动、内层滚动」见 [frontend.md](./frontend.md)  |
-| 无障碍 | 动效需兼容 `prefers-reduced-motion`（`src/animation/core/`） |
+| 注意   |                                                             |
+| ------ | ----------------------------------------------------------- |
+| 主窗   | 遵守「外层不滚动、内层滚动」见 [frontend.md](./frontend.md) |
+| 无障碍 | 动效需兼容 `prefers-reduced-motion`                         |
 
 ---
 
 ### 测试 / QA
 
-| 关注                    | 说明                                        |
-| ----------------------- | ------------------------------------------- |
-| `src/app/main-window/`  | 主窗功能与布局                              |
-| `src/app/modal-window/` | 模态窗生命周期                              |
-| 多 Webview              | 语言切换是否各窗同步（Rust 会话 + Event）   |
-| 打包产物                | `src-tauri/target/`（本地构建，一般不提交） |
+| 关注                              | 说明                                        |
+| --------------------------------- | ------------------------------------------- |
+| `apps/full/src/app/main-window/`  | 主窗功能与布局                              |
+| `apps/full/src/app/modal-window/` | 模态窗生命周期                              |
+| 多 Webview                        | 语言切换是否各窗同步（Rust 会话 + Event）   |
+| 打包产物                          | `src-tauri/target/`（本地构建，一般不提交） |
 
 自动化测试目录若后续新增，以仓库实际 `**/*.test.*` / `e2e/` 为准；当前模板以手动桌面冒烟为主。
 
@@ -155,35 +151,23 @@ Modal、新语言、新窗口 label 也有专属清单，见 [fullstack-ipc.md](
 
 ---
 
-## `apps/full/src/` 目录树（完整控制台）
+## `apps/full/src/` 目录树（完整控制台，应用层）
 
 ```
 apps/full/src/
 ├── app/                 # App Router：页面、layout、error boundary
 │   ├── main-window/     # 主窗路由与 Provider
 │   └── modal-window/    # 模态 Webview 路由
-├── components/          # UI 组件
-│   ├── ui/              # shadcn 生成的基础组件
-│   ├── title-bar/       # 自定义标题栏（拖拽区等）
-│   ├── modal/           # 模态壳 + panels 注册
+├── components/          # 应用私有组件
+│   ├── modal/panels/    # Modal 面板实现与注册
 │   └── error/           # 错误展示
-├── cmd/                 # invokeWrapper 封装（对接 TauriCmd）
-├── enums/               # 固定字符串（命令、事件、语言、窗口…）
-├── types/               # 手写 TS 类型（如事件载荷）
-├── generated/           # typeshare 生成（勿手改）
-├── store/               # Redux store 与 slices
-├── providers/           # Redux、Tauri 事件 Provider
-├── guards/              # 启动 / 语言 / 主窗背景等守卫
-├── events/              # 跨 Webview 同步到 Redux
-├── config/              # 窗口、i18n、app 配置
-├── utils/               # 前端通用工具
-├── hooks/               # 共享 Hooks
-├── animation/           # GSAP 动效模块
-├── assets/              # 全局 CSS 等
-└── lib/                 # 与 UI 无关的小工具（cn）
+├── config/              # 窗口配置（re-export shared/ui）
+├── guards/              # 主窗背景等应用级守卫
+├── assets/              # 全局 CSS
+└── lib/                 # 应用内小工具（如 cn 别名）
 ```
 
-渠道独立应用见 `apps/wework`、`apps/wechat`；共享 UI 见 `packages/`。
+IPC、Redux、控制台 UI 在 `packages/shared`、`packages/ui`。渠道应用见 `apps/wework`、`apps/wechat`。
 
 ---
 
@@ -216,7 +200,7 @@ src-tauri/
 | 场景                     | 正确分工                                              |
 | ------------------------ | ----------------------------------------------------- |
 | 用户看到的一句话         | 产品/文案改 `resources/languages/*.json`              |
-| 命令叫 `get_app_session` | 全栈同时改 Rust cmd + `TauriCmd` + `src/cmd`          |
+| 命令叫 `get_app_session` | 全栈同时改 Rust cmd + `TauriCmd` + `tauri-bridge/cmd` |
 | 当前语言存在哪           | **源真相** `context/session`；前端 Redux **镜像**     |
 | 窗口能否拖动、无边框     | Rust `utils/window` + 前端 `title-bar` + `tauri.conf` |
 | 按钮样式                 | 前端 `components/ui`，一般不经过 Rust                 |

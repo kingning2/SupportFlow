@@ -24,7 +24,7 @@ pub mod system;
 ```
 
 ```ts
-// src/enums/tauri-cmd.ts
+// packages/shared/src/tauri-bridge/enums/tauri-cmd.ts
 export enum TauriCmd {
   // ...
   GetSystemMode = "get_system_mode"
@@ -32,9 +32,9 @@ export enum TauriCmd {
 ```
 
 ```ts
-// src/cmd/system.ts
-import { TauriCmd } from "@/enums";
-import { invokeWrapper } from ".";
+// packages/shared/src/tauri-bridge/cmd/system.ts
+import { TauriCmd } from "../enums/tauri-cmd";
+import { invokeWrapper } from "./invoke";
 
 export const getSystemMode = () => invokeWrapper<string>(TauriCmd.GetSystemMode);
 ```
@@ -79,8 +79,8 @@ const { t } = useTranslation("title_bar");
 ```tsx
 "use client";
 import { useEffect } from "react";
-import { log } from "@/cmd/log";
-import { FeLogLevel } from "@/enums";
+import { log } from "@supportflow/shared/tauri-bridge/cmd/log";
+import { FeLogLevel } from "@supportflow/shared/tauri-bridge/enums";
 
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => {
@@ -96,16 +96,16 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
 // 根布局已挂载 TauriEventProvider → CrossWebviewSyncSubscriptions
 // 会话 Redux 无需页面手写订阅
 
-import { applySessionToStore } from "@/events/cross-webview-sync";
-import { getAppSession } from "@/cmd/session";
+import { applySessionToStore } from "@supportflow/shared/desktop-shell/events/cross-webview-sync";
+import { getAppSession } from "@supportflow/shared/tauri-bridge/cmd/session";
 
 void getAppSession().then((session) => applySessionToStore(store, session));
 ```
 
 ```tsx
 // 自定义事件监听（须在 TauriEventProvider 子树内）
-import { TauriEvent } from "@/enums";
-import { useTauriEventApi } from "@/providers/tauri-event-provider";
+import { TauriEvent } from "@supportflow/shared/tauri-bridge/enums";
+import { useTauriEventApi } from "@supportflow/shared/desktop-shell/providers/tauri-event-provider";
 
 const { on } = useTauriEventApi();
 useEffect(() => on(TauriEvent.ModalOpened, handler), [on]);
@@ -113,8 +113,8 @@ useEffect(() => on(TauriEvent.ModalOpened, handler), [on]);
 
 ```ts
 // 前端 → Rust 日志（非 invoke）
-import { log } from "@/cmd/log";
-import { FeLogLevel } from "@/enums";
+import { log } from "@supportflow/shared/tauri-bridge/cmd/log";
+import { FeLogLevel } from "@supportflow/shared/tauri-bridge/enums";
 
 void log(FeLogLevel.Info, "modal opened");
 ```
@@ -122,7 +122,7 @@ void log(FeLogLevel.Info, "modal opened");
 ## 6) 新增 Modal 面板
 
 ```ts
-// src/enums/modal-panel.ts
+// packages/shared/src/tauri-bridge/enums/modal-panel.ts
 export enum ModalPanel {
   Demo = "demo",
   Settings = "settings"
@@ -130,14 +130,18 @@ export enum ModalPanel {
 ```
 
 ```tsx
-// src/components/modal/panels/settings.tsx — 实现 SettingsPanel
+// apps/full/src/components/modal/panels/settings.tsx — 实现 SettingsPanel
 ```
 
 ```ts
-// src/components/modal/panels/index.ts
+// apps/full/src/components/modal/panels/index.ts
 [ModalPanel.Settings]: SettingsPanel
 ```
 
 ```tsx
+import { ModalPanel } from "@supportflow/shared/tauri-bridge/enums";
+import { useModalWindow } from "@supportflow/ui/modal";
+
+const { openModal } = useModalWindow();
 await openModal({ name: ModalPanel.Settings, width: 520, height: 400 });
 ```

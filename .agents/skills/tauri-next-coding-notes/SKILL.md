@@ -6,16 +6,16 @@ user-invocable: true
 
 # Tauri + Next 编码规范
 
-本技能用于本仓库日常开发（**桌面模板**，无内置业务域）。优先遵守已存在目录结构与命名方式。
+本技能用于本仓库日常开发（**桌面模板**，无内置业务域）。前端为 **Turborepo monorepo**（`apps/*` + `packages/*`），优先遵守已存在目录结构与命名方式。
 
 ## 关键上下文
 
-- 前端：Next App Router + React + Redux Toolkit + shadcn/ui。
-- **固定字符串**：业务相关字面量统一放 `src/enums/`（见 [frontend-enums.md](./rules/frontend-enums.md)），禁止在组件/cmd 中写魔法字符串。
-- **Command 桥接**：`src/cmd/invoke.ts` 的 `invokeWrapper` + `TauriCmd` 枚举。
-- **Event 桥接**：`src-tauri/src/events/` ↔ `src/enums/tauri-event.ts` + `src/utils/tauri-event.ts` + `TauriEventProvider`。
-- **跨 Webview 同步**：`src/events/cross-webview-sync.ts`（会话 → Redux）。
-- **窗口配置**：`src/config/windows.ts`（`WindowLabel`、`ModalPanel`、modal 打开/关闭封装）。
+- 前端：Next App Router + React + Redux Toolkit + shadcn/ui；完整控制台在 `apps/full`，共享逻辑在 `packages/shared` 与 `packages/ui`。
+- **固定字符串**：业务相关字面量统一放 `packages/shared/src/tauri-bridge/enums/`（见 [frontend-enums.md](./rules/frontend-enums.md)），通过 `@supportflow/shared/tauri-bridge/enums` 引用。
+- **Command 桥接**：`packages/shared/src/tauri-bridge/cmd/invoke.ts` 的 `invokeWrapper` + `TauriCmd` 枚举。
+- **Event 桥接**：`src-tauri/src/events/` ↔ `tauri-bridge/enums/tauri-event.ts` + `tauri-bridge/tauri-event.ts` + `desktop-shell/providers/tauri-event-provider.tsx`。
+- **跨 Webview 同步**：`desktop-shell/events/cross-webview-sync.ts`（会话 → Redux）。
+- **窗口 / Modal**：`apps/full/src/config/windows.ts`（re-export）；`useModalWindow` 在 `@supportflow/ui/modal`；面板注册在 `apps/full/src/components/modal/panels/`。
 - Rust **`context/`**：`.manage` 会话；**`utils/`**：无 Store 的通用逻辑；**`cmd/`**：薄 command。
 - Rust 入口：`src-tauri/src/lib.rs`（`generate_handler!` + `events::setup`）。
 - i18n：`react-i18next` + `src-tauri/resources/languages/*.json`（展示文案走 i18n，不进 enums）。
@@ -37,11 +37,11 @@ user-invocable: true
 ## 快速模式（常用）
 
 ```tsx
-// 页面文本走 i18n；固定标识走 enums
-import { Language, ModalPanel } from '@/enums'
+// 页面文本走 i18n；固定标识走 shared enums
+import { Language, ModalPanel } from "@supportflow/shared/tauri-bridge/enums";
 
-const { t } = useTranslation('home')
-<h1>{t('title')}</h1>
+const { t } = useTranslation("home");
+<h1>{t("title")}</h1>;
 ```
 
 ```tsx
@@ -59,11 +59,11 @@ const { t } = useTranslation('home')
 
 ```tsx
 // 打开 modal（Rust command，非 WebviewWindow API）
-import { ModalPanel } from '@/enums'
-import { useModalWindow } from '@/components/modal'
+import { ModalPanel } from "@supportflow/shared/tauri-bridge/enums";
+import { useModalWindow } from "@supportflow/ui/modal";
 
-const { openModal } = useModalWindow()
-await openModal({ name: ModalPanel.Demo, width: 480, height: 360 })
+const { openModal } = useModalWindow();
+await openModal({ name: ModalPanel.Demo, width: 480, height: 360 });
 ```
 
 ```rust
@@ -76,3 +76,4 @@ crate::events::session_changed_all(app, &session)?;
 - **通用开发规范（IDE 无关）**：仓库根目录 [`docs/development-rules/README.md`](../../../docs/development-rules/README.md)
 - 架构与目录： [architecture.md](./architecture.md)
 - 场景化片段： [examples.md](./examples.md)
+- Apps / Packages 说明： [`apps/README.md`](../../../apps/README.md)、[`packages/README.md`](../../../packages/README.md)

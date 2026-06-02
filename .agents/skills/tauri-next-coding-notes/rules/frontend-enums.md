@@ -2,7 +2,7 @@
 
 ## Rule
 
-与 IPC、路由、语言、缓存、Redux slice、Modal 面板等相关的**固定字符串**，必须定义在 `src/enums/`，通过 `import { … } from '@/enums'` 引用。
+与 IPC、路由、语言、缓存、Redux slice、Modal 面板等相关的**固定字符串**，必须定义在 `packages/shared/src/tauri-bridge/enums/`，通过 `@supportflow/shared/tauri-bridge/enums` 引用。
 
 展示给用户的文案仍走 **i18n**（`src-tauri/resources/languages/*.json`），不要放进 enums。
 
@@ -20,17 +20,17 @@
 | `ReduxSlice` | `redux-slice.ts` | Redux `createSlice({ name })` |
 | `AppRoute` | `app-route.ts` | App Router 路径 |
 
-事件载荷类型在 `src/types/tauri-payloads.ts`；typeshare 契约在 `src/generated/contracts.ts`（勿手改）。
+事件载荷类型在 `packages/shared/src/contracts/tauri-payloads.ts`；typeshare 契约在 `packages/shared/src/contracts/contracts.ts`（勿手改）。
 
 ## 扩展清单
 
-**新 Tauri 命令**：`TauriCmd` → `src/cmd/*.ts` 使用 `invokeWrapper(TauriCmd.Xxx)` → Rust `cmd` + `lib.rs`。
+**新 Tauri 命令**：`TauriCmd` → `tauri-bridge/cmd/*.ts` 使用 `invokeWrapper(TauriCmd.Xxx)` → Rust `cmd` + `lib.rs`。
 
 **新事件**：Rust `events/names.rs` → `TauriEvent` → 监听处 `tauriOn(TauriEvent.Xxx)`；载荷类型加到 `tauri-payloads.ts`。
 
-**新 Modal 面板**：`ModalPanel` → `components/modal/panels` 实现并注册 `MODAL_PANEL_REGISTRY` → `openModal({ name: ModalPanel.Xxx })`。
+**新 Modal 面板**：`ModalPanel` → `apps/full/src/components/modal/panels` 实现并注册 `MODAL_PANEL_REGISTRY` → `openModal({ name: ModalPanel.Xxx })`。
 
-**新语言**：`Language` + `cn.json` / `en.json` + `app-config` 的 `supportLanguages`。
+**新语言**：`Language` + `cn.json` / `en.json` + `desktop-shell/config/app-config.ts` 的 `supportLanguages`。
 
 ## Incorrect
 
@@ -44,10 +44,10 @@ tauriOn('session/changed', handler)
 ## Correct
 
 ```ts
-import { Language, ModalPanel, TauriCmd, TauriEvent } from '@/enums'
+import { Language, ModalPanel, TauriCmd, TauriEvent } from "@supportflow/shared/tauri-bridge/enums";
 
-await setLang(Language.En)
-void openModal({ name: ModalPanel.Demo })
-await invokeWrapper(TauriCmd.GetAppSession)
-tauriOn(TauriEvent.SessionChanged, handler)
+await setLang(Language.En);
+void openModal({ name: ModalPanel.Demo });
+await invokeWrapper(TauriCmd.GetAppSession);
+tauriOn(TauriEvent.SessionChanged, handler);
 ```
