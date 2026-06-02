@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Run `tauri dev` with a single channel preset (no in-app channel picker).
+ * Standalone flavors (wework / wx) use separate Next apps — other channels use full console.
  * Usage: node scripts/tauri-dev-channel.mjs wechat
  */
 import { spawn } from "node:child_process";
@@ -37,6 +38,12 @@ const ALIASES = {
   mp: "wechatmp"
 };
 
+/** Channel id → standalone Tauri config (separate Next app, isolated bundle). */
+const STANDALONE_TAURI_CONFIG = {
+  wework: "src-tauri/tauri.wework.conf.json",
+  wx: "src-tauri/tauri.wechat.conf.json"
+};
+
 function resolveChannel(raw) {
   const key = String(raw ?? "")
     .trim()
@@ -71,9 +78,18 @@ const env = {
   DEV_CHANNEL: channel
 };
 
-console.log(`[tauri-dev-channel] preset=${channel} (NEXT_PUBLIC_DEV_CHANNEL + DEV_CHANNEL)`);
+const standaloneConfig = STANDALONE_TAURI_CONFIG[channel];
+const tauriArgs = ["run", "tauri", "dev", "--no-watch"];
+if (standaloneConfig) {
+  tauriArgs.push("--config", standaloneConfig);
+}
 
-const child = spawn("bun", ["run", "tauri", "dev", "--no-watch"], {
+console.log(
+  `[tauri-dev-channel] preset=${channel}` +
+    (standaloneConfig ? ` standalone=${standaloneConfig}` : " full-console")
+);
+
+const child = spawn("bun", tauriArgs, {
   cwd: root,
   env,
   stdio: "inherit",

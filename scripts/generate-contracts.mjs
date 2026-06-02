@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const outFile = join(root, "src/generated/contracts.ts");
+const outFile = join(root, "packages/shared/src/contracts/contracts.ts");
 const outDir = dirname(outFile);
 
 mkdirSync(outDir, { recursive: true });

@@ -10,11 +10,14 @@ const eslintConfig = defineConfig([
   globalIgnores([
     ".next/**",
     "out/**",
+    "apps/**/.next/**",
+    "apps/**/out/**",
     "build/**",
     "next-env.d.ts",
+    "apps/**/next-env.d.ts",
     "node_modules/**",
     "src-tauri/**",
-    "src/components/ai-elements/**",
+    "apps/full/src/components/ai-elements/**",
     ".cursor/**",
     ".agents/**"
   ]),
