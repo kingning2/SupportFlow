@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { channelAction, channelLangFromI18n, fetchChannels } from "@supportflow/ui/app-shell";
 
-import { WeworkPage } from "@/wework-page";
+import { WeworkConsoleApp } from "@/console/wework-console-app";
 
 export default function WeworkAppPage() {
   const { i18n } = useTranslation("console");
@@ -27,5 +27,5 @@ export default function WeworkAppPage() {
     []
   );
 
-  return <WeworkPage lang={lang} actions={actions} />;
+  return <WeworkConsoleApp lang={lang} actions={actions} />;
 }

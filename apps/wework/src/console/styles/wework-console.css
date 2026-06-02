@@ -1,0 +1,65 @@
+/* 企微智能客服壳层（浅色系，与 data-flavor=wework 搭配） */
+
+.wework-console {
+  --wework-sidebar-width: 13.5rem;
+  --wework-inbox-list-width: 17.5rem;
+  --wework-inbox-detail-width: 18rem;
+}
+
+.wework-console-sidebar {
+  width: var(--wework-sidebar-width);
+  border-right: 1px solid hsl(var(--border));
+  background: hsl(0 0% 100%);
+}
+
+.wework-console-sidebar-item.active {
+  background: hsl(var(--channel-primary-muted));
+  color: hsl(var(--channel-primary));
+  font-weight: 500;
+}
+
+.wework-inbox-list {
+  width: var(--wework-inbox-list-width);
+  border-right: 1px solid hsl(var(--border));
+  background: hsl(0 0% 100%);
+}
+
+.wework-inbox-detail {
+  width: var(--wework-inbox-detail-width);
+  border-left: 1px solid hsl(var(--border));
+  background: hsl(0 0% 100%);
+}
+
+.wework-conversation-row {
+  transition: background-color 0.15s ease;
+}
+
+.wework-conversation-row.active {
+  background: hsl(var(--channel-primary-muted));
+}
+
+.wework-message-bubble {
+  max-width: min(28rem, 85%);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.wework-message-bubble--customer {
+  background: hsl(0 0% 100%);
+  border: 1px solid hsl(var(--border));
+  color: hsl(222 47% 11%);
+}
+
+.wework-message-bubble--assistant,
+.wework-message-bubble--operator {
+  background: hsl(var(--channel-primary));
+  color: hsl(var(--channel-primary-foreground));
+}
+
+.wework-message-bubble--system {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+}
