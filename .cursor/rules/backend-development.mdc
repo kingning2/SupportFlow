@@ -21,9 +21,9 @@ alwaysApply: false
 
 ## 必守
 
-- 新 command：`cmd/mod.rs` + `lib.rs` `generate_handler!` + 前端 `TauriCmd` + `src/cmd/*.ts`（见 [`fullstack-ipc.md`](../../docs/development-rules/fullstack-ipc.md)）。
-- 事件名仅 `events/names.rs`，与 `src/enums/tauri-event.ts` 一致。
-- 共享 DTO：`#[typeshare]` → `bun run generate:contracts`。
+- 新 command：`cmd/mod.rs` + `lib.rs` `generate_handler!` + 前端 `TauriCmd` + `packages/shared/src/tauri-bridge/cmd/*.ts`（见 [`fullstack-ipc.md`](../../docs/development-rules/fullstack-ipc.md)）。
+- 事件名仅 `events/names.rs`，与 `packages/shared/src/tauri-bridge/enums/tauri-event.ts` 一致。
+- 共享 DTO：`#[typeshare]` → `pnpm run generate:contracts`。
 - 新 `pub fn` 写文档注释（功能、参数、返回值）。
 - Command 优先 `Result<T, String>`；避免把 `unwrap` 暴露给用户路径。
 

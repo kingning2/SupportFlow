@@ -181,7 +181,7 @@
     "channels_loading": "加载通道配置…",
     "channels_config_hint": "通道由本机 SupportFlow Agent Python 进程管理（读写 SupportFlow Agent 的 config.json 并启动通道线程）。桌面端 Agent 对话仍走 Rust。",
     "channels_python_unreachable_title": "通道 sidecar 未就绪",
-    "channels_python_unreachable_hint": "请先运行 bun run build:channel-sidecar 生成 exe，或设置 CHANNEL_SIDECAR_EXE 指向 channel_agent-channels 可执行文件。",
+    "channels_python_unreachable_hint": "请先运行 pnpm run build:channel-sidecar 生成 exe，或设置 CHANNEL_SIDECAR_EXE 指向 channel_agent-channels 可执行文件。",
     "channels_load_failed": "加载通道列表失败",
     "channels_retry": "重试",
     "channel_label_weixin": "微信(官方)",

@@ -1,6 +1,6 @@
 # Build channel sidecar exe (PyInstaller one-file) into src-tauri/binaries/
 # Wework (ntwork): Python 3.10 — set CHANNEL_SIDECAR_PYTHON or rely on `py -3.10`.
-# If py 3.10 pip cannot reach PyPI, run: bun run bootstrap:sidecar-wheels
+# If py 3.10 pip cannot reach PyPI, run: pnpm run bootstrap:sidecar-wheels
 param(
     [switch]$DepsOnly
 )
@@ -88,7 +88,7 @@ function Ensure-PyInstaller {
         Write-Host "Online pip failed; using offline wheels..."
         Sync-PyInstallerWheels -BootstrapPy $BootstrapPy
         if (-not (Install-FromWheelDir -PythonExe $PythonExe -ExtraArgs @("pyinstaller"))) {
-            throw "Failed to install PyInstaller for $PythonExe (run: bun run bootstrap:sidecar-wheels)"
+            throw "Failed to install PyInstaller for $PythonExe (run: pnpm run bootstrap:sidecar-wheels)"
         }
     }
 
@@ -166,7 +166,7 @@ function Install-SidecarDeps {
         Write-Host "Online pip failed; installing sidecar deps from offline wheels..."
         Sync-SidecarWheels -BootstrapPy $BootstrapPy
         if (-not (Install-FromWheelDir -PythonExe $PythonExe -ExtraArgs @("-r", $req))) {
-            throw "Failed to install sidecar deps for $PythonExe (run: bun run bootstrap:sidecar-wheels)"
+            throw "Failed to install sidecar deps for $PythonExe (run: pnpm run bootstrap:sidecar-wheels)"
         }
     }
 
@@ -221,7 +221,7 @@ function Install-WeworkDeps {
 
     Write-Warning @"
 ntwork is not installed — wework channel will not work in the built exe.
-  - Run: bun run bootstrap:sidecar-wheels
+  - Run: pnpm run bootstrap:sidecar-wheels
   - Place ntwork-*-cp310-*-win_amd64.whl in: $WheelDir
   - Or set CHANNEL_NTWORK_WHEEL to the .whl path
   - Or set CHANNEL_SKIP_WEWORK_DEPS=1 to silence this warning
@@ -271,8 +271,8 @@ Fresh binary written to:
 1. Quit SupportFlow (and end any channel-sidecar-*.exe in Task Manager)
 2. Then run ONE of:
      Move-Item -LiteralPath '$staging' -Destination '$OutPath' -Force
-     bun run finalize:channel-sidecar
-     bun run build:channel-sidecar
+     pnpm run finalize:channel-sidecar
+     pnpm run build:channel-sidecar
 "@
 }
 
@@ -294,7 +294,7 @@ Add to project root .env:
   CHANNEL_PYTHON_EXECUTABLE=$PythonExe
 
 Or set user env CHANNEL_PYTHON_EXECUTABLE to the path above.
-Then restart: bun run tauri dev
+Then restart: pnpm run tauri dev
 "@
     exit 0
 }

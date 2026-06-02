@@ -1,5 +1,7 @@
 .next
 out
+apps/*/.next
+apps/*/out
 build
 node_modules
 src-tauri

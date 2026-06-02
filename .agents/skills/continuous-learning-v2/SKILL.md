@@ -23,7 +23,7 @@ An advanced learning system that turns your Claude Code sessions into reusable k
 
 ## Project Notes (tauri-template)
 
-- 适配策略：对“跨语言通用的安全/校验规则”（例如输入校验、Rust unsafe 审查、IPC 参数校验）设置为 `scope: global`；对“与你模板结构强相关的模式”（比如 `src-tauri/src/context/*` 的调用/封装层、前端状态管理组件组织方式）优先 `scope: project`。
+- 适配策略：对“跨语言通用的安全/校验规则”（例如输入校验、Rust unsafe 审查、IPC 参数校验）设置为 `scope: global`；对“与你模板结构强相关的模式”（比如 `src-tauri/src/context/*` 的调用/封装层、`packages/shared/src/desktop-shell/*` 状态管理）优先 `scope: project`。
 - 如果你只想用它做“文档/规则沉淀”，建议先把观测 hooks 保持在最小运行模式（避免持续后台分析带来噪声），只在需要时再启用 observer。
 
 ---

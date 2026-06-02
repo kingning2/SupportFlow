@@ -12,19 +12,21 @@
 
 ## 不可违反的三条
 
-1. 固定字符串 → `src/enums/`（或 Rust `events/names.rs`）；展示文案 → i18n。
+1. 固定字符串 → `apps/full/src/enums/`（或 Rust `events/names.rs`）；展示文案 → i18n。
 2. Tauri：**Command** 走 `invokeWrapper` + `TauriCmd`；**Event** 走 `TauriEvent`；改 IPC 必须走完 [`fullstack-ipc.md`](docs/development-rules/fullstack-ipc.md) 清单。
 3. Rust 分层：`cmd` 薄、`context` 存跨 Webview 态、`utils` 无 Store 业务、`platform/` 分 OS。
 
 ## 常用命令
 
 ```bash
-bun run dev          # 仅前端
-bun run tauri dev    # 桌面调试
-bun run check        # format + lint + typecheck
-bun run check:rust   # cargo check
-bun run generate:contracts
+pnpm run dev          # apps/full 前端
+pnpm run tauri dev    # 桌面调试（完整控制台）
+pnpm run check        # format + lint + typecheck
+pnpm run check:rust   # cargo check
+pnpm run generate:contracts
 ```
+
+前端 monorepo 见 [`apps/README.md`](apps/README.md)（`apps/full` · `apps/wework` · `apps/wechat`）。
 
 ## 深度参考（场景化）
 

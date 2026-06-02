@@ -40,11 +40,11 @@ events/       → 事件名、emit、listen 注册
 - 与前端共享的 DTO 使用 `#[typeshare]`，修改后执行：
 
   ```bash
-  bun run generate:contracts
+  pnpm run generate:contracts
   ```
 
 - 生成物：`src/generated/contracts.ts`（勿手改）。
-- 校验 CI 可用：`bun run check:contracts`。
+- 校验 CI 可用：`pnpm run check:contracts`。
 
 ## 错误与日志
 
@@ -64,7 +64,7 @@ events/       → 事件名、emit、listen 注册
 cargo fmt --manifest-path src-tauri/Cargo.toml
 cargo check --manifest-path src-tauri/Cargo.toml
 # 或
-bun run check:rust
+pnpm run check:rust
 ```
 
-与前端一并检查时：`bun run check`（format + eslint + tsc）。
+与前端一并检查时：`pnpm run check`（format + eslint + tsc）。

@@ -27,7 +27,7 @@ docs: 补充工具清单字段说明
 
 ## 自动化校验（Husky）
 
-- **pre-commit**：先执行 `bun run format`（Prettier + `cargo fmt`），将格式化后的已跟踪文件 `git add -u` 回暂存区，再执行 `bun run lint`（全量 ESLint）；任一步失败则无法提交
+- **pre-commit**：先执行 `pnpm run format`（Prettier + `cargo fmt`），将格式化后的已跟踪文件 `git add -u` 回暂存区，再执行 `pnpm run lint`（全量 ESLint）；任一步失败则无法提交
 - **commit-msg**：由 `@commitlint/config-conventional` 校验，message 必须以 `feat` / `fix` / `chore` 等 type 开头，格式为 `<type>(<scope>): <简述>`
 
 跳过校验需显式使用 `git commit --no-verify`（默认禁止）。
@@ -44,8 +44,9 @@ docs: 补充工具清单字段说明
 | 环境与示例配置 | `.env.example`、`.gitignore` | `env` / `chore` |
 | Rust 后端 | `src-tauri/src/`、`src-tauri/crates/`（非 channel_agent 业务树） | `tauri` |
 | Python Sidecar | `src-tauri/channel_agent/` | `tauri` 或 `sidecar` |
-| 前端 IPC / 枚举 | `src/cmd/`、`src/enums/`、`src/generated/` | `frontend` |
-| 控制台 UI | `src/components/agent-console/`、`src/hooks/` 相关 | `ui` / `frontend` |
+| 前端 IPC / 枚举 / 契约 | `packages/shared/src/tauri-bridge/`、`packages/shared/src/contracts/` | `frontend` |
+| 控制台 UI | `packages/ui/src/agent-console/`、`packages/ui/src/` 基础组件 | `ui` |
+| 应用壳 / 路由 | `apps/full/`、`apps/wework/`、`apps/wechat/` | `frontend` |
 | i18n | `src-tauri/resources/languages/` | `tauri` 或 `i18n` |
 | 文档 | `docs/`、`AGENTS.md` | `docs` |
 | 契约生成 | `scripts/generate-contracts.mjs` 及生成物 | `chore` / `build` |

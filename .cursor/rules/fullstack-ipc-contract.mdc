@@ -1,10 +1,9 @@
 ---
 description: 改 Tauri Command/Event/Modal/语言 时触发的全栈契约清单；完整版见 docs/development-rules/fullstack-ipc.md
 globs:
-  - src/enums/**/*
-  - src/cmd/**/*
-  - src/types/tauri-payloads.ts
-  - src/generated/**/*
+  - packages/shared/src/tauri-bridge/enums/**/*
+  - packages/shared/src/tauri-bridge/cmd/**/*
+  - packages/shared/src/contracts/**/*
   - src-tauri/src/cmd/**/*
   - src-tauri/src/events/**/*
   - src-tauri/src/context/**/*
@@ -26,13 +25,13 @@ alwaysApply: false
 1. `src-tauri/src/cmd/*.rs`
 2. `src-tauri/src/cmd/mod.rs`
 3. `src-tauri/src/lib.rs`（`generate_handler!`）
-4. `src/enums/tauri-cmd.ts`
-5. `src/cmd/*.ts`（`invokeWrapper`）
-6. 若共享类型：`#[typeshare]` + `bun run generate:contracts`
+4. `packages/shared/src/tauri-bridge/enums/tauri-cmd.ts`
+5. `packages/shared/src/tauri-bridge/cmd/*.ts`（`invokeWrapper`）
+6. 若共享类型：`#[typeshare]` + `pnpm run generate:contracts`
 
 ## 新增 Event 必改
 
-`events/names.rs` ↔ `src/enums/tauri-event.ts` ↔ 发射/订阅处 ↔ 可选 `tauri-payloads.ts` ↔ `events::setup`
+`events/names.rs` ↔ `tauri-bridge/enums/tauri-event.ts` ↔ 发射/订阅处 ↔ 可选 `contracts/tauri-payloads.ts` ↔ `events::setup`
 
 ## 一致性
 

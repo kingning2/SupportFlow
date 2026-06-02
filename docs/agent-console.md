@@ -127,7 +127,7 @@ src/cmd/agent.ts                     # IPC 封装（禁止组件内裸 invoke）
 组件通过 shadcn CLI 从 AI Elements 注册表安装，源码落入 `src/components/ai-elements/`：
 
 ```bash
-bunx shadcn@latest add \
+pnpm dlx shadcn@latest add \
   "https://elements.ai-sdk.dev/api/registry/conversation.json" \
   "https://elements.ai-sdk.dev/api/registry/message.json" \
   "https://elements.ai-sdk.dev/api/registry/prompt-input.json" \
@@ -239,7 +239,7 @@ bunx shadcn@latest add \
 
 工作区（skills / memory / mcp）默认为 `{app_data}/SupportFlow`，可用 `SUPPORT_FLOW_WORKSPACE` 覆盖，**但不改变 config 来源**。
 
-修改 `src-tauri/resources/config.json` 后 **重启** `bun run tauri dev`。
+修改 `src-tauri/resources/config.json` 后 **重启** `pnpm run tauri dev`。
 
 ---
 
@@ -247,14 +247,14 @@ bunx shadcn@latest add \
 
 ```bash
 # 桌面调试（需工作区 config.json 与 API Key）
-bun run tauri dev
+pnpm run tauri dev
 
 # 仅前端（无 Tauri 时 Agent IPC 不可用）
-bun run dev
+pnpm run dev
 
 # 提交前
-bun run check
-bun run check:rust
+pnpm run check
+pnpm run check:rust
 ```
 
 Agent 初始化依赖工作目录下的 `config.json` 与对应厂商 API Key；加载失败时 `AgentConsoleApp` 展示 `load_failed` 错误态。
