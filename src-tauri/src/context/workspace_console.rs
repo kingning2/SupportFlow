@@ -1,6 +1,5 @@
 //! Workspace-backed console helpers (sessions index, knowledge, channel config).
 
-use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
@@ -153,6 +152,7 @@ fn unix_ts_string() -> String {
         .unwrap_or_else(|_| "0".into())
 }
 
+#[allow(dead_code)]
 fn resolve_under_workspace(workspace: &Path, rel: &str) -> Result<PathBuf, String> {
     let rel = rel.replace('\\', "/");
     if rel.is_empty() || rel.contains("..") {
@@ -167,180 +167,47 @@ fn resolve_under_workspace(workspace: &Path, rel: &str) -> Result<PathBuf, Strin
     Ok(full)
 }
 
-fn resolve_knowledge_file(workspace: &Path, rel: &str) -> Result<PathBuf, String> {
-    let rel = rel.trim_start_matches('/');
-    let knowledge_root = workspace.join("knowledge");
-    let full = resolve_under_workspace(&knowledge_root, rel)?;
-    if !full.starts_with(&knowledge_root) {
-        return Err("path outside knowledge dir".into());
-    }
-    Ok(full)
-}
-
-fn title_from_md(path: &Path, fallback: &str) -> String {
-    let Ok(raw) = fs::read_to_string(path) else {
-        return fallback.to_string();
-    };
-    for line in raw.lines() {
-        let trimmed = line.trim();
-        if let Some(rest) = trimmed.strip_prefix("# ") {
-            if !rest.is_empty() {
-                return rest.to_string();
-            }
-        }
-    }
-    fallback.to_string()
-}
-
-fn collect_knowledge_md_files(dir: &Path, knowledge_root: &Path, out: &mut Vec<KnowledgeFileRow>) {
-    if !dir.is_dir() {
-        return;
-    }
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            if path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .is_some_and(|n| n.starts_with('.') || n == "_sources")
-            {
-                continue;
-            }
-            collect_knowledge_md_files(&path, knowledge_root, out);
-            continue;
-        }
-        if path
-            .extension()
-            .and_then(|e| e.to_str())
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
-        {
-            let rel = path
-                .strip_prefix(knowledge_root)
-                .map(|p| p.to_string_lossy().replace('\\', "/"))
-                .unwrap_or_default();
-            let stem = path
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .unwrap_or("document");
-            let title = title_from_md(&path, stem);
-            out.push(KnowledgeFileRow { path: rel, title });
-        }
-    }
-}
-
 /// Flat list of markdown files under `workspace/knowledge/`.
 pub fn list_knowledge_files(workspace: &Path) -> Result<Vec<KnowledgeFileRow>, String> {
-    let knowledge_root = workspace.join("knowledge");
-    if !knowledge_root.is_dir() {
-        fs::create_dir_all(&knowledge_root).map_err(|e| e.to_string())?;
+    let svc = agent::knowledge::KnowledgeService::new(workspace);
+    if !svc.knowledge_dir().is_dir() {
+        fs::create_dir_all(svc.knowledge_dir()).map_err(|e| e.to_string())?;
         return Ok(Vec::new());
     }
-    let mut files = Vec::new();
-    collect_knowledge_md_files(&knowledge_root, &knowledge_root, &mut files);
-    files.sort_by(|a, b| a.path.cmp(&b.path));
-    Ok(files)
+    Ok(svc
+        .list_files_flat()?
+        .into_iter()
+        .map(|(path, title)| KnowledgeFileRow { path, title })
+        .collect())
 }
 
 /// Read one knowledge markdown file by path relative to `knowledge/`.
 pub fn read_knowledge_file(workspace: &Path, rel_path: &str) -> Result<String, String> {
-    let full = resolve_knowledge_file(workspace, rel_path)?;
-    if !full.is_file() {
-        return Err(format!("file not found: {rel_path}"));
-    }
-    fs::read_to_string(full).map_err(|e| e.to_string())
-}
-
-fn extract_md_links(content: &str) -> Vec<String> {
-    let mut targets = Vec::new();
-    let mut rest = content;
-    while let Some(start) = rest.find("](") {
-        let after = &rest[start + 2..];
-        let Some(end) = after.find(')') else {
-            break;
-        };
-        let target = after[..end].trim();
-        if target.ends_with(".md") {
-            targets.push(target.to_string());
-        }
-        rest = &after[end + 1..];
-    }
-    targets
+    let svc = agent::knowledge::KnowledgeService::new(workspace);
+    Ok(svc.read_file(rel_path)?.content)
 }
 
 /// Build a minimal knowledge graph from markdown cross-links.
 pub fn build_knowledge_graph(workspace: &Path) -> Result<KnowledgeGraphData, String> {
-    let knowledge_root = workspace.join("knowledge");
-    if !knowledge_root.is_dir() {
-        return Ok(KnowledgeGraphData {
-            nodes: Vec::new(),
-            links: Vec::new(),
-        });
-    }
-
-    let files = list_knowledge_files(workspace)?;
-    let mut nodes: HashMap<String, KnowledgeGraphNodeRow> = HashMap::new();
-    let mut links = Vec::new();
-
-    for file in &files {
-        if file.path == "index.md" || file.path == "log.md" {
-            continue;
-        }
-        let category = file.path.split('/').next().unwrap_or("root").to_string();
-        nodes.insert(
-            file.path.clone(),
-            KnowledgeGraphNodeRow {
-                id: file.path.clone(),
-                label: file.title.clone(),
-                category,
-            },
-        );
-    }
-
-    for file in &files {
-        if file.path == "index.md" || file.path == "log.md" {
-            continue;
-        }
-        let full = knowledge_root.join(&file.path.replace('/', std::path::MAIN_SEPARATOR_STR));
-        let Ok(content) = fs::read_to_string(&full) else {
-            continue;
-        };
-        for target in extract_md_links(&content) {
-            let resolved = full
-                .parent()
-                .unwrap_or(&knowledge_root)
-                .join(&target.replace('/', std::path::MAIN_SEPARATOR_STR));
-            let Ok(resolved) = resolved.canonicalize() else {
-                continue;
-            };
-            let Ok(target_rel) = resolved.strip_prefix(&knowledge_root) else {
-                continue;
-            };
-            let target_rel = target_rel.to_string_lossy().replace('\\', "/");
-            if target_rel != file.path && nodes.contains_key(&target_rel) {
-                links.push(KnowledgeGraphLinkRow {
-                    source: file.path.clone(),
-                    target: target_rel,
-                });
-            }
-        }
-    }
-
-    let mut seen = HashSet::new();
-    links.retain(|l| {
-        let key = if l.source < l.target {
-            (l.source.clone(), l.target.clone())
-        } else {
-            (l.target.clone(), l.source.clone())
-        };
-        seen.insert(key)
-    });
-
+    let graph = agent::knowledge::KnowledgeService::new(workspace).build_graph();
     Ok(KnowledgeGraphData {
-        nodes: nodes.into_values().collect(),
-        links,
+        nodes: graph
+            .nodes
+            .into_iter()
+            .map(|n| KnowledgeGraphNodeRow {
+                id: n.id,
+                label: n.label,
+                category: n.category,
+            })
+            .collect(),
+        links: graph
+            .links
+            .into_iter()
+            .map(|l| KnowledgeGraphLinkRow {
+                source: l.source,
+                target: l.target,
+            })
+            .collect(),
     })
 }
 
@@ -350,10 +217,6 @@ struct ChannelMeta {
 }
 
 const KNOWN_CHANNELS: &[ChannelMeta] = &[
-    ChannelMeta {
-        id: "web",
-        label: "Web 控制台",
-    },
     ChannelMeta {
         id: "feishu",
         label: "飞书",

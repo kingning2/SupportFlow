@@ -6,15 +6,21 @@ description = "Agent runtime (mirrors Python agent/, incremental port)"
 
 [dependencies]
 async-trait = "0.1"
-chrono = { version = "0.4", features = ["clock"] }
+chrono = { version = "0.4", features = ["clock", "std"] }
 futures-util = "0.3"
 md5 = "0.7"
 models = { path = "../models" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
-tokio = { version = "1", features = ["io-util", "process", "sync", "time"] }
+tokio = { version = "1", features = ["fs", "io-util", "process", "sync", "time"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+encoding_rs = "0.8"
+chardetng = "0.1"
+url = "2"
+pdf-extract = "0.7"
+calamine = "0.26"
+zip = "2"
 sha2 = "0.10"
 dirs = "6"
 regex = "1"
@@ -22,6 +28,11 @@ shlex = "1"
 similar = "2"
 tracing = "0.1"
 uuid = { version = "1", features = ["v4"] }
+walkdir = "2"
+base64 = "0.22"
+rusqlite = { version = "0.32", features = ["bundled"] }
+# No `_fetcher-*` feature: never auto-download Chromium; use system Chrome/Edge instead.
+chromiumoxide = { version = "0.7", default-features = false, features = ["tokio-runtime"] }
 
 [dev-dependencies]
 async-trait = "0.1"

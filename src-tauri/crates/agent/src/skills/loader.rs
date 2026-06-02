@@ -50,7 +50,7 @@ impl SkillLoader {
             }
         };
 
-        let mut names: Vec<String> = entries
+        let names: Vec<String> = entries
             .filter_map(|e| e.ok())
             .map(|e| e.file_name().to_string_lossy().into_owned())
             .collect();
@@ -144,6 +144,7 @@ impl SkillLoader {
     }
 }
 
+#[allow(dead_code)]
 pub fn default_skill_dirs(workspace: &Path) -> (PathBuf, PathBuf) {
     let custom = workspace.join("skills");
     let builtin = workspace.join("skills"); // app may override via config

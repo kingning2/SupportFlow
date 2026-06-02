@@ -42,8 +42,8 @@ docs: 补充工具清单字段说明
 |------|-----------------|------------|
 | 构建与依赖 | `package.json`、`Cargo.toml`、`build.rs`、`scripts/`、`.github/` | `build` / `deps` |
 | 环境与示例配置 | `.env.example`、`.gitignore` | `env` / `chore` |
-| Rust 后端 | `src-tauri/src/`、`src-tauri/crates/`（非 cowagent 业务树） | `tauri` |
-| Python Sidecar | `src-tauri/cowagent/` | `tauri` 或 `sidecar` |
+| Rust 后端 | `src-tauri/src/`、`src-tauri/crates/`（非 channel_agent 业务树） | `tauri` |
+| Python Sidecar | `src-tauri/channel_agent/` | `tauri` 或 `sidecar` |
 | 前端 IPC / 枚举 | `src/cmd/`、`src/enums/`、`src/generated/` | `frontend` |
 | 控制台 UI | `src/components/agent-console/`、`src/hooks/` 相关 | `ui` / `frontend` |
 | i18n | `src-tauri/resources/languages/` | `tauri` 或 `i18n` |

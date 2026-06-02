@@ -211,7 +211,7 @@ impl BashTool {
             return ToolRunResult::error("Error: command parameter is required");
         }
 
-        if command.contains("~/.cow/.env") || command.contains("~/.cow") {
+        if command.contains("~/.supportflow/.env") || command.contains("~/.supportflow") {
             return ToolRunResult::error(
                 "Error: Access denied. API keys and credentials must be accessed through the env_config tool only.",
             );
@@ -225,7 +225,7 @@ impl BashTool {
             }
         }
 
-        let env_file = Self::expand_path("~/.cow/.env");
+        let env_file = Self::expand_path("~/.supportflow/.env");
         let dotenv_vars = Self::load_dotenv(&env_file);
         debug!(count = dotenv_vars.len(), path = %env_file.display(), "Loaded dotenv");
 

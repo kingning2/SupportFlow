@@ -11,7 +11,7 @@ fn main() {
 
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let sidecar = manifest.join(format!(
-        "binaries/cowagent-channels-{target}{}",
+        "binaries/channel-sidecar-{target}{}",
         std::env::consts::EXE_SUFFIX
     ));
     if sidecar.is_file() {
@@ -23,7 +23,7 @@ fn main() {
     }
     println!(
         "cargo:rerun-if-changed={}",
-        manifest.join("cowagent/channel/__main__.py").display()
+        manifest.join("channel_agent/channel/__main__.py").display()
     );
 
     /* ===== env ===== */
@@ -75,7 +75,7 @@ fn main() {
 fn ensure_channel_sidecar_exe(manifest: &Path) {
     let target = std::env::var("TARGET").unwrap_or_else(|_| "unknown".into());
     let sidecar = manifest.join(format!(
-        "binaries/cowagent-channels-{target}{}",
+        "binaries/channel-sidecar-{target}{}",
         std::env::consts::EXE_SUFFIX
     ));
 

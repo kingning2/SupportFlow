@@ -239,6 +239,55 @@ pub struct AgentKnowledgeGraph {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
+pub struct AgentKnowledgeUploadFile {
+    pub filename: String,
+    pub data: Vec<u8>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentKnowledgeUploadRequest {
+    pub files: Vec<AgentKnowledgeUploadFile>,
+    #[serde(default)]
+    pub category: Option<String>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentKnowledgeIngestItem {
+    pub path: String,
+    pub title: String,
+    pub category: String,
+    pub slug: String,
+    pub original_name: String,
+    pub truncated: bool,
+    pub char_count: u32,
+    pub archive: String,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentKnowledgeIngestError {
+    pub file: String,
+    pub message: String,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentKnowledgeUploadResult {
+    pub results: Vec<AgentKnowledgeIngestItem>,
+    pub errors: Vec<AgentKnowledgeIngestError>,
+    pub count: u32,
+    pub memory_synced: bool,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct AgentChannelSummary {
     pub name: String,
     pub active: bool,
@@ -248,6 +297,7 @@ pub struct AgentChannelSummary {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct AgentChannelField {
     pub key: String,
     pub label: String,
@@ -263,6 +313,7 @@ pub struct AgentChannelField {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct AgentChannelDetail {
     pub name: String,
     pub label_key: String,
@@ -285,6 +336,7 @@ pub struct AgentChannelActionRequest {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct AgentChannelActionResponse {
     pub channel_type: String,
 }
@@ -441,6 +493,48 @@ pub async fn agent_get_knowledge_graph(
 }
 
 #[tauri::command]
+/// Ingest uploaded files into knowledge/ (parse → Markdown → index/log → memory sync).
+pub async fn agent_upload_knowledge(
+    runtime: State<'_, Arc<AgentRuntime>>,
+    body: AgentKnowledgeUploadRequest,
+) -> Result<AgentKnowledgeUploadResult, String> {
+    let files: Vec<(String, Vec<u8>)> = body
+        .files
+        .into_iter()
+        .map(|f| (f.filename, f.data))
+        .collect();
+    let batch = runtime
+        .upload_knowledge_files(files, body.category.as_deref())
+        .await?;
+    Ok(AgentKnowledgeUploadResult {
+        results: batch
+            .results
+            .into_iter()
+            .map(|r| AgentKnowledgeIngestItem {
+                path: r.path,
+                title: r.title,
+                category: r.category,
+                slug: r.slug,
+                original_name: r.original_name,
+                truncated: r.truncated,
+                char_count: r.char_count as u32,
+                archive: r.archive,
+            })
+            .collect(),
+        errors: batch
+            .errors
+            .into_iter()
+            .map(|e| AgentKnowledgeIngestError {
+                file: e.file,
+                message: e.message,
+            })
+            .collect(),
+        count: batch.count as u32,
+        memory_synced: batch.memory_synced,
+    })
+}
+
+#[tauri::command]
 /// List active channel summaries (legacy/simple list).
 pub async fn agent_list_channels(
     runtime: State<'_, Arc<AgentRuntime>>,
@@ -457,15 +551,15 @@ pub async fn agent_list_channels(
 }
 
 #[tauri::command]
-/// Channel catalog proxied to CowAgent Python `GET /api/channels`.
+/// Channel catalog proxied to SupportFlow Agent Python `GET /api/channels`.
 pub async fn agent_get_channel_catalog(
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<serde_json::Value, String> {
-    runtime.cow_python_channels_get().await
+    runtime.channel_python_channels_get().await
 }
 
 #[tauri::command]
-/// Channel connect/disconnect/save proxied to CowAgent Python `POST /api/channels`.
+/// Channel connect/disconnect/save proxied to SupportFlow Agent Python `POST /api/channels`.
 pub async fn agent_channel_action(
     runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentChannelActionRequest,
@@ -475,7 +569,7 @@ pub async fn agent_channel_action(
         "channel": body.channel,
         "config": body.config,
     });
-    runtime.cow_python_channels_post(payload).await
+    runtime.channel_python_channels_post(payload).await
 }
 
 #[tauri::command]
@@ -485,7 +579,7 @@ pub async fn agent_channel_console_api(
     body: AgentChannelConsoleApiRequest,
 ) -> Result<serde_json::Value, String> {
     runtime
-        .cow_channel_console_api(&body.path, &body.method, body.body)
+        .channel_console_api(&body.path, &body.method, body.body)
         .await
 }
 

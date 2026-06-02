@@ -58,6 +58,7 @@ pub fn run() {
             cmd::agent::agent_list_knowledge,
             cmd::agent::agent_read_knowledge,
             cmd::agent::agent_get_knowledge_graph,
+            cmd::agent::agent_upload_knowledge,
             cmd::agent::agent_list_channels,
             cmd::agent::agent_get_channel_catalog,
             cmd::agent::agent_channel_action,

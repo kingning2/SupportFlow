@@ -5,11 +5,11 @@ import { Check, QrCode } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import {
-  cowChannelAction,
-  cowFieldValueString,
-  isCowMaskedSecret,
-  type CowChannel
-} from "@/cmd/cow-python-channels";
+  channelAction,
+  channelFieldValueString,
+  isChannelMaskedSecret,
+  type ChannelCatalogEntry
+} from "@/cmd/channel-python-channels";
 import {
   buildConfigFromDrafts,
   ChannelFields,
@@ -32,15 +32,15 @@ declare global {
   }
 }
 
-function wecomHasCreds(ch: CowChannel) {
+function wecomHasCreds(ch: ChannelCatalogEntry) {
   const id = ch.fields.find((f) => f.key === "wecom_bot_id");
   const secret = ch.fields.find((f) => f.key === "wecom_bot_secret");
   return !!(
     id &&
     secret &&
-    cowFieldValueString(id.value) &&
-    cowFieldValueString(secret.value) &&
-    !isCowMaskedSecret(cowFieldValueString(secret.value))
+    channelFieldValueString(id.value) &&
+    channelFieldValueString(secret.value) &&
+    !isChannelMaskedSecret(channelFieldValueString(secret.value))
   );
 }
 
@@ -64,7 +64,7 @@ function ensureWecomSdk(): Promise<void> {
 }
 
 interface WecomPanelProps {
-  channel: CowChannel;
+  channel: ChannelCatalogEntry;
   lang: string;
   variant: "add" | "active";
   onConnected: () => void;
@@ -89,7 +89,7 @@ export function WecomPanel({
 
   const connectAfterAuth = useCallback(
     async (botId: string, secret: string) => {
-      await cowChannelAction({
+      await channelAction({
         action: "connect",
         channel: "wecom_bot",
         config: { wecom_bot_id: botId, wecom_bot_secret: secret }
@@ -207,7 +207,7 @@ export function WecomPanel({
                 type="button"
                 className="cursor-pointer rounded-lg bg-[#35A85B] px-4 py-2 text-sm font-medium text-white hover:bg-[#228547]"
                 onClick={() => {
-                  void cowChannelAction({
+                  void channelAction({
                     action: "connect",
                     channel: "wecom_bot",
                     config: buildConfigFromDrafts(channel, drafts)

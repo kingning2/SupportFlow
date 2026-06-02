@@ -27,6 +27,7 @@ pub fn noop_uploader() -> SharedSendFileUploader {
 }
 
 /// Callback-based uploader for app integration.
+#[allow(dead_code)]
 pub struct CallbackSendFileUploader {
     pub f: std::sync::Arc<
         dyn Fn(

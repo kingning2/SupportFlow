@@ -8,6 +8,9 @@ use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json, Map, Value};
 use tracing::debug;
 
+use crate::config::ModelsConfig;
+use crate::http_proxy::{build_reqwest_client, HttpProxySettings};
+
 use super::openai_compat::OpenAiHttpError;
 
 pub const DEFAULT_API_BASE: &str = "https://api.openai.com/v1";
@@ -34,11 +37,39 @@ impl Default for OpenAiHttpClient {
 
 impl OpenAiHttpClient {
     pub fn new(api_key: Option<String>, api_base: Option<String>) -> Self {
-        let timeout = std::time::Duration::from_secs(DEFAULT_TIMEOUT_SECS);
-        let client = reqwest::Client::builder()
-            .timeout(timeout)
-            .build()
-            .expect("reqwest client");
+        Self::with_proxy(
+            &HttpProxySettings::default(),
+            api_key,
+            api_base,
+            DEFAULT_TIMEOUT_SECS,
+        )
+    }
+
+    /// Build client honoring `config.json` `use_proxy` / `proxy` (mirrors `OpenAIHTTPClient.__init__`).
+    pub fn from_config(
+        config: &ModelsConfig,
+        api_key: Option<String>,
+        api_base: Option<String>,
+    ) -> Self {
+        Self::with_proxy(
+            &HttpProxySettings::from_models(config),
+            api_key,
+            api_base,
+            config.request_timeout_secs(),
+        )
+    }
+
+    fn with_proxy(
+        proxy: &HttpProxySettings,
+        api_key: Option<String>,
+        api_base: Option<String>,
+        timeout_secs: u64,
+    ) -> Self {
+        let client = build_reqwest_client(
+            proxy,
+            std::time::Duration::from_secs(timeout_secs),
+            None,
+        );
         Self {
             client,
             api_key,
@@ -46,7 +77,7 @@ impl OpenAiHttpClient {
                 .unwrap_or_else(|| DEFAULT_API_BASE.to_string())
                 .trim_end_matches('/')
                 .to_string(),
-            timeout_secs: DEFAULT_TIMEOUT_SECS,
+            timeout_secs,
             extra_headers: HeaderMap::new(),
         }
     }

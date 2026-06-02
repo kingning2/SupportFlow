@@ -142,7 +142,7 @@ fn push_unique(out: &mut Vec<(String, String)>, item: (String, String), limit: u
     out.push(item);
 }
 
-/// `prefixes` contains `""` — match every message (CowAgent-style config).
+/// `prefixes` contains `""` — match every message (SupportFlow Agent-style config).
 fn prefix_matches_all(prefixes: &[String]) -> bool {
     prefixes.iter().any(|p| p.is_empty())
 }

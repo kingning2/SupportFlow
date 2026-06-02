@@ -9,7 +9,8 @@ pub use diff::{
     normalize_to_lf, restore_line_endings, strip_bom, DiffOutput, FuzzyMatchResult,
 };
 pub use path::{
-    cow_config_dir, cow_env_file, expand_path, is_cow_config_dir, is_cow_env_file, resolve_path,
+    expand_path, is_supportflow_config_dir, is_supportflow_env_file, resolve_path,
+    supportflow_config_dir, supportflow_env_file,
 };
 pub use truncate::{
     format_size, truncate_head, truncate_line, truncate_tail, TruncationResult, DEFAULT_MAX_BYTES,

@@ -1,4 +1,4 @@
-import { ConsoleView } from "@/enums";
+import { ConsoleView, channelLabelKey, type ChannelCatalogEntryId } from "@/enums";
 import {
   BookOpen,
   Brain,
@@ -30,31 +30,49 @@ export interface SidebarNavGroup {
   items: SidebarNavItem[];
 }
 
-export const SIDEBAR_NAV_GROUPS: SidebarNavGroup[] = [
-  {
-    id: SidebarGroupId.Chat,
-    labelKey: "nav_chat",
-    items: [{ view: ConsoleView.Chat, icon: MessageSquare, labelKey: "menu_chat" }]
-  },
-  {
-    id: SidebarGroupId.Manage,
-    labelKey: "nav_manage",
-    items: [
-      { view: ConsoleView.Config, icon: SlidersHorizontal, labelKey: "menu_config" },
-      { view: ConsoleView.Models, icon: Cpu, labelKey: "menu_models" },
-      { view: ConsoleView.Skills, icon: Zap, labelKey: "menu_skills" },
-      { view: ConsoleView.Memory, icon: Brain, labelKey: "menu_memory" },
-      { view: ConsoleView.Knowledge, icon: BookOpen, labelKey: "menu_knowledge" },
-      { view: ConsoleView.Channels, icon: Radio, labelKey: "menu_channels" },
-      { view: ConsoleView.Tasks, icon: Clock, labelKey: "menu_tasks" }
-    ]
-  },
-  {
-    id: SidebarGroupId.Monitor,
-    labelKey: "nav_monitor",
-    items: [{ view: ConsoleView.Logs, icon: Terminal, labelKey: "menu_logs" }]
-  }
-];
+function channelNavItem(devChannel: ChannelCatalogEntryId): SidebarNavItem {
+  return {
+    view: ConsoleView.Channels,
+    icon: Radio,
+    labelKey: channelLabelKey(devChannel)
+  };
+}
+
+/** Sidebar groups; pass `devChannel` from `getDevChannel()` to lock a single channel entry. */
+export function getSidebarNavGroups(devChannel: ChannelCatalogEntryId | null): SidebarNavGroup[] {
+  const channelItem: SidebarNavItem = devChannel
+    ? channelNavItem(devChannel)
+    : { view: ConsoleView.Channels, icon: Radio, labelKey: "menu_channels" };
+
+  return [
+    {
+      id: SidebarGroupId.Chat,
+      labelKey: "nav_chat",
+      items: [{ view: ConsoleView.Chat, icon: MessageSquare, labelKey: "menu_chat" }]
+    },
+    {
+      id: SidebarGroupId.Manage,
+      labelKey: "nav_manage",
+      items: [
+        { view: ConsoleView.Config, icon: SlidersHorizontal, labelKey: "menu_config" },
+        { view: ConsoleView.Models, icon: Cpu, labelKey: "menu_models" },
+        { view: ConsoleView.Skills, icon: Zap, labelKey: "menu_skills" },
+        { view: ConsoleView.Memory, icon: Brain, labelKey: "menu_memory" },
+        { view: ConsoleView.Knowledge, icon: BookOpen, labelKey: "menu_knowledge" },
+        channelItem,
+        { view: ConsoleView.Tasks, icon: Clock, labelKey: "menu_tasks" }
+      ]
+    },
+    {
+      id: SidebarGroupId.Monitor,
+      labelKey: "nav_monitor",
+      items: [{ view: ConsoleView.Logs, icon: Terminal, labelKey: "menu_logs" }]
+    }
+  ];
+}
+
+/** Default (all channels) navigation — use `getSidebarNavGroups(null)` in new code. */
+export const SIDEBAR_NAV_GROUPS = getSidebarNavGroups(null);
 
 export const CONSOLE_VIEW_GROUP_LABEL: Partial<Record<ConsoleView, string>> = {
   [ConsoleView.Chat]: "nav_chat",
@@ -80,10 +98,17 @@ export const CONSOLE_VIEW_PAGE_LABEL: Record<ConsoleView, string> = {
   [ConsoleView.Logs]: "menu_logs"
 };
 
-export function getBreadcrumbKeys(view: ConsoleView) {
+export function getBreadcrumbKeys(
+  view: ConsoleView,
+  devChannel: ChannelCatalogEntryId | null = null
+) {
+  const pageKey =
+    view === ConsoleView.Channels && devChannel
+      ? channelLabelKey(devChannel)
+      : CONSOLE_VIEW_PAGE_LABEL[view];
   return {
     groupKey: CONSOLE_VIEW_GROUP_LABEL[view] ?? "nav_chat",
-    pageKey: CONSOLE_VIEW_PAGE_LABEL[view]
+    pageKey
   };
 }
 

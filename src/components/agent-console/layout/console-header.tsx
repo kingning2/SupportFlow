@@ -5,15 +5,16 @@ import { useTranslation } from "react-i18next";
 
 import { CONSOLE_BRAND, getBreadcrumbKeys } from "@/components/agent-console/constants/sidebar-nav";
 import { Button } from "@/components/ui/button";
-import type { ConsoleView } from "@/enums";
+import type { ConsoleView, ChannelCatalogEntryId } from "@/enums";
 import { Language } from "@/enums";
-import type { CowTheme } from "@/lib/agent-console/theme-sync";
+import type { ConsoleTheme } from "@/lib/agent-console/theme-sync";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { changeCurrentLanguageAction } from "@/store/modules/app";
 
 interface ConsoleHeaderProps {
   activeView: ConsoleView;
-  theme: CowTheme;
+  devChannel: ChannelCatalogEntryId | null;
+  theme: ConsoleTheme;
   onToggleTheme: () => void;
   onToggleSessionPanel: () => void;
   onToggleMobileSidebar: () => void;
@@ -21,6 +22,7 @@ interface ConsoleHeaderProps {
 
 export function ConsoleHeader({
   activeView,
+  devChannel,
   theme,
   onToggleTheme,
   onToggleSessionPanel,
@@ -29,7 +31,7 @@ export function ConsoleHeader({
   const { t, i18n } = useTranslation("console");
   const dispatch = useAppDispatch();
   const currentLanguage = useAppSelector((state) => state.app.currentLanguage);
-  const { groupKey, pageKey } = getBreadcrumbKeys(activeView);
+  const { groupKey, pageKey } = getBreadcrumbKeys(activeView, devChannel);
 
   const toggleLanguage = () => {
     const next = currentLanguage === Language.Cn ? Language.En : Language.Cn;

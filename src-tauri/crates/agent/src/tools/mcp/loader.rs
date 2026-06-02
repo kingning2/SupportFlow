@@ -176,7 +176,7 @@ impl McpToolLoader {
     fn teardown_server(&self, server_name: &str) {
         let client = self.clients.write().expect("clients").remove(server_name);
         if let Some(client) = client {
-            let name = server_name.to_string();
+            let _name = server_name.to_string();
             tokio::spawn(async move {
                 client.shutdown().await;
             });

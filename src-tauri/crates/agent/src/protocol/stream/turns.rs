@@ -23,12 +23,11 @@ pub fn identify_complete_turns(messages: &[Value]) -> Vec<Turn> {
 
         if role == "user" {
             let mut is_user_query = false;
-            let mut has_tool_result = false;
             if let Some(blocks) = content.as_array() {
                 let has_text = blocks
                     .iter()
                     .any(|b| b.get("type").and_then(|t| t.as_str()) == Some("text"));
-                has_tool_result = blocks
+                let has_tool_result = blocks
                     .iter()
                     .any(|b| b.get("type").and_then(|t| t.as_str()) == Some("tool_result"));
                 is_user_query = has_text && !has_tool_result;

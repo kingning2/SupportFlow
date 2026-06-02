@@ -7,15 +7,16 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use agent::SkillEntry;
 use agent::{
-    get_cancel_registry, Agent, AgentEvent, AgentEventCallback, BotLlmModel, CancelHandle,
-    LlmBridgeConfig, LlmModel, McpToolLoader, RunStreamOptions,
+    get_cancel_registry, Agent, AgentEvent, AgentEventCallback, CancelHandle, McpToolLoader,
+    RunStreamOptions,
 };
+use bridge::{context_from_reply_params, BridgeRuntime};
 use models::catalog::provider_configured;
 use models::provider_catalog::{
     build_provider_details, find_provider_meta as find_provider_meta_detail,
 };
 use models::{
-    clear_provider_credentials, create_bot, find_provider_meta, list_providers, set_chat_model,
+    clear_provider_credentials, find_provider_meta, list_providers, set_chat_model,
     update_provider_credentials, ModelsConfig,
 };
 use tauri::path::BaseDirectory;
@@ -125,6 +126,7 @@ fn load_models_config_from_path(path: &Path) -> ModelsConfig {
 }
 
 /// Resolve mirrored workspace config path if present.
+#[allow(dead_code)]
 pub fn resolve_config_path(workspace: &Path) -> Option<PathBuf> {
     let config = workspace.join("config.json");
     if config.is_file() {
@@ -133,26 +135,16 @@ pub fn resolve_config_path(workspace: &Path) -> Option<PathBuf> {
     None
 }
 
-fn build_agent(workspace: PathBuf, config: &ModelsConfig) -> Result<Agent, String> {
-    let config_arc = Arc::new(config.clone());
-    let bot_type = config.bot_type()?;
-    let bot = create_bot(bot_type, config_arc)?;
-    let model_name = config.model_or("deepseek-chat");
-    let bridge = LlmBridgeConfig {
-        model: model_name.clone(),
-        enable_thinking: true,
-        channel_type: "web".into(),
-        session_id: None,
-        reasoning_effort: None,
-    };
-    let model: Arc<dyn LlmModel> = Arc::new(BotLlmModel::new(bot, bridge.clone()));
-    let mut agent = Agent::new(
-        "You are SupportFlow, a helpful desktop assistant.",
-        model,
-        bridge,
-    );
-    agent.workspace_dir = Some(workspace);
-    Ok(agent)
+fn build_bridge_stack(
+    workspace: PathBuf,
+    config: &ModelsConfig,
+    mcp_loader: Arc<McpToolLoader>,
+) -> Arc<BridgeRuntime> {
+    Arc::new(BridgeRuntime::new(
+        workspace,
+        Arc::new(config.clone()),
+        mcp_loader,
+    ))
 }
 
 pub struct AgentRuntime {
@@ -161,11 +153,12 @@ pub struct AgentRuntime {
     pub config_path: PathBuf,
     config: tokio::sync::RwLock<ModelsConfig>,
     pub mcp_loader: Arc<McpToolLoader>,
-    agent: Mutex<Option<Agent>>,
+    bridge_stack: tokio::sync::RwLock<Arc<BridgeRuntime>>,
     session_id: Mutex<String>,
     log_streaming: tokio::sync::RwLock<bool>,
-    cow_sidecar:
-        tokio::sync::Mutex<Option<Arc<crate::context::cow_python_sidecar::CowPythonSidecar>>>,
+    channel_sidecar: tokio::sync::Mutex<
+        Option<Arc<crate::context::channel_python_sidecar::ChannelPythonSidecar>>,
+    >,
     channel_bridge: Arc<ChannelBridge>,
 }
 
@@ -217,16 +210,17 @@ impl AgentRuntime {
         let _ = workspace_console::upsert_session_index(&workspace, &session_id, Some("New Chat"));
         let channel_bridge = Arc::new(ChannelBridge::new());
         let _ = channel_bridge.sync_from_config_file(&config_path);
+        let bridge_stack = build_bridge_stack(workspace.clone(), &config, mcp_loader.clone());
         Ok(Self {
             app: app.clone(),
             workspace,
             config_path,
             config: tokio::sync::RwLock::new(config),
             mcp_loader,
-            agent: Mutex::new(None),
+            bridge_stack: tokio::sync::RwLock::new(bridge_stack),
             session_id: Mutex::new(session_id),
             log_streaming: tokio::sync::RwLock::new(false),
-            cow_sidecar: tokio::sync::Mutex::new(None),
+            channel_sidecar: tokio::sync::Mutex::new(None),
             channel_bridge,
         })
     }
@@ -235,17 +229,37 @@ impl AgentRuntime {
     pub async fn start_sidecar_deferred(self: Arc<Self>) {
         const DEFAULT_DELAY: Duration = Duration::from_secs(2);
         tokio::time::sleep(DEFAULT_DELAY).await;
-        if self.cow_sidecar.lock().await.is_some() {
+        if self.channel_sidecar.lock().await.is_some() {
             return;
         }
-        match crate::context::cow_python_sidecar::spawn_sidecar(&self.app, &self.config_path).await
+        match crate::context::channel_python_sidecar::spawn_sidecar(&self.app, &self.config_path)
+            .await
         {
             Ok(sidecar) => {
                 sidecar
                     .register_runtime(std::sync::Arc::downgrade(&self))
                     .await;
-                *self.cow_sidecar.lock().await = Some(sidecar);
+                *self.channel_sidecar.lock().await = Some(sidecar.clone());
                 crate::log_info!("Channel sidecar ready (deferred start)");
+                if let Err(e) = sidecar.channels_autostart().await {
+                    crate::log_warn!("Channel autostart RPC failed: {e}");
+                } else if let Ok(status) = sidecar.channels_status().await {
+                    let running = status
+                        .get("running")
+                        .and_then(|v| v.as_array())
+                        .map(|a| {
+                            a.iter()
+                                .filter_map(|v| v.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        })
+                        .unwrap_or_default();
+                    if running.is_empty() {
+                        crate::log_info!("Channel sidecar: no external channels running");
+                    } else {
+                        crate::log_info!("Channel sidecar running: {running}");
+                    }
+                }
             }
             Err(e) => {
                 crate::log_warn!("Channel sidecar deferred start failed: {e}");
@@ -255,21 +269,25 @@ impl AgentRuntime {
 
     async fn ensure_sidecar(
         self: &Arc<Self>,
-    ) -> Result<Arc<crate::context::cow_python_sidecar::CowPythonSidecar>, String> {
-        if let Some(sidecar) = self.cow_sidecar.lock().await.clone() {
+    ) -> Result<Arc<crate::context::channel_python_sidecar::ChannelPythonSidecar>, String> {
+        if let Some(sidecar) = self.channel_sidecar.lock().await.clone() {
             return Ok(sidecar);
         }
         let sidecar =
-            crate::context::cow_python_sidecar::spawn_sidecar(&self.app, &self.config_path).await?;
+            crate::context::channel_python_sidecar::spawn_sidecar(&self.app, &self.config_path)
+                .await?;
         sidecar
             .register_runtime(std::sync::Arc::downgrade(self))
             .await;
-        *self.cow_sidecar.lock().await = Some(sidecar.clone());
+        *self.channel_sidecar.lock().await = Some(sidecar.clone());
         Ok(sidecar)
     }
 
     /// LLM reply for external channels (Python sidecar calls via `agent.reply` RPC).
-    pub async fn channel_reply(&self, params: &serde_json::Value) -> Result<String, String> {
+    pub async fn channel_reply(
+        &self,
+        params: &serde_json::Value,
+    ) -> Result<serde_json::Value, String> {
         let query = params
             .get("query")
             .and_then(|v| v.as_str())
@@ -278,27 +296,18 @@ impl AgentRuntime {
             .get("clear_history")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
+        let agent_default = self.config.read().await.agent_enabled();
+        let use_agent = params
+            .get("agent")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(agent_default);
 
-        self.ensure_agent().await?;
-        let mut guard = self.agent.lock().await;
-        let agent = guard
-            .as_mut()
-            .ok_or_else(|| "agent not initialized".to_string())?;
-        agent.mcp_registry = Some(self.mcp_loader.registry.clone());
-        agent.mcp_loader = Some(self.mcp_loader.clone());
-
-        agent
-            .run_stream(
-                query,
-                RunStreamOptions {
-                    on_event: None,
-                    clear_history,
-                    cancel: None,
-                    skill_filter: None,
-                },
-            )
-            .await
-            .map_err(|e| e.to_string())
+        let ctx = context_from_reply_params(params);
+        let stack = self.bridge_stack.read().await.clone();
+        let reply = stack
+            .reply(query, Some(ctx), use_agent, clear_history, None)
+            .await;
+        Ok(reply.to_json_value())
     }
 
     /// Channel-agnostic message processing moved into Rust crate (`crates/channel_runtime`).
@@ -521,8 +530,9 @@ impl AgentRuntime {
         let mirror = self.workspace.join("config.json");
         fs::copy(&self.config_path, &mirror)
             .map_err(|e| format!("sync config to workspace: {e}"))?;
-        let mut guard = self.agent.lock().await;
-        *guard = None;
+        let fresh = self.config.read().await.clone();
+        *self.bridge_stack.write().await =
+            build_bridge_stack(self.workspace.clone(), &fresh, self.mcp_loader.clone());
         Ok(())
     }
 
@@ -575,8 +585,11 @@ impl AgentRuntime {
         let id = format!("session_{}", uuid::Uuid::new_v4());
         *self.session_id.lock().await = id.clone();
         let _ = workspace_console::upsert_session_index(&self.workspace, &id, Some("New Chat"));
-        let mut guard = self.agent.lock().await;
-        *guard = None;
+        self.bridge_stack
+            .write()
+            .await
+            .agent_bridge
+            .clear_all_sessions();
         id
     }
 
@@ -603,19 +616,43 @@ impl AgentRuntime {
         workspace_console::build_knowledge_graph(&self.workspace)
     }
 
+    /// Ingest uploads into `knowledge/` (aligned with Python `KnowledgeService.ingest_upload`).
+    pub async fn upload_knowledge_files(
+        &self,
+        files: Vec<(String, Vec<u8>)>,
+        category: Option<&str>,
+    ) -> Result<agent::IngestBatchResult, String> {
+        let config = self.config.read().await.clone();
+        let enabled = config.knowledge.unwrap_or(true);
+        let svc = agent::knowledge::KnowledgeService::new(&self.workspace);
+        svc.ingest_upload(files, category.unwrap_or("uploads"), true, enabled, &config)
+            .await
+    }
+
     /// List configured channels from bundled config.
     pub async fn list_channels(&self) -> Result<Vec<workspace_console::ChannelRow>, String> {
         workspace_console::list_channels_from_config(&self.config_path)
     }
 
-    /// Channel catalog via CowAgent Python stdio RPC.
-    pub async fn cow_python_channels_get(self: &Arc<Self>) -> Result<serde_json::Value, String> {
+    /// Channel catalog via SupportFlow Agent Python stdio RPC.
+    pub async fn channel_python_channels_get(
+        self: &Arc<Self>,
+    ) -> Result<serde_json::Value, String> {
         let sidecar = self.ensure_sidecar().await?;
         sidecar.channels_get().await
     }
 
-    /// Channel connect/disconnect/save via CowAgent Python stdio RPC.
-    pub async fn cow_channel_console_api(
+    /// Sidecar channel health (configured vs running threads).
+    #[allow(dead_code)]
+    pub async fn channel_python_channels_status(
+        self: &Arc<Self>,
+    ) -> Result<serde_json::Value, String> {
+        let sidecar = self.ensure_sidecar().await?;
+        sidecar.channels_status().await
+    }
+
+    /// Channel connect/disconnect/save via SupportFlow Agent Python stdio RPC.
+    pub async fn channel_console_api(
         self: &Arc<Self>,
         path: &str,
         method: &str,
@@ -625,7 +662,7 @@ impl AgentRuntime {
         sidecar.console_api(path, method, body).await
     }
 
-    pub async fn cow_python_channels_post(
+    pub async fn channel_python_channels_post(
         self: &Arc<Self>,
         payload: serde_json::Value,
     ) -> Result<serde_json::Value, String> {
@@ -644,6 +681,23 @@ impl AgentRuntime {
         self.reload_config_from_disk().await?;
         self.channel_bridge
             .on_action_result(&self.config_path, &action, &channel, &result)?;
+        if result.get("status").and_then(|v| v.as_str()) == Some("success")
+            && (action == "connect" || action == "save")
+        {
+            if let Ok(status) = sidecar.channels_status().await {
+                let running = status
+                    .get("running")
+                    .and_then(|v| v.as_array())
+                    .map(|a| {
+                        a.iter()
+                            .filter_map(|v| v.as_str())
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    })
+                    .unwrap_or_default();
+                crate::log_info!("Channel '{channel}' action={action} ok; running=[{running}]");
+            }
+        }
         Ok(result)
     }
 
@@ -891,24 +945,28 @@ impl AgentRuntime {
         Ok(rows)
     }
 
-    /// Ensure in-process agent instance is initialized.
-    pub async fn ensure_agent(&self) -> Result<(), String> {
-        let mut guard = self.agent.lock().await;
-        if guard.is_some() {
-            return Ok(());
-        }
-        let cfg = self.config.read().await.clone();
-        let mut agent = build_agent(self.workspace.clone(), &cfg)?;
-        agent.mcp_registry = Some(self.mcp_loader.registry.clone());
-        agent.mcp_loader = Some(self.mcp_loader.clone());
-        *guard = Some(agent);
-        Ok(())
+    /// Ensure in-process agent instance is initialized for the current session.
+    pub async fn ensure_agent(&self) -> Result<Arc<Agent>, String> {
+        let session_id = self.session_id().await;
+        let stack = self.bridge_stack.read().await.clone();
+        let agent = stack.agent_bridge.ensure_agent(Some(&session_id), "web")?;
+        Ok(agent)
     }
 
     /// Clear conversation history of current in-process agent.
     pub async fn clear_context(&self) -> Result<(), String> {
-        if let Some(agent) = self.agent.lock().await.as_mut() {
-            agent.clear_history();
+        let session_id = self.session_id().await;
+        let agent = self.ensure_agent().await?;
+        agent.clear_history();
+        if self
+            .config
+            .read()
+            .await
+            .conversation_persistence
+            .unwrap_or(true)
+        {
+            let store = agent::conversation_store_for_workspace(&self.workspace)?;
+            store.clear_context(&session_id)?;
         }
         Ok(())
     }
@@ -918,21 +976,17 @@ impl AgentRuntime {
     where
         F: FnOnce(&Agent) -> R,
     {
-        self.ensure_agent().await?;
-        let guard = self.agent.lock().await;
-        let agent = guard.as_ref().ok_or_else(|| "agent missing".to_string())?;
-        Ok(f(agent))
+        let agent = self.ensure_agent().await?;
+        Ok(f(agent.as_ref()))
     }
 
-    /// Execute a mutable closure against initialized agent.
+    /// Execute a closure against initialized agent (`Agent` is behind `Arc`, use interior mutability on tools if needed).
     pub async fn with_agent_write<F, R>(&self, f: F) -> Result<R, String>
     where
-        F: FnOnce(&mut Agent) -> R,
+        F: FnOnce(&Agent) -> R,
     {
-        self.ensure_agent().await?;
-        let mut guard = self.agent.lock().await;
-        let agent = guard.as_mut().ok_or_else(|| "agent missing".to_string())?;
-        Ok(f(agent))
+        let agent = self.ensure_agent().await?;
+        Ok(f(agent.as_ref()))
     }
 
     /// Convert low-level agent stream event into frontend stream chunk payload.
@@ -1052,13 +1106,8 @@ pub async fn run_agent_message(
         }
     });
 
-    let run_result = {
-        let mut guard = runtime.agent.lock().await;
-        let Some(agent) = guard.as_mut() else {
-            return;
-        };
-        agent.mcp_registry = Some(runtime.mcp_loader.registry.clone());
-        agent.mcp_loader = Some(runtime.mcp_loader.clone());
+    let run_result = async {
+        let agent = runtime.ensure_agent().await?;
         agent
             .run_stream(
                 &message,
@@ -1070,7 +1119,9 @@ pub async fn run_agent_message(
                 },
             )
             .await
-    };
+            .map_err(|e| e.to_string())
+    }
+    .await;
 
     match run_result {
         Ok(content) => {

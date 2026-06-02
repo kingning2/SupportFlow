@@ -165,18 +165,45 @@ export function getAgentKnowledgeGraph() {
   );
 }
 
+export interface AgentKnowledgeUploadFile {
+  filename: string;
+  data: number[];
+}
+
+export interface AgentKnowledgeUploadResult {
+  results: Array<{
+    path: string;
+    title: string;
+    category: string;
+    slug: string;
+    originalName: string;
+    truncated: boolean;
+    charCount: number;
+    archive: string;
+  }>;
+  errors: Array<{ file: string; message: string }>;
+  count: number;
+  memorySynced: boolean;
+}
+
+export function uploadAgentKnowledge(files: AgentKnowledgeUploadFile[], category?: string) {
+  return invokeWrapper<AgentKnowledgeUploadResult>(TauriCmd.AgentUploadKnowledge, {
+    body: { files, category }
+  });
+}
+
 export function listAgentChannels() {
   return invokeWrapper<AgentChannelSummary[]>(TauriCmd.AgentListChannels);
 }
 
-/** @deprecated Use `fetchCowChannels` from `@/cmd/cow-python-channels` (Python proxy). */
+/** @deprecated Use `fetchChannels` from `@/cmd/channel-python-channels` (Python proxy). */
 export function getAgentChannelCatalog() {
   return invokeWrapper<{ status: string; channels: AgentChannelDetail[] }>(
     TauriCmd.AgentGetChannelCatalog
   );
 }
 
-/** @deprecated Use `cowChannelAction` from `@/cmd/cow-python-channels` (Python proxy). */
+/** @deprecated Use `channelAction` from `@/cmd/channel-python-channels` (Python proxy). */
 export function agentChannelAction(body: AgentChannelActionRequest) {
   return invokeWrapper<AgentChannelActionResponse & { status: string }>(
     TauriCmd.AgentChannelAction,

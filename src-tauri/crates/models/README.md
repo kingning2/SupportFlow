@@ -39,4 +39,5 @@ From Tauri: `crate::models::*` re-exports this crate.
 ## Status
 
 - **Done**: OpenAI-compatible HTTP + SSE; full `call_with_tools` + Claude→OpenAI message/tool conversion + `drop_orphaned_tool_results_openai`; `SessionManager` + per-vendor `SessionClass` (discard/token rules aligned with Python `*_session.py`, ChatGPT uses `tiktoken-rs`); factory for all `bot_type` values.
-- **TODO**: Channel `reply()` flows; non-compat APIs (Baidu/Gemini/讯飞 native); HTTP proxy (`common/http_proxy`); `call_vision`; DeepSeek thinking-mode request extras in `deepseek_bot.py`.
+- **TODO**: Channel `reply()` flows; non-compat APIs (Baidu/Gemini/讯飞 native); per-vendor vision overrides.
+- **Done**: HTTP proxy; `OpenAICompatibleBot::call_vision` (OpenAI-compat `/chat/completions` + image_url).

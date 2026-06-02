@@ -95,6 +95,11 @@ fn build_tooling_section(tools: &[std::sync::Arc<dyn AgentTool>]) -> Vec<String>
         ("memory_search", "搜索记忆"),
         ("memory_get", "读取记忆内容"),
         ("send", "发送本地文件给用户"),
+        ("env_config", "管理API密钥和技能配置"),
+        ("web_search", "网络搜索"),
+        ("web_fetch", "获取网页/文档内容"),
+        ("browser", "控制浏览器（Chromium/CDP）"),
+        ("vision", "图像理解/视觉问答"),
     ];
 
     let mut tool_lines = Vec::new();

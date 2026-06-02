@@ -1,21 +1,21 @@
 import { LocalCacheKey } from "@/enums";
 
-export type CowTheme = "light" | "dark";
+export type ConsoleTheme = "light" | "dark";
 
-export function readCowTheme(): CowTheme {
+export function readConsoleTheme(): ConsoleTheme {
   if (typeof window === "undefined") {
     return "dark";
   }
-  return localStorage.getItem(LocalCacheKey.CowTheme) === "light" ? "light" : "dark";
+  return localStorage.getItem(LocalCacheKey.ConsoleTheme) === "light" ? "light" : "dark";
 }
 
-export function applyCowTheme(theme: CowTheme): void {
-  localStorage.setItem(LocalCacheKey.CowTheme, theme);
+export function applyConsoleTheme(theme: ConsoleTheme): void {
+  localStorage.setItem(LocalCacheKey.ConsoleTheme, theme);
   document.documentElement.classList.toggle("dark", theme === "dark");
 }
 
-export function toggleCowTheme(): CowTheme {
-  const next: CowTheme = readCowTheme() === "dark" ? "light" : "dark";
-  applyCowTheme(next);
+export function toggleConsoleTheme(): ConsoleTheme {
+  const next: ConsoleTheme = readConsoleTheme() === "dark" ? "light" : "dark";
+  applyConsoleTheme(next);
   return next;
 }

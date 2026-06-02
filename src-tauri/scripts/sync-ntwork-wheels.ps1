@@ -1,5 +1,5 @@
-# Shared: download ntwork + pyee + xcgui wheels for Python 3.8 / wework channel.
-$script:NtworkWhlName = "ntwork-0.1.3-cp38-cp38-win_amd64.whl"
+# Shared: download ntwork + pyee + xcgui wheels for Python 3.10 / wework channel.
+$script:NtworkWhlName = "ntwork-0.1.3-cp310-cp310-win_amd64.whl"
 $script:NtworkWhlUrl = "https://github.com/hanfangyuan4396/ntwork-bin-backup/raw/main/ntwork-whl/$($script:NtworkWhlName)"
 
 function Sync-NtworkWheels {
@@ -18,7 +18,7 @@ function Sync-NtworkWheels {
         Write-Host "Found ntwork wheel: $($script:NtworkWhlName)"
     }
 
-    $onlyBin = @("--python-version", "38", "--platform", "win_amd64", "--only-binary=:all:")
+    $onlyBin = @("--python-version", "310", "--platform", "win_amd64", "--only-binary=:all:")
     foreach ($dep in @("pyee", "xcgui")) {
         if (-not (Get-ChildItem -Path $WheelDir -Filter "$dep*.whl" -ErrorAction SilentlyContinue)) {
             Write-Host "Downloading $dep for ntwork..."

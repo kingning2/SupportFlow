@@ -5,11 +5,11 @@ import { MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import {
-  cowChannelAction,
-  cowChannelLoginStatus,
-  localizeCowText,
-  type CowChannel
-} from "@/cmd/cow-python-channels";
+  channelAction,
+  channelLoginStatus,
+  localizeChannelText,
+  type ChannelCatalogEntry
+} from "@/cmd/channel-python-channels";
 import { ChannelHint } from "@/components/agent-console/views/channels/channel-hint";
 import {
   buildConfigFromDrafts,
@@ -26,14 +26,14 @@ import { WecomPanel } from "@/components/agent-console/views/channels/wecom-pane
 import { WeixinQrPanel } from "@/components/agent-console/views/channels/weixin-qr-panel";
 import { WxQrPanel } from "@/components/agent-console/views/channels/wx-qr-panel";
 
-function wecomHasCreds(ch: CowChannel) {
+function wecomHasCreds(ch: ChannelCatalogEntry) {
   const id = ch.fields.find((f) => f.key === "wecom_bot_id");
   const secret = ch.fields.find((f) => f.key === "wecom_bot_secret");
   return !!(id?.value && secret?.value);
 }
 
 interface ActiveChannelCardProps {
-  channel: CowChannel;
+  channel: ChannelCatalogEntry;
   lang: string;
   onRefresh: () => void;
   onDisconnect: (name: string) => void;
@@ -51,10 +51,10 @@ export function ActiveChannelCard({
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [statusError, setStatusError] = useState(false);
 
-  const loginStatus = cowChannelLoginStatus(channel);
+  const loginStatus = channelLoginStatus(channel);
   const colors = channelColorClasses(channel.color);
   const Icon = CHANNEL_ICON_MAP[channel.icon ?? ""] ?? MessageCircle;
-  const label = localizeCowText(channel.label, lang);
+  const label = localizeChannelText(channel.label, lang);
 
   const weixinWaiting = channel.name === "weixin" && loginStatus && loginStatus !== "logged_in";
   const wxWaiting = channel.name === "wx" && loginStatus && loginStatus !== "logged_in";
@@ -82,7 +82,7 @@ export function ActiveChannelCard({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const data = await cowChannelAction({
+      const data = await channelAction({
         action: "save",
         channel: channel.name,
         config: buildConfigFromDrafts(channel, drafts)

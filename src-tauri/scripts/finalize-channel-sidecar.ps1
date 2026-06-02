@@ -1,9 +1,9 @@
-# Move cowagent-channels-*.exe.new -> binaries/ after quitting the running app.
+# Move channel-sidecar-*.exe.new -> binaries/ after quitting the running app.
 $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $BinDir = Join-Path $Root "src-tauri\binaries"
 $Target = if ($env:CARGO_BUILD_TARGET) { $env:CARGO_BUILD_TARGET } else { "x86_64-pc-windows-msvc" }
-$OutPath = Join-Path $BinDir "cowagent-channels-$Target.exe"
+$OutPath = Join-Path $BinDir "channel-sidecar-$Target.exe"
 $Staging = "$OutPath.new"
 
 if (-not (Test-Path -LiteralPath $Staging)) {

@@ -126,10 +126,26 @@ impl Agent {
         bridge: LlmBridgeConfig,
     ) -> Self {
         let workspace_dir = std::env::current_dir().ok();
-        let tools = load_builtin_tools(&ToolManagerConfig {
-            workspace_dir: workspace_dir.clone(),
-            ..Default::default()
-        });
+        Self::with_tool_config(
+            system_prompt,
+            model,
+            bridge,
+            ToolManagerConfig {
+                workspace_dir: workspace_dir.clone(),
+                ..Default::default()
+            },
+        )
+    }
+
+    /// Construct agent with explicit workspace/tool configuration (memory backend, etc.).
+    pub fn with_tool_config(
+        system_prompt: impl Into<String>,
+        model: Arc<dyn LlmModel>,
+        bridge: LlmBridgeConfig,
+        tool_config: ToolManagerConfig,
+    ) -> Self {
+        let workspace_dir = tool_config.workspace_dir.clone();
+        let tools = load_builtin_tools(&tool_config);
 
         let skill_manager = workspace_dir.as_ref().map(|ws| SkillManager::new(ws, None));
 

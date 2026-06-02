@@ -4,7 +4,11 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronDown, Loader2, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { cowChannelAction, localizeCowText, type CowChannel } from "@/cmd/cow-python-channels";
+import {
+  channelAction,
+  localizeChannelText,
+  type ChannelCatalogEntry
+} from "@/cmd/channel-python-channels";
 import { ChannelHint } from "@/components/agent-console/views/channels/channel-hint";
 import {
   buildConfigFromDrafts,
@@ -17,27 +21,38 @@ import { WecomPanel } from "@/components/agent-console/views/channels/wecom-pane
 import { WeixinQrPanel } from "@/components/agent-console/views/channels/weixin-qr-panel";
 
 interface ChannelAddPanelProps {
-  catalog: CowChannel[];
+  catalog: ChannelCatalogEntry[];
   lang: string;
+  /** When set (dev preset), skip channel type dropdown. */
+  fixedChannel?: string;
   onClose: () => void;
   onConnected: () => void;
 }
 
-export function ChannelAddPanel({ catalog, lang, onClose, onConnected }: ChannelAddPanelProps) {
+export function ChannelAddPanel({
+  catalog,
+  lang,
+  fixedChannel,
+  onClose,
+  onConnected
+}: ChannelAddPanelProps) {
   const { t } = useTranslation("console");
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(fixedChannel ?? "");
   const [open, setOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
-  const [drafts, setDrafts] = useState<ChannelFieldDrafts>({
-    strings: {},
-    bools: {},
-    maskedCleared: {}
+  const [drafts, setDrafts] = useState<ChannelFieldDrafts>(() => {
+    if (!fixedChannel) {
+      return { strings: {}, bools: {}, maskedCleared: {} };
+    }
+    const row = catalog.find((c) => c.name === fixedChannel);
+    return row ? draftsFromChannel(row) : { strings: {}, bools: {}, maskedCleared: {} };
   });
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const activeNames = new Set(catalog.filter((c) => c.active).map((c) => c.name));
   const available = catalog.filter((c) => !activeNames.has(c.name));
-  const ch = catalog.find((c) => c.name === selected);
+  const selectedChannel = fixedChannel ?? selected;
+  const ch = catalog.find((c) => c.name === selectedChannel);
 
   const pickChannel = useCallback(
     (name: string) => {
@@ -81,7 +96,7 @@ export function ChannelAddPanel({ catalog, lang, onClose, onConnected }: Channel
     }
     setConnecting(true);
     try {
-      await cowChannelAction({
+      await channelAction({
         action: "connect",
         channel: ch.name,
         config: buildConfigFromDrafts(ch, drafts)
@@ -96,11 +111,14 @@ export function ChannelAddPanel({ catalog, lang, onClose, onConnected }: Channel
   };
 
   const showActions =
-    ch && selected !== "weixin" && selected !== "wecom_bot" && selected !== "feishu";
+    ch &&
+    selectedChannel !== "weixin" &&
+    selectedChannel !== "wecom_bot" &&
+    selectedChannel !== "feishu";
 
   const selectLabel =
-    selected && ch
-      ? `${localizeCowText(ch.label, lang)} (${ch.name})`
+    selectedChannel && ch
+      ? `${localizeChannelText(ch.label, lang)} (${ch.name})`
       : t("channels_select_placeholder");
 
   return (
@@ -112,57 +130,59 @@ export function ChannelAddPanel({ catalog, lang, onClose, onConnected }: Channel
         <h3 className="font-semibold text-slate-800 dark:text-slate-100">{t("channels_add")}</h3>
       </div>
 
-      <div className="mb-4">
-        <div
-          ref={dropdownRef}
-          className={`cfg-dropdown ${open ? "open" : ""}`}
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              setOpen(false);
-            }
-          }}
-        >
+      {fixedChannel ? null : (
+        <div className="mb-4">
           <div
-            className="cfg-dropdown-selected"
-            onClick={() => setOpen((v) => !v)}
-            onKeyDown={(e) => e.key === "Enter" && setOpen((v) => !v)}
-            role="button"
+            ref={dropdownRef}
+            className={`cfg-dropdown ${open ? "open" : ""}`}
             tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setOpen(false);
+              }
+            }}
           >
-            <span className="truncate text-sm">{selectLabel}</span>
-            <ChevronDown className="cfg-dropdown-arrow size-3 text-slate-400" />
-          </div>
-          <div className="cfg-dropdown-menu">
             <div
-              className={`cfg-dropdown-item ${!selected ? "active" : ""}`}
-              onClick={() => pickChannel("")}
-              onKeyDown={() => {}}
-              role="option"
-              aria-selected={!selected}
+              className="cfg-dropdown-selected"
+              onClick={() => setOpen((v) => !v)}
+              onKeyDown={(e) => e.key === "Enter" && setOpen((v) => !v)}
+              role="button"
+              tabIndex={0}
             >
-              {t("channels_select_placeholder")}
+              <span className="truncate text-sm">{selectLabel}</span>
+              <ChevronDown className="cfg-dropdown-arrow size-3 text-slate-400" />
             </div>
-            {available.map((item) => (
+            <div className="cfg-dropdown-menu">
               <div
-                key={item.name}
-                className={`cfg-dropdown-item ${selected === item.name ? "active" : ""}`}
-                onClick={() => pickChannel(item.name)}
+                className={`cfg-dropdown-item ${!selected ? "active" : ""}`}
+                onClick={() => pickChannel("")}
+                onKeyDown={() => {}}
                 role="option"
-                aria-selected={selected === item.name}
+                aria-selected={!selected}
               >
-                {localizeCowText(item.label, lang)} ({item.name})
+                {t("channels_select_placeholder")}
               </div>
-            ))}
+              {available.map((item) => (
+                <div
+                  key={item.name}
+                  className={`cfg-dropdown-item ${selected === item.name ? "active" : ""}`}
+                  onClick={() => pickChannel(item.name)}
+                  role="option"
+                  aria-selected={selected === item.name}
+                >
+                  {localizeChannelText(item.label, lang)} ({item.name})
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="space-y-4">
-        {selected === "weixin" && ch ? (
+        {selectedChannel === "weixin" && ch ? (
           <WeixinQrPanel mode="add" onConnected={onConnected} />
         ) : null}
-        {selected === "wx" && ch ? (
+        {selectedChannel === "wx" && ch ? (
           <>
             {ch.hint ? <ChannelHint hint={ch.hint} lang={lang} /> : null}
             <ChannelFields
@@ -174,7 +194,7 @@ export function ChannelAddPanel({ catalog, lang, onClose, onConnected }: Channel
             />
           </>
         ) : null}
-        {selected === "wecom_bot" && ch ? (
+        {selectedChannel === "wecom_bot" && ch ? (
           <WecomPanel
             channel={ch}
             lang={lang}
@@ -184,13 +204,15 @@ export function ChannelAddPanel({ catalog, lang, onClose, onConnected }: Channel
             onManualConnect={onConnected}
           />
         ) : null}
-        {selected === "feishu" && ch ? (
+        {selectedChannel === "feishu" && ch ? (
           <FeishuPanel channel={ch} lang={lang} onConnected={onConnected} showConnectButton />
         ) : null}
-        {ch && selected && !["weixin", "wx", "wecom_bot", "feishu"].includes(selected) ? (
+        {ch &&
+        selectedChannel &&
+        !["weixin", "wx", "wecom_bot", "feishu"].includes(selectedChannel) ? (
           <>
             {ch.hint ? <ChannelHint hint={ch.hint} lang={lang} /> : null}
-            {selected === "wework" ? (
+            {selectedChannel === "wework" ? (
               <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
                 {t("wework_connect_note")}
               </p>
@@ -231,7 +253,7 @@ export function ChannelAddPanel({ catalog, lang, onClose, onConnected }: Channel
             )}
           </button>
         </div>
-      ) : selected === "weixin" || selected === "feishu" ? (
+      ) : selectedChannel === "weixin" || selectedChannel === "feishu" ? (
         <div className="mt-4 flex justify-end">
           <button
             type="button"

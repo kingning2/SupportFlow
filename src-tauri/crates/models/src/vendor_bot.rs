@@ -12,7 +12,7 @@ use crate::session::{SessionClass, SessionManager};
 
 #[derive(Debug)]
 pub struct OpenAiVendorBot {
-    pub sessions: SessionManager,
+    pub _sessions: SessionManager,
     client: OpenAiHttpClient,
     api: ApiConfig,
 }
@@ -27,7 +27,7 @@ impl OpenAiVendorBot {
     ) -> Self {
         let model = config.model_or(default_model);
         Self {
-            sessions: session_manager(&config, session_class, default_model),
+            _sessions: session_manager(&config, session_class, default_model),
             client: http_client(&config, Some(api_key.clone()), Some(api_base.clone())),
             api: api_config(api_key, api_base, model, &config),
         }

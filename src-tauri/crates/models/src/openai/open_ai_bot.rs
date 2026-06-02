@@ -21,11 +21,11 @@ impl OpenAiBot {
         let model = config.model_or("gpt-4o-mini");
         let sessions =
             crate::provider::session_manager(&config, crate::session::SessionClass::OpenAi, &model);
-        let client = OpenAiHttpClient::new(
+        let client = OpenAiHttpClient::from_config(
+            &config,
             config.open_ai_api_key.clone(),
             config.open_ai_api_base.clone(),
-        )
-        .with_timeout_secs(config.request_timeout_secs());
+        );
         Self {
             config,
             sessions,

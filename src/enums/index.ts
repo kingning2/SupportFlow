@@ -9,3 +9,11 @@ export { ReduxSlice } from "./redux-slice";
 export { AppRoute } from "./app-route";
 export { AgentStreamChunkType, isAgentStreamChunkType } from "./agent-stream-chunk-type";
 export { ConsoleView, isConsoleView } from "./console-view";
+export {
+  CHANNEL_IDS,
+  DEV_CHANNEL_ALIASES,
+  channelLabelKey,
+  isChannelCatalogEntryId,
+  resolveDevChannel,
+  type ChannelCatalogEntryId
+} from "./dev-channel";
