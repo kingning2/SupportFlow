@@ -2,6 +2,6 @@
 
 pub mod agent_runtime;
 pub mod channel_bridge;
-pub mod cow_python_sidecar;
+pub mod channel_python_sidecar;
 pub mod session;
 pub mod workspace_console;

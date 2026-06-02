@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde_json::{json, Value};
 
 use crate::tools::base_tool::{AgentTool, ToolRunResult};
-use crate::tools::utils::path::is_cow_config_dir;
+use crate::tools::utils::path::is_supportflow_config_dir;
 use crate::tools::utils::truncate::{format_size, truncate_head, DEFAULT_MAX_BYTES};
 use crate::tools::workspace::WorkspaceToolConfig;
 
@@ -69,7 +69,7 @@ impl AgentTool for LsTool {
 
         let absolute = self.config.resolve(path);
 
-        if is_cow_config_dir(&absolute) {
+        if is_supportflow_config_dir(&absolute) {
             return ToolRunResult::error(
                 "Error: Access denied. API keys and credentials must be accessed through the env_config tool only.",
             );

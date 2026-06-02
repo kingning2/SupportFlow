@@ -17,7 +17,7 @@ export function useAgentConsoleState() {
     try {
       const next = await getAgentConsoleState();
       setState(next);
-      localStorage.setItem(LocalCacheKey.CowSessionId, next.sessionId);
+      localStorage.setItem(LocalCacheKey.AgentSessionId, next.sessionId);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -35,7 +35,7 @@ export function useAgentConsoleState() {
           return;
         }
         setState(next);
-        localStorage.setItem(LocalCacheKey.CowSessionId, next.sessionId);
+        localStorage.setItem(LocalCacheKey.AgentSessionId, next.sessionId);
       } catch (err) {
         if (!active) {
           return;

@@ -425,7 +425,7 @@ impl McpClient {
 
         let guard = self.inner.lock().await;
         let _ = match &guard.transport {
-            Transport::Stdio { stdin, .. } => {
+            Transport::Stdio { stdin: _, .. } => {
                 drop(guard);
                 let mut guard = self.inner.lock().await;
                 if let Transport::Stdio { stdin, .. } = &mut guard.transport {

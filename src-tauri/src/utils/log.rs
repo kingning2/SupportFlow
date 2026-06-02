@@ -107,6 +107,7 @@ pub fn trace_result_fn<T>(
 }
 
 /// 异步 Future 产出的 `Result` 经 [`trace_result`] 记录后返回。
+#[allow(dead_code)]
 #[inline]
 pub async fn trace_result_async<T>(
     scope: &str,

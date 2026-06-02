@@ -1,4 +1,5 @@
 //! `agent_stream.py` — streaming executor and LLM bridge.
+#![allow(unused_imports)]
 
 mod executor;
 mod helpers;

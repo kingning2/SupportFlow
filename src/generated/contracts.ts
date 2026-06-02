@@ -9,6 +9,33 @@ export interface AgentCancelRequest {
   requestId: string;
 }
 
+export interface AgentChannelActionRequest {
+  action: string;
+  channel: string;
+  config?: Record<string, Value>;
+}
+
+export interface AgentChannelActionResponse {
+  channelType: string;
+}
+
+export interface AgentChannelField {
+  key: string;
+  label: string;
+  type: string;
+  value: string;
+  defaultValue?: string;
+  placeholder?: string;
+}
+
+export interface AgentChannelDetail {
+  name: string;
+  labelKey: string;
+  active: boolean;
+  fields: AgentChannelField[];
+  hintKey?: string;
+}
+
 export interface AgentChannelSummary {
   name: string;
   active: boolean;
@@ -89,6 +116,22 @@ export interface AgentKnowledgeGraph {
   links: AgentKnowledgeGraphLink[];
 }
 
+export interface AgentKnowledgeIngestError {
+  file: string;
+  message: string;
+}
+
+export interface AgentKnowledgeIngestItem {
+  path: string;
+  title: string;
+  category: string;
+  slug: string;
+  originalName: string;
+  truncated: boolean;
+  charCount: number;
+  archive: string;
+}
+
 export interface AgentKnowledgeReadRequest {
   path: string;
 }
@@ -96,6 +139,23 @@ export interface AgentKnowledgeReadRequest {
 export interface AgentKnowledgeReadResult {
   path: string;
   content: string;
+}
+
+export interface AgentKnowledgeUploadFile {
+  filename: string;
+  data: number[];
+}
+
+export interface AgentKnowledgeUploadRequest {
+  files: AgentKnowledgeUploadFile[];
+  category?: string;
+}
+
+export interface AgentKnowledgeUploadResult {
+  results: AgentKnowledgeIngestItem[];
+  errors: AgentKnowledgeIngestError[];
+  count: number;
+  memorySynced: boolean;
 }
 
 export interface AgentLogStreamPayload {

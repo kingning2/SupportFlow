@@ -55,7 +55,7 @@ Rust port of Python `agent/`, **incremental** — one slice per PR.
 | `tools/utils/{truncate,diff}.py` | `tools/utils/{truncate,diff}.rs` |
 | `tools/tool_manager.py` (core load) | `tools/tool_manager.rs` |
 
-PDF/Office: returns same “library not installed” style errors until native extractors are wired.
+Uploads / documents: **MarkItDown** → Markdown first, then `memory/chunker` (fallback: pdf-extract, calamine, OOXML). Install: `pip install -r requirements-markitdown.txt` (Python 3.10+, `CHANNEL_MARKITDOWN_PYTHON`).
 
 ## Step 6: `send` + memory tools
 
@@ -92,9 +92,43 @@ PDF/Office: returns same “library not installed” style errors until native e
 
 Config: `{workspace}/mcp.json` with `mcpServers` (same as SupportFlow).
 
-## Step 9 (next)
+## Step 9: memory SQLite + embeddings
 
-Full `agent/memory` (SQLite + embeddings), optional tools (`web_search`, `env_config`).
+| Python | Rust |
+|--------|------|
+| `memory/storage.py` | `memory/storage.rs` |
+| `memory/chunker.py` | `memory/chunker.rs` |
+| `memory/manager.py` | `memory/manager.rs` |
+| `memory/embedding/provider.py` | `memory/embedding.rs` |
+| `create_memory_manager` | `memory/factory.rs` |
+
+- DB path: `{workspace}/memory/long-term/index.db`
+- Hybrid search: vector (cosine) + FTS5/LIKE keyword merge
+- Embedding: OpenAI-compatible vendors (legacy OpenAI→LinkAI auto-pick, or explicit `embedding_provider` in config)
+- Falls back to `FileKeywordMemoryManager` if SQLite init fails
+
+## Step 10: optional tools + knowledge
+
+| Python | Rust |
+|--------|------|
+| `tools/env_config/*` | `tools/env_config/*` |
+| `tools/web_fetch/*` | `tools/web_fetch/*` |
+| `tools/web_search/*` | `tools/web_search/*` |
+| `tools/browser/*` | `tools/browser/*` (chromiumoxide + system browser) |
+| `knowledge/document_parser.py` | `knowledge/document_parser.rs` + `knowledge/markitdown.rs` |
+| `common/http_proxy.py` | `models/http_proxy.rs` (LLM + tools) |
+
+## Step 11: vision + console IPC
+
+| Python | Rust |
+|--------|------|
+| `tools/vision/vision.py` | `tools/vision/*` |
+| `openai_compatible_bot.call_vision` | `OpenAICompatibleBot::call_vision` |
+| Web 控制台 sessions/knowledge/graph | `context/workspace_console.rs` |
+
+## Step 12 (next)
+
+Deep Dream / memory flush；channel 全链路 Rust 化或稳定 sidecar；CLI。
 
 ## Usage
 

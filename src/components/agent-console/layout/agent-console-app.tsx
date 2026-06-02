@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { ChatView } from "@/components/agent-console/chat/chat-view";
 import {
+  getSidebarNavGroups,
   PLACEHOLDER_CONSOLE_VIEWS,
   SidebarGroupId
 } from "@/components/agent-console/constants/sidebar-nav";
@@ -24,11 +25,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { newAgentSession } from "@/cmd/agent";
 import { ConsoleView, LocalCacheKey } from "@/enums";
 import { useAgentConsoleState } from "@/hooks/use-agent-console-state";
+import { getDevChannel } from "@/lib/agent-console/dev-channel";
 import {
-  applyCowTheme,
-  readCowTheme,
-  toggleCowTheme,
-  type CowTheme
+  applyConsoleTheme,
+  readConsoleTheme,
+  toggleConsoleTheme,
+  type ConsoleTheme
 } from "@/lib/agent-console/theme-sync";
 
 import "../styles/console.css";
@@ -42,11 +44,13 @@ const DEFAULT_OPEN_GROUPS: Record<SidebarGroupId, boolean> = {
 export function AgentConsoleApp() {
   const { t } = useTranslation("console");
   const { state, setState, loading, error } = useAgentConsoleState();
+  const devChannel = useMemo(() => getDevChannel(), []);
+  const sidebarNavGroups = useMemo(() => getSidebarNavGroups(devChannel), [devChannel]);
 
   const [activeView, setActiveView] = useState<ConsoleView>(ConsoleView.Chat);
-  const [theme, setTheme] = useState<CowTheme>(() => {
-    const initial = readCowTheme();
-    applyCowTheme(initial);
+  const [theme, setTheme] = useState<ConsoleTheme>(() => {
+    const initial = readConsoleTheme();
+    applyConsoleTheme(initial);
     return initial;
   });
   const [sessionPanelOpen, setSessionPanelOpen] = useState(false);
@@ -55,13 +59,13 @@ export function AgentConsoleApp() {
     useState<Record<SidebarGroupId, boolean>>(DEFAULT_OPEN_GROUPS);
 
   const handleToggleTheme = useCallback(() => {
-    setTheme(toggleCowTheme());
+    setTheme(toggleConsoleTheme());
   }, []);
 
   const handleNewSession = useCallback(async () => {
     try {
       const sessionId = await newAgentSession();
-      localStorage.setItem(LocalCacheKey.CowSessionId, sessionId);
+      localStorage.setItem(LocalCacheKey.AgentSessionId, sessionId);
       if (state) {
         setState({ ...state, sessionId });
       }
@@ -155,6 +159,7 @@ export function AgentConsoleApp() {
     <TooltipProvider>
       <div className="agent-console flex h-full min-h-0 flex-1 overflow-hidden bg-gray-50 font-sans text-slate-800 dark:bg-[#111111] dark:text-slate-200">
         <ConsoleSidebar
+          navGroups={sidebarNavGroups}
           activeView={activeView}
           onNavigate={setActiveView}
           openGroups={openGroups}
@@ -173,6 +178,7 @@ export function AgentConsoleApp() {
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <ConsoleHeader
             activeView={activeView}
+            devChannel={devChannel}
             theme={theme}
             onToggleTheme={handleToggleTheme}
             onToggleSessionPanel={() => setSessionPanelOpen((v) => !v)}

@@ -3,14 +3,21 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use models::ModelsConfig;
+
 use crate::tools::bash::{BashConfig, BashTool};
 use crate::tools::edit::EditTool;
+use crate::tools::env_config::{EnvConfigTool, EnvConfigToolConfig};
 use crate::tools::ls::LsTool;
 use crate::tools::memory::{
     FileKeywordMemoryManager, MemoryGetTool, MemoryManager, MemorySearchTool,
 };
 use crate::tools::read::ReadTool;
 use crate::tools::send::{noop_uploader, SendFileUploader, SendTool};
+use crate::tools::browser::BrowserTool;
+use crate::tools::web_fetch::WebFetchTool;
+use crate::tools::vision::VisionTool;
+use crate::tools::web_search::WebSearchTool;
 use crate::tools::workspace::WorkspaceToolConfig;
 use crate::tools::write::WriteTool;
 use crate::tools::AgentTool;
@@ -25,6 +32,11 @@ pub struct ToolManagerConfig {
     pub user_id: Option<String>,
     pub enable_knowledge: bool,
     pub send_uploader: Option<Arc<dyn SendFileUploader>>,
+    /// Model/config.json snapshot for optional tools (`web_search`).
+    pub models_config: Option<Arc<ModelsConfig>>,
+    pub env_config: EnvConfigToolConfig,
+    /// Called after env_config set/delete (e.g. refresh skills).
+    pub on_env_changed: Option<Arc<dyn Fn() + Send + Sync>>,
 }
 
 impl Default for ToolManagerConfig {
@@ -37,6 +49,9 @@ impl Default for ToolManagerConfig {
             user_id: None,
             enable_knowledge: true,
             send_uploader: None,
+            models_config: None,
+            env_config: EnvConfigToolConfig::default(),
+            on_env_changed: None,
         }
     }
 }
@@ -59,7 +74,7 @@ pub fn load_builtin_tools(config: &ToolManagerConfig) -> Vec<Arc<dyn AgentTool>>
 
     let uploader = config.send_uploader.clone().unwrap_or_else(noop_uploader);
 
-    vec![
+    let mut tools: Vec<Arc<dyn AgentTool>> = vec![
         Arc::new(ReadTool::new(ws.clone())),
         Arc::new(WriteTool::new(ws.clone())),
         Arc::new(EditTool::new(ws.clone())),
@@ -76,5 +91,29 @@ pub fn load_builtin_tools(config: &ToolManagerConfig) -> Vec<Arc<dyn AgentTool>>
             config.enable_knowledge,
         )),
         Arc::new(MemoryGetTool::new(memory, config.enable_knowledge)),
-    ]
+        Arc::new(EnvConfigTool::new(EnvConfigToolConfig {
+            env_path: config.env_config.env_path.clone(),
+            on_change: config
+                .on_env_changed
+                .clone()
+                .or(config.env_config.on_change.clone()),
+        })),
+        Arc::new(if let Some(models) = &config.models_config {
+            WebFetchTool::with_models_config(cwd.clone(), models)
+        } else {
+            WebFetchTool::new(cwd.clone())
+        }),
+    ];
+
+    if let Some(models) = &config.models_config {
+        if WebSearchTool::is_available(models) {
+            tools.push(Arc::new(WebSearchTool::new(models.clone())));
+        }
+        tools.push(Arc::new(BrowserTool::new(models.as_ref(), cwd)));
+        if VisionTool::is_available(models) {
+            tools.push(Arc::new(VisionTool::new(models.clone())));
+        }
+    }
+
+    tools
 }

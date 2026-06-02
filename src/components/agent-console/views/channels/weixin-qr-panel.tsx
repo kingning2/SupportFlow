@@ -5,10 +5,10 @@ import { Check, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import {
-  cowChannelAction,
-  fetchCowChannelConsoleApi,
-  fetchCowChannels
-} from "@/cmd/cow-python-channels";
+  channelAction,
+  fetchChannelConsoleApi,
+  fetchChannels
+} from "@/cmd/channel-python-channels";
 
 interface WeixinQrPanelProps {
   mode: "add" | "active";
@@ -39,7 +39,7 @@ export function WeixinQrPanel({ mode, onConnected }: WeixinQrPanelProps) {
   const pollQr = useCallback(() => {
     pollRef.current = setTimeout(async () => {
       try {
-        const data = await fetchCowChannelConsoleApi("weixin/qrlogin", "POST", { action: "poll" });
+        const data = await fetchChannelConsoleApi("weixin/qrlogin", "POST", { action: "poll" });
         if (data.status !== "success") {
           pollQr();
           return;
@@ -49,7 +49,7 @@ export function WeixinQrPanel({ mode, onConnected }: WeixinQrPanelProps) {
           stopPoll();
           setStatusText(t("weixin_scan_success"));
           setStatusClass("text-[#35A85B]");
-          await cowChannelAction({ action: "connect", channel: "weixin", config: {} });
+          await channelAction({ action: "connect", channel: "weixin", config: {} });
           setTimeout(() => onConnected(), 1500);
           return;
         }
@@ -71,7 +71,7 @@ export function WeixinQrPanel({ mode, onConnected }: WeixinQrPanelProps) {
     setError(null);
     setStatusText(t("weixin_scan_loading"));
     try {
-      const data = await fetchCowChannelConsoleApi("weixin/qrlogin", "GET");
+      const data = await fetchChannelConsoleApi("weixin/qrlogin", "GET");
       if (data.status !== "success") {
         setError(`${t("weixin_scan_fail")}: ${data.message ?? ""}`);
         return;
@@ -84,7 +84,7 @@ export function WeixinQrPanel({ mode, onConnected }: WeixinQrPanelProps) {
           const statusPoll = () => {
             statusPollRef.current = setTimeout(async () => {
               try {
-                const list = await fetchCowChannels();
+                const list = await fetchChannels();
                 const wx = list.find((c) => c.name === "weixin");
                 const st = wx?.login_status ?? wx?.loginStatus;
                 if (st === "logged_in") {

@@ -1,6 +1,13 @@
 [workspace]
 resolver = "2"
-members = [".", "crates/models", "crates/agent", "crates/channel_runtime"]
+members = [
+    ".",
+    "crates/models",
+    "crates/agent",
+    "crates/bridge",
+    "crates/channel_runtime",
+    "crates/supportflow-cli",
+]
 
 [package]
 name = "tauri-app"
@@ -33,3 +40,4 @@ uuid = { version = "1", features = ["v4"] }
 models = { path = "crates/models" }
 agent = { path = "crates/agent" }
 channel_runtime = { path = "crates/channel_runtime" }
+bridge = { path = "crates/bridge" }

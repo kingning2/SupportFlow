@@ -1,9 +1,9 @@
 import { Info } from "lucide-react";
 
-import { localizeCowText, type CowLocalized } from "@/cmd/cow-python-channels";
+import { localizeChannelText, type ChannelLocalized } from "@/cmd/channel-python-channels";
 
-export function ChannelHint({ hint, lang }: { hint: CowLocalized; lang: string }) {
-  const text = localizeCowText(hint, lang);
+export function ChannelHint({ hint, lang }: { hint: ChannelLocalized; lang: string }) {
+  const text = localizeChannelText(hint, lang);
   if (!text) {
     return null;
   }

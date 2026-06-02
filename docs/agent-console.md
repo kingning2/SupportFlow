@@ -201,7 +201,7 @@ bunx shadcn@latest add \
 
 ## 主题与布局
 
-- **SupportFlow 主题**：`LocalCacheKey.CowTheme`（`light` / `dark`，默认 `dark`），同步到 `<html class="dark">`
+- **SupportFlow 主题**：`LocalCacheKey.ConsoleTheme`（`light` / `dark`，默认 `dark`），同步到 `<html class="dark">`
 - **主色**：`#35A85B`（按钮、侧栏 active 图标 `#4ABE6E`）
 - **侧栏**：固定 `#0A0A0A`，宽 `w-52`（`console-sidebar.tsx` + `styles/console.css`）
 - **主窗布局**：页面使用 `-m-3` 抵消 `MainProvider` 内边距，全屏铺满控制台；内部链路透传 `min-h-0` + `overflow-hidden`

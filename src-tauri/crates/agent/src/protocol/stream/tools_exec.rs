@@ -7,7 +7,7 @@ use tracing::{error, info};
 
 use crate::protocol::stream::executor::{AgentStreamExecutor, ParsedToolCall};
 use crate::protocol::stream::helpers::hash_args;
-use crate::tools::{AgentTool, ToolRunResult, ToolStage};
+use crate::tools::{ToolRunResult, ToolStage};
 
 const MAX_CURRENT_TURN_RESULT_CHARS: usize = 50_000;
 

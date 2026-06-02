@@ -26,7 +26,10 @@ pub trait MemoryManager: Send + Sync {
         min_score: f64,
     ) -> Result<Vec<MemorySearchHit>, String>;
 
-    fn mark_dirty(&self) {
-        // optional hook for write/edit on memory paths
+    fn mark_dirty(&self) {}
+
+    /// Re-index memory files from disk (no-op for file-only fallback).
+    async fn sync(&self) -> Result<(), String> {
+        Ok(())
     }
 }

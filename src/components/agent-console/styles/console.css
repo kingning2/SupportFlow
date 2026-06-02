@@ -1,11 +1,11 @@
 ﻿/* SupportFlow console — layout tokens & sidebar (mirrors channel/web/static/css/console.css) */
 
 .agent-console {
-  --cow-primary-400: #4abe6e;
-  --cow-primary-500: #35a85b;
-  --cow-sidebar-bg: #0a0a0a;
-  --cow-surface: #1a1a1a;
-  --cow-page-bg: #111111;
+  --console-primary-400: #4abe6e;
+  --console-primary-500: #35a85b;
+  --console-sidebar-bg: #0a0a0a;
+  --console-surface: #1a1a1a;
+  --console-page-bg: #111111;
 }
 
 .agent-console .sidebar-item.active {
@@ -14,7 +14,7 @@
 }
 
 .agent-console .sidebar-item.active .item-icon {
-  color: var(--cow-primary-400);
+  color: var(--console-primary-400);
 }
 
 .agent-console .session-panel {
@@ -28,7 +28,7 @@
 }
 
 .dark .agent-console .session-panel {
-  background: var(--cow-page-bg);
+  background: var(--console-page-bg);
   border-right-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -95,7 +95,7 @@
 }
 
 .agent-console .example-card:hover {
-  border-color: color-mix(in srgb, var(--cow-primary-400) 60%, transparent);
+  border-color: color-mix(in srgb, var(--console-primary-400) 60%, transparent);
 }
 
 .agent-console .composer-shell {
@@ -104,7 +104,7 @@
 }
 
 .dark .agent-console .composer-shell {
-  background: var(--cow-surface);
+  background: var(--console-surface);
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 

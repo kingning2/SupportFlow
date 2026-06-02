@@ -58,6 +58,17 @@ pub trait OpenAICompatibleBot: Send + Sync {
     ) -> Result<LlmResult, OpenAiHttpError> {
         call_with_tools_impl(self, req).await
     }
+
+    /// `openai_compatible_bot.call_vision` — multimodal chat/completions.
+    async fn call_vision(
+        &self,
+        image_url: &str,
+        question: &str,
+        model: Option<&str>,
+        max_tokens: u32,
+    ) -> Value {
+        call_vision_impl(self, image_url, question, model, max_tokens).await
+    }
 }
 
 /// Back-compat alias; prefer [`OpenAICompatibleBot::call_with_tools`].
@@ -199,6 +210,84 @@ fn convert_tools_to_openai(tools: Vec<Value>) -> Vec<Value> {
         }));
     }
     out
+}
+
+/// OpenAI-compatible vision request (`/chat/completions` with image_url content).
+pub async fn call_vision_impl<B: OpenAICompatibleBot + ?Sized>(
+    bot: &B,
+    image_url: &str,
+    question: &str,
+    model: Option<&str>,
+    max_tokens: u32,
+) -> Value {
+    let api = bot.get_api_config();
+    let vision_model = model
+        .filter(|s| !s.is_empty())
+        .unwrap_or(api.model.as_str());
+    let client = bot.http_client();
+
+    let mut payload = Map::new();
+    payload.insert("model".into(), json!(vision_model));
+    payload.insert("max_tokens".into(), json!(max_tokens));
+    payload.insert(
+        "messages".into(),
+        json!([{
+            "role": "user",
+            "content": [
+                { "type": "text", "text": question },
+                { "type": "image_url", "image_url": { "url": image_url } },
+            ],
+        }]),
+    );
+
+    let api_key = if api.api_key.is_empty() {
+        None
+    } else {
+        Some(api.api_key.as_str())
+    };
+    let api_base = if api.api_base.is_empty() {
+        None
+    } else {
+        Some(api.api_base.as_str())
+    };
+
+    match client
+        .chat_completions(
+            payload,
+            api_key,
+            api_base,
+            Some(60),
+        )
+        .await
+    {
+        Ok(body) => {
+            if body.get("error").is_some() {
+                return body;
+            }
+            let content = body
+                .get("choices")
+                .and_then(|c| c.get(0))
+                .and_then(|c| c.get("message"))
+                .and_then(|m| m.get("content"))
+                .and_then(|c| c.as_str())
+                .unwrap_or("")
+                .to_string();
+            let usage = body.get("usage").cloned().unwrap_or(json!({}));
+            json!({
+                "model": vision_model,
+                "content": content,
+                "usage": {
+                    "prompt_tokens": usage.get("prompt_tokens").unwrap_or(&json!(0)),
+                    "completion_tokens": usage.get("completion_tokens").unwrap_or(&json!(0)),
+                    "total_tokens": usage.get("total_tokens").unwrap_or(&json!(0)),
+                }
+            })
+        }
+        Err(e) => json!({
+            "error": true,
+            "message": format!("HTTP {}: {}", e.status_code, e.message),
+        }),
+    }
 }
 
 pub fn error_value(err: &OpenAiHttpError) -> Value {

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { fetchCowChannelConsoleApi, fetchCowChannels } from "@/cmd/cow-python-channels";
+import { fetchChannelConsoleApi, fetchChannels } from "@/cmd/channel-python-channels";
 
 interface WxQrPanelProps {
   onLoggedIn: () => void;
@@ -33,7 +33,7 @@ export function WxQrPanel({ onLoggedIn }: WxQrPanelProps) {
   const pollWx = useCallback(() => {
     pollRef.current = setTimeout(async () => {
       try {
-        const data = await fetchCowChannelConsoleApi("wx/qrlogin", "POST", { action: "poll" });
+        const data = await fetchChannelConsoleApi("wx/qrlogin", "POST", { action: "poll" });
         if (data.status !== "success") {
           pollWx();
           return;
@@ -62,7 +62,7 @@ export function WxQrPanel({ onLoggedIn }: WxQrPanelProps) {
   const loadQr = useCallback(async () => {
     setStatusText(t("weixin_scan_loading"));
     try {
-      const data = await fetchCowChannelConsoleApi("wx/qrlogin", "GET");
+      const data = await fetchChannelConsoleApi("wx/qrlogin", "GET");
       if (data.status !== "success") {
         setStatusText(`${t("weixin_scan_fail")}: ${data.message ?? ""}`);
         setStatusClass("text-red-500");
@@ -87,7 +87,7 @@ export function WxQrPanel({ onLoggedIn }: WxQrPanelProps) {
   const startStatusPoll = useCallback(() => {
     statusPollRef.current = setTimeout(async () => {
       try {
-        const channels = await fetchCowChannels();
+        const channels = await fetchChannels();
         const row = channels.find((c) => c.name === "wx");
         if (row && (row.login_status === "logged_in" || row.loginStatus === "logged_in")) {
           stopAll();

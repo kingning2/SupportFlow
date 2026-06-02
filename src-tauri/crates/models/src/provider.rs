@@ -20,7 +20,7 @@ pub fn http_client(
     api_key: Option<String>,
     api_base: Option<String>,
 ) -> OpenAiHttpClient {
-    OpenAiHttpClient::new(api_key, api_base).with_timeout_secs(config.request_timeout_secs())
+    OpenAiHttpClient::from_config(config, api_key, api_base)
 }
 
 pub fn api_config(

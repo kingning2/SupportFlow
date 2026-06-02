@@ -1,4 +1,4 @@
-//! External channel message bridge (replaces CowAgent Python `bridge`).
+//! External channel message bridge (replaces SupportFlow Agent Python `bridge`).
 //!
 //! Python sidecar only manages channel **config**; inbound messages and LLM replies
 //! are handled here via the desktop `AgentRuntime`.
@@ -37,6 +37,7 @@ impl ChannelBridge {
         Ok(list)
     }
 
+    #[allow(dead_code)]
     pub fn active_channels(&self) -> Vec<String> {
         self.active.read().map(|g| g.clone()).unwrap_or_default()
     }
@@ -61,12 +62,17 @@ impl ChannelBridge {
 }
 
 fn parse_channel_type(value: Option<&Value>) -> Vec<String> {
-    match value {
+    let items: Vec<String> = match value {
         Some(Value::String(s)) => s
             .split(',')
             .map(|p| p.trim().to_string())
             .filter(|p| !p.is_empty() && p != "web" && p != "terminal")
             .collect(),
         _ => Vec::new(),
-    }
+    };
+    let mut seen = std::collections::HashSet::new();
+    items
+        .into_iter()
+        .filter(|name| seen.insert(name.clone()))
+        .collect()
 }

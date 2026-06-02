@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  cowFieldValueString,
-  isCowMaskedSecret,
-  localizeCowText,
-  type CowChannel,
-  type CowChannelField
-} from "@/cmd/cow-python-channels";
+  channelFieldValueString,
+  isChannelMaskedSecret,
+  localizeChannelText,
+  type ChannelCatalogEntry,
+  type ChannelField
+} from "@/cmd/channel-python-channels";
 import { cn } from "@/lib/utils";
 
 export interface ChannelFieldDrafts {
@@ -17,7 +17,7 @@ export interface ChannelFieldDrafts {
 
 interface ChannelFieldsProps {
   channelName: string;
-  fields: CowChannelField[];
+  fields: ChannelField[];
   lang: string;
   drafts: ChannelFieldDrafts;
   onChange: (next: ChannelFieldDrafts) => void;
@@ -27,10 +27,10 @@ export function ChannelFields({ channelName, fields, lang, drafts, onChange }: C
   return (
     <div className="space-y-4">
       {fields.map((field) => {
-        const fieldLabel = localizeCowText(field.label, lang);
+        const fieldLabel = localizeChannelText(field.label, lang);
         const inputId = `ch-${channelName}-${field.key}`;
-        const rawVal = cowFieldValueString(field.value);
-        const isMasked = isCowMaskedSecret(rawVal) && !drafts.maskedCleared[field.key];
+        const rawVal = channelFieldValueString(field.value);
+        const isMasked = isChannelMaskedSecret(rawVal) && !drafts.maskedCleared[field.key];
 
         if (field.type === "bool" || field.type === "checkbox") {
           const checked = drafts.bools[field.key] ?? rawVal === "true";
@@ -113,43 +113,44 @@ export function ChannelFields({ channelName, fields, lang, drafts, onChange }: C
 }
 
 export function buildConfigFromDrafts(
-  channel: CowChannel,
+  channel: ChannelCatalogEntry,
   drafts: ChannelFieldDrafts
 ): Record<string, string | number | boolean> {
   const config: Record<string, string | number | boolean> = {};
   for (const field of channel.fields) {
     if (field.type === "bool" || field.type === "checkbox") {
-      config[field.key] = drafts.bools[field.key] ?? cowFieldValueString(field.value) === "true";
+      config[field.key] =
+        drafts.bools[field.key] ?? channelFieldValueString(field.value) === "true";
     } else if (field.type === "number") {
       config[field.key] =
-        Number.parseInt(drafts.strings[field.key] ?? cowFieldValueString(field.value), 10) || 0;
+        Number.parseInt(drafts.strings[field.key] ?? channelFieldValueString(field.value), 10) || 0;
     } else {
       const raw = drafts.strings[field.key] ?? "";
-      if (field.type === "secret" && isCowMaskedSecret(raw)) {
+      if (field.type === "secret" && isChannelMaskedSecret(raw)) {
         continue;
       }
       if (
         field.type === "secret" &&
-        isCowMaskedSecret(cowFieldValueString(field.value)) &&
+        isChannelMaskedSecret(channelFieldValueString(field.value)) &&
         !drafts.maskedCleared[field.key]
       ) {
         continue;
       }
-      config[field.key] = raw || cowFieldValueString(field.value);
+      config[field.key] = raw || channelFieldValueString(field.value);
     }
   }
   return config;
 }
 
-export function draftsFromChannel(channel: CowChannel): ChannelFieldDrafts {
+export function draftsFromChannel(channel: ChannelCatalogEntry): ChannelFieldDrafts {
   const strings: Record<string, string> = {};
   const bools: Record<string, boolean> = {};
   const maskedCleared: Record<string, boolean> = {};
   for (const field of channel.fields) {
-    const raw = cowFieldValueString(field.value);
+    const raw = channelFieldValueString(field.value);
     if (field.type === "bool" || field.type === "checkbox") {
       bools[field.key] = raw === "true";
-    } else if (!isCowMaskedSecret(raw)) {
+    } else if (!isChannelMaskedSecret(raw)) {
       strings[field.key] = raw;
     } else {
       strings[field.key] = "";

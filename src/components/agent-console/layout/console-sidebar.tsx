@@ -6,11 +6,13 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { ConsoleView } from "@/enums";
 import {
-  SIDEBAR_NAV_GROUPS,
-  type SidebarGroupId
+  getSidebarNavGroups,
+  type SidebarGroupId,
+  type SidebarNavGroup
 } from "@/components/agent-console/constants/sidebar-nav";
 
 interface ConsoleSidebarProps {
+  navGroups: SidebarNavGroup[];
   activeView: ConsoleView;
   onNavigate: (view: ConsoleView) => void;
   openGroups: Record<SidebarGroupId, boolean>;
@@ -20,6 +22,7 @@ interface ConsoleSidebarProps {
 }
 
 export function ConsoleSidebar({
+  navGroups,
   activeView,
   onNavigate,
   openGroups,
@@ -48,7 +51,7 @@ export function ConsoleSidebar({
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {SIDEBAR_NAV_GROUPS.map((group) => (
+          {navGroups.map((group) => (
             <div
               key={group.id}
               className={cn("menu-group", openGroups[group.id] && "open")}

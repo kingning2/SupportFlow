@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use serde_json::{json, Value};
 
 use crate::tools::base_tool::{AgentTool, ToolRunResult};
-use crate::tools::utils::path::is_cow_env_file;
+use crate::tools::utils::path::is_supportflow_env_file;
 use crate::tools::utils::truncate::{
     format_size, truncate_head, DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES,
 };
@@ -214,7 +214,7 @@ impl ReadTool {
         display_path: &str,
     ) -> (String, Option<Value>) {
         let truncation = truncate_head(selected_content, None, None);
-        let mut output_text = String::new();
+        let mut output_text: String;
         let mut details = None;
 
         if truncation.first_line_exceeds_limit {
@@ -256,6 +256,30 @@ impl ReadTool {
         }
 
         (output_text, details)
+    }
+
+    fn read_document(
+        &self,
+        absolute: &Path,
+        display_path: &str,
+        ext: &str,
+        offset: Option<i64>,
+        limit: Option<u64>,
+    ) -> ToolRunResult {
+        let text = match crate::knowledge::parse_document_file(absolute, Some(ext)) {
+            Ok(t) => t,
+            Err(e) => return ToolRunResult::error(format!("Error reading document: {e}")),
+        };
+        if text.trim().is_empty() {
+            let name = absolute
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("file");
+            return ToolRunResult::success(json!({
+                "content": format!("[Office file {name}: no text content could be extracted]"),
+            }));
+        }
+        self.read_text_content(&text, display_path, offset, limit)
     }
 
     fn read_text(
@@ -300,9 +324,19 @@ impl ReadTool {
             Err(e) => return ToolRunResult::error(format!("Error reading file: {e}")),
         };
 
+        self.read_text_content(&content, display_path, offset, limit)
+    }
+
+    fn read_text_content(
+        &self,
+        content: &str,
+        display_path: &str,
+        offset: Option<i64>,
+        limit: Option<u64>,
+    ) -> ToolRunResult {
         let all_lines: Vec<&str> = content.split('\n').collect();
         let (selected, total_file_lines, start_line_display, user_limited) =
-            match Self::apply_offset_limit(&content, offset, limit) {
+            match Self::apply_offset_limit(content, offset, limit) {
                 Ok(v) => v,
                 Err(msg) => return ToolRunResult::error(msg),
             };
@@ -347,7 +381,7 @@ impl ReadTool {
         }
 
         let absolute = self.config.resolve(path);
-        if is_cow_env_file(&absolute) {
+        if is_supportflow_env_file(&absolute) {
             return ToolRunResult::error(
                 "Error: Access denied. API keys and credentials must be accessed through the env_config tool only.",
             );
@@ -399,15 +433,8 @@ impl ReadTool {
                 ),
             );
         }
-        if is_pdf(&ext) {
-            return ToolRunResult::error(
-                "Error: pypdf library not installed. Install with: pip install pypdf (PDF extraction not yet wired in Rust port)",
-            );
-        }
-        if is_office(&ext) {
-            return ToolRunResult::error(format!(
-                "Error: Office document extraction requires python-docx/openpyxl/python-pptx (not yet wired in Rust port for {ext})"
-            ));
+        if is_pdf(&ext) || is_office(&ext) {
+            return self.read_document(&absolute, path, &ext, offset, limit);
         }
 
         self.read_text(&absolute, path, offset, limit)

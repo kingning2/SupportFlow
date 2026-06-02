@@ -5,12 +5,12 @@ import { Check, QrCode } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import {
-  cowChannelAction,
-  cowFieldValueString,
-  fetchCowChannelConsoleApi,
-  isCowMaskedSecret,
-  type CowChannel
-} from "@/cmd/cow-python-channels";
+  channelAction,
+  channelFieldValueString,
+  fetchChannelConsoleApi,
+  isChannelMaskedSecret,
+  type ChannelCatalogEntry
+} from "@/cmd/channel-python-channels";
 import {
   buildConfigFromDrafts,
   ChannelFields,
@@ -19,7 +19,7 @@ import {
 } from "@/components/agent-console/views/channels/channel-fields";
 
 interface FeishuPanelProps {
-  channel: CowChannel;
+  channel: ChannelCatalogEntry;
   lang: string;
   isActive?: boolean;
   onSaveStatus?: (msgKey: string, isError: boolean) => void;
@@ -40,8 +40,8 @@ export function FeishuPanel({
     channel.fields.some(
       (f) =>
         (f.key === "feishu_app_id" || f.key === "feishu_app_secret") &&
-        cowFieldValueString(f.value) &&
-        !isCowMaskedSecret(cowFieldValueString(f.value))
+        channelFieldValueString(f.value) &&
+        !isChannelMaskedSecret(channelFieldValueString(f.value))
     )
       ? "manual"
       : "scan"
@@ -63,7 +63,7 @@ export function FeishuPanel({
 
   const connectAfterRegister = useCallback(
     async (appId: string, appSecret: string) => {
-      await cowChannelAction({
+      await channelAction({
         action: "connect",
         channel: "feishu",
         config: { feishu_app_id: appId, feishu_app_secret: appSecret }
@@ -76,7 +76,7 @@ export function FeishuPanel({
   const pollRegister = useCallback(() => {
     pollRef.current = setTimeout(async () => {
       try {
-        const data = await fetchCowChannelConsoleApi("feishu/register", "POST", { action: "poll" });
+        const data = await fetchChannelConsoleApi("feishu/register", "POST", { action: "poll" });
         if (data.status !== "success") {
           setScanError((data.message as string) ?? t("feishu_scan_fail"));
           setScanHtml("error");
@@ -110,7 +110,7 @@ export function FeishuPanel({
     setScanHtml("loading");
     setScanError("");
     try {
-      const data = await fetchCowChannelConsoleApi("feishu/register", "GET");
+      const data = await fetchChannelConsoleApi("feishu/register", "GET");
       if (data.status !== "success") {
         setScanError(String(data.message ?? t("feishu_scan_fail")));
         setScanHtml("error");
@@ -136,7 +136,7 @@ export function FeishuPanel({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const data = await cowChannelAction({
+      const data = await channelAction({
         action: "save",
         channel: "feishu",
         config: buildConfigFromDrafts(channel, drafts)
@@ -243,7 +243,7 @@ export function FeishuPanel({
                 onClick={() =>
                   void (isActive
                     ? handleSave()
-                    : cowChannelAction({
+                    : channelAction({
                         action: "connect",
                         channel: "feishu",
                         config: buildConfigFromDrafts(channel, drafts)
