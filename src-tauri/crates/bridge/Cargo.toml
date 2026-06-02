@@ -1,0 +1,17 @@
+[package]
+name = "bridge"
+version = "0.1.0"
+edition = "2021"
+description = "SupportFlow Agent bridge/ — channel context, bot routing, AgentBridge (Python bridge/ port)"
+
+[dependencies]
+agent = { path = "../agent" }
+async-trait = "0.1"
+futures-util = "0.3"
+models = { path = "../models" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["sync"] }
+tracing = "0.1"
+uuid = { version = "1", features = ["v4"] }
+dirs = "6"
