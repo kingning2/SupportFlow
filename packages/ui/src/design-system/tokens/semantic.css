@@ -1,0 +1,53 @@
+/**
+ * 语义令牌（默认：中性 zinc，与 shadcn new-york + zinc 对齐）
+ * 组件与 Tailwind 只消费映射后的 --color-*，勿直接写 hex。
+ */
+:root {
+  --radius: var(--radius-base);
+
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 240 5.9% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 5.9% 10%;
+
+  --brand: var(--primary);
+  --brand-foreground: var(--primary-foreground);
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 100%;
+  --info: 240 5.9% 10%;
+  --info-foreground: 0 0% 98%;
+
+  --surface-0: var(--background);
+  --surface-1: 240 4.8% 97%;
+  --surface-2: 240 4.8% 95.9%;
+  --text-secondary: 240 3.8% 46.1%;
+  --text-tertiary: 240 5% 64.9%;
+
+  /* 渠道品牌色：默认跟随 primary，flavor 文件覆盖 */
+  --channel-primary: var(--primary);
+  --channel-primary-foreground: var(--primary-foreground);
+  --channel-primary-hover: 240 5.9% 20%;
+  --channel-primary-muted: 240 4.8% 95.9%;
+
+  --scrollbar-size: 8px;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: hsl(var(--muted-foreground) / 0.3);
+  --scrollbar-thumb-hover: hsl(var(--muted-foreground) / 0.45);
+}

@@ -1,0 +1,2 @@
+/** @deprecated 请使用 @supportflow/ui/design-system；保留此路径以兼容旧 import */
+@import "../design-system/index.css";

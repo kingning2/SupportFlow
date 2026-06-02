@@ -33,8 +33,6 @@ import {
   type ConsoleTheme
 } from "../lib/agent-console/theme-sync";
 
-import "../styles/console.css";
-
 const DEFAULT_OPEN_GROUPS: Record<SidebarGroupId, boolean> = {
   [SidebarGroupId.Chat]: true,
   [SidebarGroupId.Manage]: true,

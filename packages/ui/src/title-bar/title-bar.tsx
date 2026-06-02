@@ -35,6 +35,19 @@ import { useAppDispatch, useAppSelector } from "@supportflow/shared/desktop-shel
 import { changeCurrentLanguageAction } from "@supportflow/shared/desktop-shell/store/modules/app";
 import type { Language } from "@supportflow/shared/tauri-bridge/enums";
 
+/** 通道 flavor 可选品牌色；未传时使用默认控制台标题栏样式 */
+export type TitleBarAccent = {
+  logoGradient: string;
+  title: string;
+  barClassName: string;
+  logoText: string;
+  titleClassName?: string;
+  controlClassName?: string;
+};
+
+const INTERACTIVE_TITLE_BAR_SELECTOR =
+  "button, a, input, select, textarea, [role='menuitem'], [data-radix-popper-content-wrapper]";
+
 type MoreMenuItem = {
   id: string;
   i18nKey:
@@ -54,9 +67,21 @@ const MORE_MENU_ITEMS: MoreMenuItem[] = [
   { id: "about", i18nKey: "menu_about", Icon: Info }
 ];
 
-const TitleBar = memo((props: { height?: number }) => {
+/** 整栏可拖；仅排除按钮/菜单等可交互控件（由控件区 stopPropagation 兜底） */
+function handleTitleBarMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+  if (e.buttons !== 1) return;
+  const target = e.target as HTMLElement;
+  if (target.closest(INTERACTIVE_TITLE_BAR_SELECTOR)) return;
+  void mainWindow.startDragging();
+}
+
+const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
   const { t } = useTranslation("title_bar");
   const h = props.height ?? 40;
+  const accent = props.accent;
+  const title = accent?.title ?? t("app_name");
+  const logoText = accent?.logoText ?? "T";
+  const logoGradient = accent?.logoGradient ?? "from-[#2b7fff] to-[#155dfc]";
   const dispatch = useAppDispatch();
   const currentLanguage = useAppSelector((state) => state.app.currentLanguage);
   const supportLanguages = useAppSelector((state) => state.app.supportLanguages);
@@ -73,36 +98,40 @@ const TitleBar = memo((props: { height?: number }) => {
     [currentLanguage, dispatch]
   );
 
-  function handleBarMouseDown(e: React.MouseEvent) {
-    const isDragRegion = Boolean((e.target as HTMLElement).dataset.dragRegion);
-    if (isDragRegion && e.buttons === 1) {
-      void mainWindow.startDragging();
-    }
-  }
+  const controlBtnClass = cn(accent?.controlClassName ?? "text-muted-foreground", "shrink-0");
 
   return (
     <div
       role="banner"
-      data-drag-region
+      data-tauri-drag-region
       className={cn(
-        "bg-card/90 flex w-full items-center justify-between px-3 backdrop-blur select-none"
+        "flex w-full cursor-default items-center justify-between px-3 select-none",
+        accent ? accent.barClassName : "bg-card/90 backdrop-blur"
       )}
       style={{ height: h }}
-      onMouseDown={handleBarMouseDown}
+      onMouseDown={handleTitleBarMouseDown}
     >
-      <div className="pointer-events-none flex min-w-0 flex-1 items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <div
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-[#2b7fff] to-[#155dfc] text-sm font-bold text-white"
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br text-sm font-bold text-white",
+            logoGradient
+          )}
           aria-hidden
         >
-          T
+          {logoText}
         </div>
-        <span className="text-foreground truncate text-[15px] font-semibold tracking-tight">
-          {t("app_name")}
+        <span
+          className={cn(
+            "truncate text-[15px] font-semibold tracking-tight",
+            accent?.titleClassName ?? (accent ? "text-slate-800" : "text-foreground")
+          )}
+        >
+          {title}
         </span>
       </div>
 
-      <div className="pointer-events-auto flex shrink-0 items-center gap-2" data-drag-region>
+      <div className="flex shrink-0 items-center gap-2" onMouseDown={(e) => e.stopPropagation()}>
         <div className="ml-1 flex items-center gap-0.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -110,9 +139,8 @@ const TitleBar = memo((props: { height?: number }) => {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground"
+                className={controlBtnClass}
                 aria-label={t("menu")}
-                onPointerDown={(e) => e.stopPropagation()}
               >
                 <Menu className="size-4" />
               </Button>
@@ -163,7 +191,7 @@ const TitleBar = memo((props: { height?: number }) => {
             type="button"
             variant="ghost"
             size="icon"
-            className="text-muted-foreground"
+            className={controlBtnClass}
             aria-label={t("minimize")}
             onClick={() => void mainWindow.minimize()}
           >
@@ -174,7 +202,7 @@ const TitleBar = memo((props: { height?: number }) => {
               type="button"
               variant="ghost"
               size="icon"
-              className="text-muted-foreground"
+              className={controlBtnClass}
               aria-label={t("maximize")}
               onClick={() => void mainWindow.toggleMaximize()}
             >
@@ -185,7 +213,12 @@ const TitleBar = memo((props: { height?: number }) => {
             type="button"
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            className={cn(
+              controlBtnClass,
+              accent?.controlClassName
+                ? "hover:bg-red-500/10 hover:text-red-600"
+                : "hover:bg-destructive/10 hover:text-destructive"
+            )}
             aria-label={t("close")}
             onClick={() => void mainWindow.close()}
           >

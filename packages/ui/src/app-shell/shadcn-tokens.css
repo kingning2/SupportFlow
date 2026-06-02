@@ -1,0 +1,5 @@
+/** @deprecated 已并入 @supportflow/ui/design-system */
+@import "../design-system/tokens/semantic.css";
+@import "../design-system/tokens/semantic.dark.css";
+@import "../design-system/tokens/tailwind-theme.css";
+@import "../design-system/base/reset-shell.css";

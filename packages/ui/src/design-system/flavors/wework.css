@@ -1,0 +1,26 @@
+/**
+ * 企业微信 flavor：浅蓝品牌，覆盖语义与桌面壳变量。
+ */
+[data-flavor="wework"] {
+  color-scheme: light;
+
+  --channel-primary: 214 84% 55%;
+  --channel-primary-foreground: 0 0% 100%;
+  --channel-primary-hover: 214 76% 48%;
+  --channel-primary-muted: 214 100% 97%;
+
+  --primary: var(--channel-primary);
+  --primary-foreground: var(--channel-primary-foreground);
+  --ring: var(--channel-primary);
+  --accent: 214 100% 97%;
+  --accent-foreground: 214 84% 40%;
+  --border: 214 32% 88%;
+  --input: 214 32% 88%;
+  --muted: 214 40% 96%;
+  --muted-foreground: 215 16% 42%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  --app-bg: #eef4fb;
+  --main-window-bg: #f7faff;
+}

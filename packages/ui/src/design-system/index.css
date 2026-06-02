@@ -1,0 +1,16 @@
+/**
+ * SupportFlow 企业设计系统 — 唯一完整入口。
+ * App 用法：@import "@supportflow/ui/design-system";
+ * 渠道再 @import flavor 或本地 theme 只覆盖 CSS 变量。
+ */
+@import "./tailwind.css";
+@import "./tokens/primitives.css";
+@import "./tokens/semantic.css";
+@import "./tokens/semantic.dark.css";
+@import "./tokens/desktop.css";
+@import "./tokens/tailwind-theme.css";
+@import "./base/reset-shell.css";
+@import "./base/scrollbar.css";
+@import "./utilities/motion.css";
+@import "./utilities/cards.css";
+@import "./scopes/agent-console.css";

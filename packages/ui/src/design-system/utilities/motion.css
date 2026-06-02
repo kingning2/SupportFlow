@@ -1,0 +1,46 @@
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(450%);
+  }
+}
+
+@keyframes ios-radial-bar {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes download-arrow-slide-down {
+  0% {
+    transform: translateY(-42%);
+  }
+  100% {
+    transform: translateY(42%);
+  }
+}
+
+@keyframes modal-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-overlay-enter {
+  animation: modal-overlay-in 0.28s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay-enter {
+    animation: none;
+  }
+}
