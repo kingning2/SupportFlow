@@ -141,9 +141,11 @@ Modal、新语言、新窗口 label 也有专属清单，见 [fullstack-ipc.md](
 
 | 路径              | 职责                  | 谁常改       |
 | ----------------- | --------------------- | ------------ |
-| `src/`            | Next.js 前端源码      | 前端、动效   |
+| `apps/full/`      | 完整控制台 Next 应用  | 前端、动效   |
+| `apps/wework/`    | 企微独立 Next 应用    | 前端         |
+| `apps/wechat/`    | 微信独立 Next 应用    | 前端         |
+| `packages/`       | 前端共享库            | 前端         |
 | `src-tauri/`      | Tauri / Rust 桌面端   | Rust、全栈   |
-| `public/`         | 静态资源（如图标）    | 前端         |
 | `docs/`           | 人类文档（含本规范）  | 全员         |
 | `scripts/`        | 构建/生成脚本         | DevOps、全栈 |
 | `.github/`        | GitHub Actions        | DevOps       |
@@ -153,10 +155,10 @@ Modal、新语言、新窗口 label 也有专属清单，见 [fullstack-ipc.md](
 
 ---
 
-## `src/` 目录树（前端）
+## `apps/full/src/` 目录树（完整控制台）
 
 ```
-src/
+apps/full/src/
 ├── app/                 # App Router：页面、layout、error boundary
 │   ├── main-window/     # 主窗路由与 Provider
 │   └── modal-window/    # 模态 Webview 路由
@@ -180,6 +182,8 @@ src/
 ├── assets/              # 全局 CSS 等
 └── lib/                 # 与 UI 无关的小工具（cn）
 ```
+
+渠道独立应用见 `apps/wework`、`apps/wechat`；共享 UI 见 `packages/`。
 
 ---
 

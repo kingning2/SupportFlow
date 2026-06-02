@@ -1,21 +1,22 @@
 # 前端编写规范
 
-技术栈：Next.js App Router、React 19、Redux Toolkit、shadcn/ui、Tailwind、GSAP（`src/animation/`）。
+技术栈：Next.js App Router、React 19、Redux Toolkit、shadcn/ui、Tailwind、GSAP（`apps/full/src/animation/`）。
 
-> 各职位对应的目录说明见 [roles-and-directories.md](./roles-and-directories.md)。
+> 各职位对应的目录说明见 [roles-and-directories.md](./roles-and-directories.md)。  
+> 前端 monorepo：`apps/full`（完整控制台）、`apps/wework`、`apps/wechat`；共享库见 `packages/`。
 
-## 目录与职责
+## 目录与职责（完整控制台 `apps/full`）
 
-| 路径                            | 用途                                                  |
-| ------------------------------- | ----------------------------------------------------- |
-| `src/app/`                      | 路由与页面壳（`main-window`、`modal-window` 等）      |
-| `src/components/`               | 可复用 UI；`components/ui/` 为 shadcn 生成件          |
-| `src/cmd/`                      | Tauri Command 封装（仅 `invokeWrapper` + `TauriCmd`） |
-| `src/enums/`                    | 固定字符串（命令名、事件名、语言、窗口 label 等）     |
-| `src/store/`                    | Redux slice（`name` 使用 `ReduxSlice` 枚举）          |
-| `src/providers/`、`src/guards/` | 全局 Provider 与启动/语言守卫                         |
-| `src/config/`                   | 窗口、路由等行为配置                                  |
-| `src/generated/contracts.ts`    | typeshare 生成，**禁止手改**                          |
+| 路径                                   | 用途                                                  |
+| -------------------------------------- | ----------------------------------------------------- |
+| `apps/full/src/app/`                   | 路由与页面壳（`main-window`、`modal-window` 等）      |
+| `apps/full/src/components/`            | 可复用 UI；`components/ui/` 为 shadcn 生成件          |
+| `apps/full/src/cmd/`                   | Tauri Command 封装（仅 `invokeWrapper` + `TauriCmd`） |
+| `apps/full/src/enums/`                 | 固定字符串（命令名、事件名、语言、窗口 label 等）     |
+| `apps/full/src/store/`                 | Redux slice（`name` 使用 `ReduxSlice` 枚举）          |
+| `apps/full/src/providers/`、`guards/`  | 全局 Provider 与启动/语言守卫                         |
+| `apps/full/src/config/`                | 窗口、路由等行为配置                                  |
+| `apps/full/src/generated/contracts.ts` | typeshare 生成，**禁止手改**                          |
 
 ## `"use client"` 边界
 
