@@ -43,7 +43,7 @@ pub struct WeworkAccountsStore {
 impl WeworkAccountsStore {
     pub fn open(app: &AppHandle) -> Result<Self, String> {
         let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
-        std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        crate::utils::fs::create_dir_all(&dir)?;
         let path = dir.join("wework_accounts.db");
         Self::open_path(path)
     }
@@ -78,7 +78,7 @@ impl WeworkAccountsStore {
     }
 
     pub fn list_accounts(&self) -> Result<Vec<WeworkSavedAccountDto>, String> {
-        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let conn = crate::utils::err::lock_mutex(&self.conn)?;
         let mut stmt = conn
             .prepare(
                 r#"SELECT id, label, wework_user_id, wework_exe_path, wework_version,
@@ -112,7 +112,7 @@ impl WeworkAccountsStore {
         &self,
         account: WeworkSavedAccountDto,
     ) -> Result<WeworkSavedAccountDto, String> {
-        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let conn = crate::utils::err::lock_mutex(&self.conn)?;
         let smart = account
             .config
             .wework_smart
@@ -147,7 +147,7 @@ impl WeworkAccountsStore {
     }
 
     pub fn delete_account(&self, id: &str) -> Result<(), String> {
-        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let conn = crate::utils::err::lock_mutex(&self.conn)?;
         conn.execute("DELETE FROM wework_accounts WHERE id = ?1", params![id])
             .map_err(|e| e.to_string())?;
         conn.execute(
@@ -159,7 +159,7 @@ impl WeworkAccountsStore {
     }
 
     pub fn get_active_account_id(&self) -> Result<Option<String>, String> {
-        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let conn = crate::utils::err::lock_mutex(&self.conn)?;
         let mut stmt = conn
             .prepare("SELECT account_id FROM wework_active_account WHERE id = 1")
             .map_err(|e| e.to_string())?;
@@ -172,7 +172,7 @@ impl WeworkAccountsStore {
     }
 
     pub fn set_active_account_id(&self, id: Option<&str>) -> Result<(), String> {
-        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let conn = crate::utils::err::lock_mutex(&self.conn)?;
         match id {
             Some(account_id) => {
                 conn.execute(

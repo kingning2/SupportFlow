@@ -6,7 +6,6 @@
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -34,10 +33,7 @@ pub struct LicenseStatus {
 }
 
 fn now_unix_seconds() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64
+    crate::utils::date::unix_timestamp_seconds_i64()
 }
 
 fn is_dev_license_bypass_enabled() -> bool {
@@ -46,20 +42,18 @@ fn is_dev_license_bypass_enabled() -> bool {
     }
     // Enable bypass for local single-channel dev launcher by default.
     // Can be disabled with SUPPORT_FLOW_DEV_BYPASS_LICENSE=0/false/off.
-    let has_dev_channel = std::env::var("DEV_CHANNEL")
-        .ok()
+    let has_dev_channel = crate::utils::env::get("DEV_CHANNEL")
         .map(|v| !v.trim().is_empty())
         .unwrap_or(false);
     if !has_dev_channel {
         return false;
     }
-    match std::env::var("SUPPORT_FLOW_DEV_BYPASS_LICENSE") {
-        Ok(v) => {
+    crate::utils::env::get("SUPPORT_FLOW_DEV_BYPASS_LICENSE")
+        .map(|v| {
             let v = v.trim().to_ascii_lowercase();
             !(v == "0" || v == "false" || v == "off")
-        }
-        Err(_) => true,
-    }
+        })
+        .unwrap_or(true)
 }
 
 fn read_optional_resource_text(app: &AppHandle, filename: &str) -> Result<Option<String>, String> {
@@ -84,22 +78,22 @@ fn license_file_path(app: &AppHandle) -> Result<PathBuf, String> {
 fn write_license_token(app: &AppHandle, token: &str) -> Result<(), String> {
     let path = license_file_path(app)?;
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        crate::utils::fs::create_dir_all(parent)?;
     }
     let payload = serde_json::json!({ "token": token.trim() });
-    fs::write(path, payload.to_string()).map_err(|e| e.to_string())
+    crate::utils::fs::write(path, payload.to_string())
 }
 
 fn read_license_token_file(path: &PathBuf) -> Result<Option<String>, String> {
     if !path.is_file() {
         return Ok(None);
     }
-    let raw = fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let raw = crate::utils::fs::read_to_string(path)?;
     extract_token_from_license_json(&raw).map(Some)
 }
 
 fn extract_token_from_license_json(raw: &str) -> Result<String, String> {
-    let v: serde_json::Value = serde_json::from_str(raw).map_err(|e| e.to_string())?;
+    let v: serde_json::Value = crate::utils::json::from_str(raw)?;
     match v {
         // 兼容直接写字符串的最简格式： "xxxxx"
         serde_json::Value::String(s) => Ok(s.trim().to_string()),
@@ -124,11 +118,9 @@ fn read_public_key_pem(app: &AppHandle) -> Result<String, String> {
 
     // Dev fallback: Tauri dev may not bundle non-whitelisted resources into `BaseDirectory::Resource`.
     // Use the repo file relative to the `src-tauri` crate dir (stable even if CWD differs).
-    let dev_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("resources")
-        .join("public_key.pem");
+    let dev_path = crate::utils::path::crate_path("resources/public_key.pem");
     if dev_path.is_file() {
-        return fs::read_to_string(dev_path).map_err(|e| e.to_string());
+        return crate::utils::fs::read_to_string(dev_path);
     }
 
     Err("missing resources/public_key.pem".to_string())
@@ -234,7 +226,7 @@ impl LicenseStore {
     }
 
     pub fn snapshot(&self) -> Result<LicenseStatusDto, String> {
-        let guard = self.0.lock().map_err(|e| e.to_string())?;
+        let guard = crate::utils::err::lock_mutex(&self.0)?;
         Ok(LicenseStatusDto {
             machine_code: guard.machine_code.clone(),
             valid: guard.valid,
@@ -255,7 +247,7 @@ impl LicenseStore {
 
         let public_key_pem = read_public_key_pem(app)?;
         let machine_code = {
-            let guard = self.0.lock().map_err(|e| e.to_string())?;
+            let guard = crate::utils::err::lock_mutex(&self.0)?;
             guard.machine_code.clone()
         };
 
@@ -278,12 +270,12 @@ impl LicenseStore {
             valid: next.valid,
             reason: next.reason.clone(),
         };
-        *self.0.lock().map_err(|e| e.to_string())? = next;
+        *crate::utils::err::lock_mutex(&self.0)? = next;
         Ok(dto)
     }
 
     pub fn require_valid(&self) -> Result<(), String> {
-        let guard = self.0.lock().map_err(|e| e.to_string())?;
+        let guard = crate::utils::err::lock_mutex(&self.0)?;
         if guard.valid {
             Ok(())
         } else {

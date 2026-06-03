@@ -61,7 +61,7 @@ impl ChannelPythonSidecar {
                 "CHANNEL_CONFIG_PATH",
                 self.config_path.to_string_lossy().to_string(),
             );
-        if let Ok(dev) = std::env::var("DEV_CHANNEL") {
+        if let Some(dev) = crate::utils::env::get("DEV_CHANNEL") {
             let trimmed = dev.trim();
             if !trimmed.is_empty() {
                 cmd.env("DEV_CHANNEL", trimmed);
@@ -154,21 +154,6 @@ impl ChannelPythonSidecar {
                 );
             }
         }
-        // crate::log_info!(
-        //     "Channel sidecar started: {}",
-        //     if self.sidecar_exe.is_file() {
-        //         self.sidecar_exe.display().to_string()
-        //     } else {
-        //         format!(
-        //             "python dev ({}, {})",
-        //             resolve_python_executable(),
-        //             self.dev_source_dir
-        //                 .as_ref()
-        //                 .map(|p| p.display().to_string())
-        //                 .unwrap_or_default()
-        //         )
-        //     }
-        // );
         Ok(())
     }
 
@@ -230,67 +215,45 @@ impl ChannelPythonSidecar {
         let params = req.get("params").cloned().unwrap_or(json!({}));
 
         let result = match method {
-            "agent.reply" => {
-                let runtime = self.runtime.lock().await.as_ref().and_then(|w| w.upgrade());
-                match runtime {
-                    Some(rt) => match rt.channel_reply(&params).await {
-                        Ok(reply) => json!({
-                            "id": id,
-                            "result": {
-                                "status": "success",
-                                "content": reply.get("content").cloned().unwrap_or(json!("")),
-                                "reply_type": reply.get("reply_type").cloned(),
-                                "text_content": reply.get("text_content").cloned(),
-                                "file_name": reply.get("file_name").cloned(),
-                            }
-                        }),
-                        Err(e) => json!({ "id": id, "error": e }),
-                    },
-                    None => json!({ "id": id, "error": "AgentRuntime not registered" }),
-                }
-            }
-            "channel.process" => {
-                let runtime = self.runtime.lock().await.as_ref().and_then(|w| w.upgrade());
-                match runtime {
-                    Some(rt) => match rt.channel_process(&params).await {
-                        Ok(payload) => json!({
-                            "id": id,
-                            "result": payload
-                        }),
-                        Err(e) => json!({ "id": id, "error": e }),
-                    },
-                    None => json!({ "id": id, "error": "AgentRuntime not registered" }),
-                }
-            }
-            "channel.decorate_text" => {
-                let runtime = self.runtime.lock().await.as_ref().and_then(|w| w.upgrade());
-                match runtime {
-                    Some(rt) => match rt.channel_decorate_text(&params).await {
-                        Ok(text) => json!({
-                            "id": id,
-                            "result": { "text": text }
-                        }),
-                        Err(e) => json!({ "id": id, "error": e }),
-                    },
-                    None => json!({ "id": id, "error": "AgentRuntime not registered" }),
-                }
-            }
-            "channel.extract_media" => {
-                let runtime = self.runtime.lock().await.as_ref().and_then(|w| w.upgrade());
-                match runtime {
-                    Some(rt) => match rt.channel_extract_media(&params).await {
-                        Ok(items) => json!({
-                            "id": id,
-                            "result": { "items": items }
-                        }),
-                        Err(e) => json!({ "id": id, "error": e }),
-                    },
-                    None => json!({ "id": id, "error": "AgentRuntime not registered" }),
-                }
-            }
+            "agent.reply" => match self.runtime_handle().await {
+                Ok(rt) => match rt.channel_reply(&params).await {
+                    Ok(reply) => json!({
+                        "id": id,
+                        "result": {
+                            "status": "success",
+                            "content": reply.get("content").cloned().unwrap_or(json!("")),
+                            "reply_type": reply.get("reply_type").cloned(),
+                            "text_content": reply.get("text_content").cloned(),
+                            "file_name": reply.get("file_name").cloned(),
+                        }
+                    }),
+                    Err(e) => json!({ "id": id, "error": e }),
+                },
+                Err(e) => json!({ "id": id, "error": e }),
+            },
+            "channel.process" => match self.runtime_handle().await {
+                Ok(rt) => match rt.channel_process(&params).await {
+                    Ok(payload) => json!({ "id": id, "result": payload }),
+                    Err(e) => json!({ "id": id, "error": e }),
+                },
+                Err(e) => json!({ "id": id, "error": e }),
+            },
+            "channel.decorate_text" => match self.runtime_handle().await {
+                Ok(rt) => match rt.channel_decorate_text(&params).await {
+                    Ok(text) => json!({ "id": id, "result": { "text": text } }),
+                    Err(e) => json!({ "id": id, "error": e }),
+                },
+                Err(e) => json!({ "id": id, "error": e }),
+            },
+            "channel.extract_media" => match self.runtime_handle().await {
+                Ok(rt) => match rt.channel_extract_media(&params).await {
+                    Ok(items) => json!({ "id": id, "result": { "items": items } }),
+                    Err(e) => json!({ "id": id, "error": e }),
+                },
+                Err(e) => json!({ "id": id, "error": e }),
+            },
             "channel.notify" => {
-                let runtime = self.runtime.lock().await.as_ref().and_then(|w| w.upgrade());
-                if let Some(rt) = runtime {
+                if let Ok(rt) = self.runtime_handle().await {
                     rt.emit_channel_status_changed(&params);
                 }
                 json!({
@@ -301,6 +264,15 @@ impl ChannelPythonSidecar {
             _ => json!({ "id": id, "error": format!("unknown method: {method}") }),
         };
         result
+    }
+
+    async fn runtime_handle(&self) -> Result<Arc<AgentRuntime>, String> {
+        self.runtime
+            .lock()
+            .await
+            .as_ref()
+            .and_then(|runtime| runtime.upgrade())
+            .ok_or_else(|| "AgentRuntime not registered".to_string())
     }
 
     pub async fn channels_get(self: &Arc<Self>) -> Result<Value, String> {
@@ -421,7 +393,7 @@ pub fn resolve_python_executable() -> String {
 
 /// Runtime env, then compile-time value from project root `.env` (via build.rs).
 fn channel_python_from_env() -> Option<String> {
-    if let Ok(exe) = std::env::var("CHANNEL_PYTHON_EXECUTABLE") {
+    if let Some(exe) = crate::utils::env::get("CHANNEL_PYTHON_EXECUTABLE") {
         let trimmed = exe.trim();
         if !trimmed.is_empty() {
             return Some(trimmed.to_string());
@@ -506,13 +478,13 @@ fn materialize_embedded_sidecar(app: &AppHandle) -> Result<PathBuf, String> {
 fn resolve_sidecar_paths(_app: &AppHandle) -> (PathBuf, Option<PathBuf>) {
     // Dev: prefer `python -m channel` so stale PyInstaller binaries do not pollute stdout.
     #[cfg(debug_assertions)]
-    if std::env::var("CHANNEL_SIDECAR_EXE").is_err() {
+    if crate::utils::env::get("CHANNEL_SIDECAR_EXE").is_none() {
         if let Some(dev) = dev_source_dir() {
             return (PathBuf::new(), Some(dev));
         }
     }
 
-    if let Ok(raw) = std::env::var("CHANNEL_SIDECAR_EXE") {
+    if let Some(raw) = crate::utils::env::get("CHANNEL_SIDECAR_EXE") {
         let trimmed = raw.trim();
         if !trimmed.is_empty() {
             let path = PathBuf::from(trimmed);
@@ -527,7 +499,7 @@ fn resolve_sidecar_paths(_app: &AppHandle) -> (PathBuf, Option<PathBuf>) {
         return (path, None);
     }
 
-    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let manifest = crate::utils::path::crate_path("");
     let binaries_name = format!(
         "channel-sidecar-{}{}",
         env!("BUILD_TARGET"),
@@ -546,7 +518,7 @@ fn resolve_sidecar_paths(_app: &AppHandle) -> (PathBuf, Option<PathBuf>) {
 }
 
 fn dev_source_dir() -> Option<PathBuf> {
-    let src = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("channel_agent");
+    let src = crate::utils::path::crate_path("channel_agent");
     if src.join("channel").join("__main__.py").is_file() {
         src.canonicalize().ok()
     } else {

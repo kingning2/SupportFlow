@@ -43,11 +43,8 @@ fn skill_to_item(e: &SkillEntry) -> SkillItem {
 
 /// Standalone wework / wechat apps connect only from the account UI.
 fn should_skip_deferred_channel_autostart() -> bool {
-    std::env::var("DEV_CHANNEL")
-        .map(|v| {
-            let v = v.trim();
-            v == "wework" || v == "wx"
-        })
+    crate::utils::env::get("DEV_CHANNEL")
+        .map(|v| v.trim() == "wework" || v.trim() == "wx")
         .unwrap_or(false)
 }
 
@@ -57,7 +54,7 @@ fn resolve_bundled_config(app: &AppHandle) -> Result<PathBuf, String> {
     // `target/debug/resources/` — read the source tree directly so edits take effect.
     #[cfg(debug_assertions)]
     {
-        let source_config = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources/config.json");
+        let source_config = crate::utils::path::crate_path("resources/config.json");
         if source_config.is_file() {
             crate::log_info!(
                 "agent config: dev source resources/config.json -> {}",
@@ -101,7 +98,7 @@ fn resolve_workspace_dir(app: &AppHandle) -> Result<PathBuf, String> {
 fn resolve_agent_dirs(app: &AppHandle) -> Result<(PathBuf, PathBuf), String> {
     let config_path = resolve_bundled_config(app)?;
     let workspace = resolve_workspace_dir(app)?;
-    fs::create_dir_all(&workspace).map_err(|e| e.to_string())?;
+    crate::utils::fs::create_dir_all(&workspace)?;
 
     // Mirror into workspace for tools that read ./config.json; source remains resources.
     let mirror = workspace.join("config.json");
@@ -129,8 +126,7 @@ fn resolve_markitdown_convert_script(app: &AppHandle) -> Result<PathBuf, String>
     }
 
     // Dev source tree (relative to tauri crate root)
-    let dev = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("channel_agent/scripts/markitdown_convert.py");
+    let dev = crate::utils::path::crate_path("channel_agent/scripts/markitdown_convert.py");
     if dev.is_file() {
         return Ok(dev);
     }
@@ -963,7 +959,7 @@ impl AgentRuntime {
             return Ok((source.display().to_string(), String::new()));
         }
 
-        let raw = fs::read_to_string(&source).map_err(|e| e.to_string())?;
+        let raw = crate::utils::fs::read_to_string(&source)?;
         let limit = limit.and_then(|v| usize::try_from(v).ok()).unwrap_or(400);
         let lines: Vec<&str> = raw.lines().collect();
         let start = lines.len().saturating_sub(limit);
@@ -1024,7 +1020,7 @@ impl AgentRuntime {
         if !full.starts_with(&self.workspace) {
             return Err("invalid memory path".to_string());
         }
-        fs::read_to_string(full).map_err(|e| e.to_string())
+        crate::utils::fs::read_to_string(full)
     }
 
     /// 读取 scheduler/tasks.json 的任务列表（若不存在返回空数组）。
@@ -1034,8 +1030,8 @@ impl AgentRuntime {
         if !task_path.exists() {
             return Ok(Vec::new());
         }
-        let raw = fs::read_to_string(task_path).map_err(|e| e.to_string())?;
-        let value: serde_json::Value = serde_json::from_str(&raw).map_err(|e| e.to_string())?;
+        let raw = crate::utils::fs::read_to_string(task_path)?;
+        let value: serde_json::Value = crate::utils::json::from_str(&raw)?;
         let mut rows = Vec::new();
         let Some(obj) = value.get("tasks").and_then(|v| v.as_object()) else {
             return Ok(rows);
@@ -1193,7 +1189,7 @@ fn resolve_latest_log_path() -> Result<PathBuf, String> {
 }
 
 fn latest_lines_from(path: &PathBuf, limit: usize) -> Result<String, String> {
-    let raw = fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let raw = crate::utils::fs::read_to_string(path)?;
     let lines: Vec<&str> = raw.lines().collect();
     let start = lines.len().saturating_sub(limit);
     Ok(lines[start..].join("\n"))

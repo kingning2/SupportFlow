@@ -39,9 +39,9 @@ pub fn write_stored_lang(lang: &str) -> Result<(), String> {
     }
     let path = lang_store_path()?;
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        crate::utils::fs::create_dir_all(parent)?;
     }
-    fs::write(&path, lang).map_err(|e| e.to_string())
+    crate::utils::fs::write(&path, lang)
 }
 
 impl SessionStore {
@@ -53,7 +53,7 @@ impl SessionStore {
 
 pub fn get_session(app: &AppHandle) -> Result<AppSession, String> {
     let store = app.state::<SessionStore>();
-    let guard = store.0.lock().map_err(|e| e.to_string())?;
+    let guard = crate::utils::err::lock_mutex(&store.0)?;
     Ok(guard.clone())
 }
 
@@ -65,7 +65,7 @@ pub fn set_current_language(app: &AppHandle, language: String) -> Result<(), Str
 
     let session = {
         let store = app.state::<SessionStore>();
-        let mut guard = store.0.lock().map_err(|e| e.to_string())?;
+        let mut guard = crate::utils::err::lock_mutex(&store.0)?;
         guard.current_language = language;
         guard.clone()
     };

@@ -20,9 +20,9 @@ impl ChannelBridge {
 
     /// Reload `channel_type` from config after Python connect/disconnect/save.
     pub fn sync_from_config_file(&self, config_path: &Path) -> Result<Vec<String>, String> {
-        let raw = std::fs::read_to_string(config_path).map_err(|e| e.to_string())?;
-        let cfg: Value = serde_json::from_str(&raw).map_err(|e| e.to_string())?;
-        let list = parse_channel_type(cfg.get("channel_type"));
+        let raw = crate::utils::fs::read_to_string(config_path)?;
+        let cfg: Value = crate::utils::json::from_str(&raw)?;
+        let list = crate::utils::channel::parse_desktop_channel_types(cfg.get("channel_type"));
         if let Ok(mut guard) = self.active.write() {
             *guard = list.clone();
         }
@@ -59,20 +59,4 @@ impl ChannelBridge {
         );
         Ok(())
     }
-}
-
-fn parse_channel_type(value: Option<&Value>) -> Vec<String> {
-    let items: Vec<String> = match value {
-        Some(Value::String(s)) => s
-            .split(',')
-            .map(|p| p.trim().to_string())
-            .filter(|p| !p.is_empty() && p != "web" && p != "terminal")
-            .collect(),
-        _ => Vec::new(),
-    };
-    let mut seen = std::collections::HashSet::new();
-    items
-        .into_iter()
-        .filter(|name| seen.insert(name.clone()))
-        .collect()
 }
