@@ -1,12 +1,15 @@
 "use client";
 
+import { Dropdown, type MenuProps } from "antd";
 import {
   ArrowUpCircle,
   Check,
   CircleHelp,
+  Copy,
   Globe,
   Headphones,
   Info,
+  KeyRound,
   Mail,
   Menu,
   Minus,
@@ -14,26 +17,18 @@ import {
   X,
   type LucideIcon
 } from "lucide-react";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { setLang } from "@supportflow/shared/tauri-bridge/cmd/lang";
-import { mainWindow } from "@supportflow/shared/tauri-bridge/window/main-window";
-import { Button } from "@supportflow/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger
-} from "@supportflow/ui/dropdown-menu";
 import { cn } from "@supportflow/shared";
 import { useAppDispatch, useAppSelector } from "@supportflow/shared/desktop-shell/store/hooks";
 import { changeCurrentLanguageAction } from "@supportflow/shared/desktop-shell/store/modules/app";
+import { setLang } from "@supportflow/shared/tauri-bridge/cmd/lang";
 import type { Language } from "@supportflow/shared/tauri-bridge/enums";
+import { mainWindow } from "@supportflow/shared/tauri-bridge/window/main-window";
+import { Button } from "@supportflow/ui/button";
+
+import { LicenseActivationModal, LicenseMachineCodeModal } from "./license-modals";
 
 /** 通道 flavor 可选品牌色；未传时使用默认控制台标题栏样式 */
 export type TitleBarAccent = {
@@ -46,7 +41,7 @@ export type TitleBarAccent = {
 };
 
 const INTERACTIVE_TITLE_BAR_SELECTOR =
-  "button, a, input, select, textarea, [role='menuitem'], [data-radix-popper-content-wrapper]";
+  "button, a, input, select, textarea, [role='menuitem'], .ant-dropdown";
 
 type MoreMenuItem = {
   id: string;
@@ -99,6 +94,55 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
   );
 
   const controlBtnClass = cn(accent?.controlClassName ?? "text-muted-foreground", "shrink-0");
+  const [activationOpen, setActivationOpen] = useState(false);
+  const [machineCodeOpen, setMachineCodeOpen] = useState(false);
+
+  const menuItems = useMemo<MenuProps["items"]>(
+    () => [
+      {
+        key: "language",
+        label: t("menu_language"),
+        icon: <Globe className="size-4 shrink-0 opacity-80" aria-hidden />,
+        children: supportLanguages.map((opt) => ({
+          key: opt.value,
+          label: (
+            <span className="flex items-center gap-2">
+              <span className="flex size-4 shrink-0 items-center justify-center">
+                {currentLanguage === opt.value ? (
+                  <Check className="text-primary size-4" aria-hidden />
+                ) : null}
+              </span>
+              {opt.label}
+            </span>
+          ),
+          onClick: () => {
+            void switchLanguage(opt.value);
+          }
+        }))
+      },
+      { type: "divider" as const },
+      {
+        key: "license_activation",
+        label: t("menu_license_activation"),
+        icon: <KeyRound className="size-4 shrink-0" aria-hidden />,
+        onClick: () => setActivationOpen(true)
+      },
+      {
+        key: "license_machine_code",
+        label: t("menu_license_machine_code"),
+        icon: <Copy className="size-4 shrink-0" aria-hidden />,
+        onClick: () => setMachineCodeOpen(true)
+      },
+      { type: "divider" as const },
+      ...MORE_MENU_ITEMS.map(({ id, i18nKey, Icon }) => ({
+        key: id,
+        label: t(i18nKey),
+        icon: <Icon className="size-4 shrink-0" aria-hidden />,
+        disabled: true
+      }))
+    ],
+    [t, supportLanguages, currentLanguage, switchLanguage]
+  );
 
   return (
     <div
@@ -133,59 +177,20 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
 
       <div className="flex shrink-0 items-center gap-2" onMouseDown={(e) => e.stopPropagation()}>
         <div className="ml-1 flex items-center gap-0.5">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className={controlBtnClass}
-                aria-label={t("menu")}
-              >
-                <Menu className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              sideOffset={6}
-              className="min-w-[200px]"
-              onPointerDown={(e) => e.stopPropagation()}
+          <Dropdown trigger={["click"]} placement="bottomRight" menu={{ items: menuItems }}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={controlBtnClass}
+              aria-label={t("menu")}
             >
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="gap-2">
-                  <Globe className="size-4 shrink-0 opacity-80" aria-hidden />
-                  <span>{t("menu_language")}</span>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="min-w-40" sideOffset={4}>
-                  {supportLanguages.map((opt) => (
-                    <DropdownMenuItem
-                      key={opt.value}
-                      className="gap-2 pl-2"
-                      onSelect={() => {
-                        void switchLanguage(opt.value);
-                      }}
-                    >
-                      <span className="flex size-4 shrink-0 items-center justify-center">
-                        {currentLanguage === opt.value ? (
-                          <Check className="text-primary size-4" aria-hidden />
-                        ) : null}
-                      </span>
-                      {opt.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
+              <Menu className="size-4" />
+            </Button>
+          </Dropdown>
 
-              <DropdownMenuSeparator />
-
-              {MORE_MENU_ITEMS.map(({ id, i18nKey, Icon }) => (
-                <DropdownMenuItem key={id} disabled className="gap-2">
-                  <Icon className="size-4 shrink-0" aria-hidden />
-                  {t(i18nKey)}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <LicenseActivationModal open={activationOpen} onOpenChange={setActivationOpen} />
+          <LicenseMachineCodeModal open={machineCodeOpen} onOpenChange={setMachineCodeOpen} />
 
           <Button
             type="button"
