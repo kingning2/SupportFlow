@@ -6,6 +6,7 @@ pub mod fs;
 pub mod json;
 pub mod knowledge_pick;
 pub mod license;
+pub mod license_key;
 pub mod log;
 pub mod path;
 pub mod window;

@@ -12,6 +12,7 @@ use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 
 use crate::utils::license::{compute_machine_code_windows, verify_license_token};
+use crate::utils::license_key::{decode_token_from_key_bytes, encode_token_to_key_bytes};
 
 pub struct LicenseStore(pub Mutex<LicenseStatus>);
 
@@ -69,8 +70,27 @@ fn read_optional_resource_text(app: &AppHandle, filename: &str) -> Result<Option
         .map(Some)
 }
 
-/// 获取激活文件路径（固定一个位置，简单可靠）
+fn read_optional_resource_bytes(
+    app: &AppHandle,
+    filename: &str,
+) -> Result<Option<Vec<u8>>, String> {
+    let path = app
+        .path()
+        .resolve(filename, tauri::path::BaseDirectory::Resource)
+        .map_err(|e| e.to_string())?;
+    if !path.is_file() {
+        return Ok(None);
+    }
+    std::fs::read(path).map_err(|e| e.to_string()).map(Some)
+}
+
+/// 获取激活 key 文件路径（固定一个位置，简单可靠）
 fn license_file_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    Ok(dir.join("SupportFlow").join("license.key"))
+}
+
+fn legacy_license_json_path(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     Ok(dir.join("SupportFlow").join("license.json"))
 }
@@ -80,8 +100,16 @@ fn write_license_token(app: &AppHandle, token: &str) -> Result<(), String> {
     if let Some(parent) = path.parent() {
         crate::utils::fs::create_dir_all(parent)?;
     }
-    let payload = serde_json::json!({ "token": token.trim() });
-    crate::utils::fs::write(path, payload.to_string())
+    let key_bytes = encode_token_to_key_bytes(token)?;
+    crate::utils::fs::write(path, key_bytes)
+}
+
+fn read_license_key_file(path: &PathBuf) -> Result<Option<String>, String> {
+    if !path.is_file() {
+        return Ok(None);
+    }
+    let bytes = std::fs::read(path).map_err(|e| e.to_string())?;
+    decode_token_from_key_bytes(&bytes).map(Some)
 }
 
 fn read_license_token_file(path: &PathBuf) -> Result<Option<String>, String> {
@@ -127,16 +155,33 @@ fn read_public_key_pem(app: &AppHandle) -> Result<String, String> {
 }
 
 fn read_stored_activation_token(app: &AppHandle) -> Result<Option<String>, String> {
-    // 1) 先读本地可写目录
+    // 1) 先读本地可写目录的二进制 key 文件
     let path = license_file_path(app)?;
-    if let Some(token) = read_license_token_file(&path)? {
+    if let Some(token) = read_license_key_file(&path)? {
         let token = token.trim().to_string();
         if !token.is_empty() {
             return Ok(Some(token));
         }
     }
 
-    // 2) 再读 resources 里的只读兜底文件
+    // 2) 兼容旧版本地 JSON token 文件
+    let legacy_path = legacy_license_json_path(app)?;
+    if let Some(token) = read_license_token_file(&legacy_path)? {
+        let token = token.trim().to_string();
+        if !token.is_empty() {
+            return Ok(Some(token));
+        }
+    }
+
+    // 3) 再读 resources 里的只读兜底文件
+    if let Some(bytes) = read_optional_resource_bytes(app, "license.key")? {
+        let token = decode_token_from_key_bytes(&bytes)?;
+        if !token.trim().is_empty() {
+            return Ok(Some(token));
+        }
+    }
+
+    // 4) 兼容 resources 里的旧 license.json
     if let Some(raw) = read_optional_resource_text(app, "license.json")? {
         let token = extract_token_from_license_json(&raw)?;
         if !token.trim().is_empty() {

@@ -43,6 +43,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             cmd::license::license_get_status,
             cmd::license::license_apply_activation,
+            cmd::license::license_pick_and_apply_activation_key,
             cmd::lang::get_lang,
             cmd::lang::set_lang,
             cmd::session::get_app_session,
