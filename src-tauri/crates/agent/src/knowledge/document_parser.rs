@@ -63,11 +63,11 @@ pub fn parse_document_file(file_path: impl AsRef<Path>, suffix: Option<&str>) ->
 
     match markitdown::convert_file_to_markdown(path) {
         Ok(text) if !text.trim().is_empty() => return Ok(text),
-        Ok(_) => tracing::debug!(
-            "[document_parser] MarkItDown returned empty for {}",
-            path.display()
+        Ok(_) => tracing::warn!(
+            "[parser] MarkItDown returned empty ({} bytes file)",
+            std::fs::metadata(path).map(|m| m.len()).unwrap_or(0)
         ),
-        Err(e) => tracing::debug!("[document_parser] MarkItDown skipped: {e}"),
+        Err(e) => tracing::warn!("[parser] MarkItDown skipped: {e}"),
     }
 
     // Legacy .doc (non-OXML) is not a ZIP package, so the Rust fallback
@@ -93,11 +93,15 @@ pub fn parse_document_file(file_path: impl AsRef<Path>, suffix: Option<&str>) ->
 }
 
 fn parse_pdf(path: &Path) -> Result<String, String> {
+    let file_size = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
     let text = extract_text(path).map_err(|e| format!("parse PDF: {e}"))?;
     if text.trim().is_empty() {
+        tracing::warn!(
+            "[parser] pdf-extract returned empty ({} bytes file — likely scanned/image PDF)",
+            file_size
+        );
         return Ok(String::new());
     }
-    // Mirror Python page markers when possible (pdf-extract returns one blob).
     Ok(text)
 }
 

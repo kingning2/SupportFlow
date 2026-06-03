@@ -2,7 +2,6 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::time::UNIX_EPOCH;
 
 use serde::{Deserialize, Serialize};
 
@@ -62,7 +61,7 @@ fn session_index_path(workspace: &Path) -> PathBuf {
 }
 
 fn ensure_sessions_dir(workspace: &Path) -> Result<(), String> {
-    fs::create_dir_all(workspace.join("sessions")).map_err(|e| e.to_string())
+    crate::utils::fs::create_dir_all(workspace.join("sessions"))
 }
 
 fn load_session_index(workspace: &Path) -> SessionIndexFile {
@@ -77,8 +76,8 @@ fn load_session_index(workspace: &Path) -> SessionIndexFile {
 fn save_session_index(workspace: &Path, index: &SessionIndexFile) -> Result<(), String> {
     ensure_sessions_dir(workspace)?;
     let path = session_index_path(workspace);
-    let text = serde_json::to_string_pretty(index).map_err(|e| e.to_string())?;
-    fs::write(path, text).map_err(|e| e.to_string())
+    let text = crate::utils::json::to_string_pretty(index)?;
+    crate::utils::fs::write(path, text)
 }
 
 /// Upsert one session row in `workspace/sessions/index.json`.
@@ -90,7 +89,7 @@ pub fn upsert_session_index(
     if session_id.is_empty() {
         return Ok(());
     }
-    let now = unix_ts_string();
+    let now = crate::utils::date::unix_timestamp_string();
     let mut index = load_session_index(workspace);
     if let Some(row) = index.sessions.iter_mut().find(|s| s.id == session_id) {
         if let Some(t) = title {
@@ -127,7 +126,7 @@ pub fn list_session_summaries(
             index.sessions.push(SessionIndexEntry {
                 id: current.to_string(),
                 title: "New Chat".into(),
-                updated_at: unix_ts_string(),
+                updated_at: crate::utils::date::unix_timestamp_string(),
             });
         }
     }
@@ -143,13 +142,6 @@ pub fn list_session_summaries(
             updated_at: s.updated_at,
         })
         .collect())
-}
-
-fn unix_ts_string() -> String {
-    std::time::SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_secs().to_string())
-        .unwrap_or_else(|_| "0".into())
 }
 
 #[allow(dead_code)]
@@ -171,7 +163,7 @@ fn resolve_under_workspace(workspace: &Path, rel: &str) -> Result<PathBuf, Strin
 pub fn list_knowledge_files(workspace: &Path) -> Result<Vec<KnowledgeFileRow>, String> {
     let svc = agent::knowledge::KnowledgeService::new(workspace);
     if !svc.knowledge_dir().is_dir() {
-        fs::create_dir_all(svc.knowledge_dir()).map_err(|e| e.to_string())?;
+        crate::utils::fs::create_dir_all(svc.knowledge_dir())?;
         return Ok(Vec::new());
     }
     Ok(svc
@@ -211,10 +203,23 @@ pub fn build_knowledge_graph(workspace: &Path) -> Result<KnowledgeGraphData, Str
     })
 }
 
-/// Remove one knowledge file by relative path.
+/// Remove one knowledge file by relative path and clean up the memory index.
 pub fn remove_knowledge_file(workspace: &Path, rel_path: &str) -> Result<(), String> {
     let svc = agent::knowledge::KnowledgeService::new(workspace);
     svc.remove_file(rel_path)?;
+
+    // Remove chunks from SQLite memory index.
+    let db_path = workspace.join("memory/long-term/index.db");
+    if db_path.is_file() {
+        match agent::memory::MemoryStorage::open(&db_path) {
+            Ok(storage) => {
+                let _ = storage.delete_by_path(&format!("knowledge/{rel_path}"));
+            }
+            Err(e) => {
+                crate::log_warn!("clean up memory index after remove: {e}");
+            }
+        }
+    }
     Ok(())
 }
 
@@ -278,39 +283,12 @@ fn channel_label(id: &str) -> String {
         .unwrap_or_else(|| id.to_string())
 }
 
-/// Channels that belong to the Python server/CLI stack, not the Tauri desktop app.
-const DESKTOP_EXCLUDED_CHANNELS: &[&str] = &["web", "terminal"];
-
-fn is_desktop_listed_channel(name: &str) -> bool {
-    !DESKTOP_EXCLUDED_CHANNELS.contains(&name)
-}
-
-fn parse_channel_types(value: &serde_json::Value) -> Vec<String> {
-    match value {
-        serde_json::Value::String(s) => s
-            .split(',')
-            .map(str::trim)
-            .filter(|p| !p.is_empty())
-            .map(str::to_string)
-            .collect(),
-        serde_json::Value::Array(arr) => arr
-            .iter()
-            .filter_map(|v| v.as_str())
-            .map(str::trim)
-            .filter(|p| !p.is_empty())
-            .map(str::to_string)
-            .collect(),
-        _ => Vec::new(),
-    }
-}
-
 /// Active channels from `channel_type` in config (no Rust channel catalog).
 pub fn list_channels_from_config(config_path: &Path) -> Result<Vec<ChannelRow>, String> {
     let root = models::provider_catalog::read_config_root(config_path)?;
-    let names = parse_channel_types(root.get("channel_type").unwrap_or(&serde_json::Value::Null));
+    let names = crate::utils::channel::parse_desktop_channel_types(root.get("channel_type"));
     Ok(names
         .into_iter()
-        .filter(|name| is_desktop_listed_channel(name))
         .map(|name| ChannelRow {
             label: channel_label(&name),
             active: true,
