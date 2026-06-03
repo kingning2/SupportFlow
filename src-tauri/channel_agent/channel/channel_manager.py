@@ -98,6 +98,11 @@ def parse_channel_type(raw) -> list:
     return out
 
 
+def parse_external_channel_type(raw) -> list:
+    """解析桌面端可启动的外部渠道，过滤 web/terminal 这类内置渠道。"""
+    return [name for name in parse_channel_type(raw) if name not in ("web", "terminal")]
+
+
 class ChannelManager:
     def __init__(self):
         self._channels = {}
@@ -119,12 +124,10 @@ class ChannelManager:
             return thread is not None and thread.is_alive()
 
     def start(self, channel_names: list, first_start: bool = False):
-        channel_names = parse_channel_type(channel_names)
+        channel_names = parse_external_channel_type(channel_names)
         with self._lock:
             channels = []
             for name in channel_names:
-                if name in ("web", "terminal"):
-                    continue
                 ch = channel_factory.create_channel(name)
                 ch.cloud_mode = self.cloud_mode
                 self._channels[name] = ch

@@ -27,15 +27,11 @@ def handle_rust_request(req: dict) -> dict:
                 result = handler.dispatch_action(action, channel_name, params.get("config", {}))
         elif method == "channels.status":
             from channel import channel_manager
-            from channel.channel_manager import parse_channel_type
+            from channel.channel_manager import parse_external_channel_type
             from config import conf
 
             mgr = channel_manager.get_channel_manager()
-            configured = [
-                n
-                for n in parse_channel_type(conf().get("channel_type", ""))
-                if n not in ("web", "terminal")
-            ]
+            configured = parse_external_channel_type(conf().get("channel_type", ""))
             running = []
             if mgr:
                 for name in configured:
@@ -50,12 +46,11 @@ def handle_rust_request(req: dict) -> dict:
         elif method == "channels.autostart":
             from channel.stdio_server import _start_configured_channels
             from channel import channel_manager
-            from channel.channel_manager import parse_channel_type
+            from channel.channel_manager import parse_external_channel_type
             from config import conf
 
             mgr = channel_manager.get_channel_manager()
-            configured = parse_channel_type(conf().get("channel_type", ""))
-            configured = [n for n in configured if n not in ("web", "terminal")]
+            configured = parse_external_channel_type(conf().get("channel_type", ""))
             dev_channel = (os.environ.get("DEV_CHANNEL") or "").strip()
             # Standalone desktop apps (wework / wx): connect only from UI, not on boot.
             if dev_channel in ("wework", "wx"):

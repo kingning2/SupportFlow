@@ -10,7 +10,7 @@ import threading
 import time
 
 from channel import channel_manager
-from channel.channel_manager import ChannelManager, parse_channel_type
+from channel.channel_manager import ChannelManager, parse_external_channel_type
 from channel.rpc_handlers import handle_rust_request
 from channel.rust_ipc import _ensure_reader
 from common.log import logger
@@ -19,8 +19,7 @@ from config import conf, load_config
 
 def _start_configured_channels(first_start: bool) -> None:
     raw = conf().get("channel_type", "")
-    names = parse_channel_type(raw)
-    names = [n for n in names if n not in ("web", "terminal")]
+    names = parse_external_channel_type(raw)
     mgr = ChannelManager()
     channel_manager.set_channel_manager(mgr)
     if names:
@@ -78,10 +77,5 @@ def run_stdio_server() -> None:
             name="channel-autostart",
             daemon=True,
         ).start()
-    # else:
-        # logger.info(
-        #     "[ChannelStdio] TAURI_CHANNEL_MODE=1: channel autostart deferred to Rust RPC"
-        # )
-
     while True:
         time.sleep(3600)
