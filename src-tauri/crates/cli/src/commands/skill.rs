@@ -25,25 +25,15 @@ pub enum SkillCommand {
         page: u32,
     },
     /// Search Skill Hub
-    Search {
-        query: String,
-    },
+    Search { query: String },
     /// Install from Skill Hub, GitHub owner/repo, or local path
-    Install {
-        name: String,
-    },
+    Install { name: String },
     /// Enable a skill in skills_config.json
-    Enable {
-        name: String,
-    },
+    Enable { name: String },
     /// Disable a skill
-    Disable {
-        name: String,
-    },
+    Disable { name: String },
     /// Show skill details
-    Info {
-        name: String,
-    },
+    Info { name: String },
 }
 
 pub fn run_command(command: SkillCommand) -> Result<()> {
@@ -89,7 +79,9 @@ fn list_local() -> Result<()> {
 }
 
 fn list_remote(page: u32) -> Result<()> {
-    let client = Client::builder().timeout(std::time::Duration::from_secs(15)).build()?;
+    let client = Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()?;
     let resp: Value = client
         .get(format!("{}/skills", hub_api_base()))
         .query(&[("page", page), ("limit", REMOTE_PAGE_SIZE)])
@@ -131,7 +123,9 @@ fn list_remote(page: u32) -> Result<()> {
 }
 
 fn search(query: &str) -> Result<()> {
-    let client = Client::builder().timeout(std::time::Duration::from_secs(15)).build()?;
+    let client = Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()?;
     let resp: Value = client
         .get(format!("{}/skills/search", hub_api_base()))
         .query(&[("q", query)])
@@ -143,7 +137,10 @@ fn search(query: &str) -> Result<()> {
         println!("No skills found for \"{query}\".");
         return Ok(());
     }
-    println!("\n  Search results for \"{query}\" ({} found)\n", skills.len());
+    println!(
+        "\n  Search results for \"{query}\" ({} found)\n",
+        skills.len()
+    );
     for s in &skills {
         let name = s["name"].as_str().unwrap_or("");
         let desc = truncate(
@@ -176,7 +173,10 @@ fn install(name: &str) -> Result<()> {
 
     let github_re = Regex::new(r"^[a-zA-Z0-9_\-]+/[a-zA-Z0-9_.\-]+(?:#.+)?$").unwrap();
     if github_re.is_match(name) {
-        let (spec, subpath) = name.split_once('#').map(|(a, b)| (a, Some(b))).unwrap_or((name, None));
+        let (spec, subpath) = name
+            .split_once('#')
+            .map(|(a, b)| (a, Some(b)))
+            .unwrap_or((name, None));
         install_github_zip(spec, subpath)?;
         return Ok(());
     }
@@ -187,7 +187,9 @@ fn install(name: &str) -> Result<()> {
 
 fn install_from_hub(name: &str, provider: Option<&str>) -> Result<()> {
     println!("Fetching skill '{name}' from Skill Hub...");
-    let client = Client::builder().timeout(std::time::Duration::from_secs(60)).build()?;
+    let client = Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()?;
     let mut body = serde_json::Map::new();
     if let Some(p) = provider {
         body.insert("provider".into(), p.into());
@@ -238,7 +240,9 @@ fn install_github_zip(spec: &str, subpath: Option<&str>) -> Result<()> {
     let (owner, repo) = (parts[0], parts[1]);
     let url = format!("https://github.com/{owner}/{repo}/archive/refs/heads/main.zip");
     println!("Downloading {owner}/{repo}...");
-    let client = Client::builder().timeout(std::time::Duration::from_secs(120)).build()?;
+    let client = Client::builder()
+        .timeout(std::time::Duration::from_secs(120))
+        .build()?;
     let bytes = client.get(&url).send()?.error_for_status()?.bytes()?;
     let label = subpath
         .and_then(|s| s.trim_end_matches('/').rsplit('/').next())
@@ -387,7 +391,10 @@ fn info(name: &str) -> Result<()> {
     }
     let cfg = skills_config::load(&ws);
     if let Some(e) = cfg.get(name) {
-        println!("\n  Skill: {} (config only)\n  Enabled: {}\n  Description: {}\n", e.name, e.enabled, e.description);
+        println!(
+            "\n  Skill: {} (config only)\n  Enabled: {}\n  Description: {}\n",
+            e.name, e.enabled, e.description
+        );
         return Ok(());
     }
     bail!("skill '{name}' not found");
@@ -413,7 +420,10 @@ fn truncate(s: &str, max: usize) -> String {
     if s.chars().count() <= max {
         return s.to_string();
     }
-    format!("{}...", s.chars().take(max.saturating_sub(3)).collect::<String>())
+    format!(
+        "{}...",
+        s.chars().take(max.saturating_sub(3)).collect::<String>()
+    )
 }
 
 fn expand_tilde(path: &Path) -> PathBuf {

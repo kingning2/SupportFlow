@@ -107,7 +107,9 @@ pub fn parse_document_file(path: &Path, suffix: &str) -> Result<String, String> 
 }
 
 pub fn format_document_result(filename: &str, local_path: &Path, text: &str) -> String {
-    let file_size = std::fs::metadata(local_path).map(|m| m.len() as usize).unwrap_or(0);
+    let file_size = std::fs::metadata(local_path)
+        .map(|m| m.len() as usize)
+        .unwrap_or(0);
 
     if text.trim().is_empty() {
         return format!(

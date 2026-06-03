@@ -57,9 +57,7 @@ impl VisionTool {
             .find(|(e, _)| *e == ext)
             .map(|(_, m)| *m)
             .ok_or_else(|| {
-                format!(
-                    "Unsupported image format '.{ext}'. Supported: jpg, jpeg, png, gif, webp"
-                )
+                format!("Unsupported image format '.{ext}'. Supported: jpg, jpeg, png, gif, webp")
             })?;
         let bytes = std::fs::read(path).map_err(|e| format!("read image: {e}"))?;
         let b64 = STANDARD.encode(bytes);
@@ -70,11 +68,8 @@ impl VisionTool {
     }
 
     async fn download_to_data_url(&self, url: &str) -> Result<Value, String> {
-        let client = build_reqwest_client(
-            &self.proxy,
-            Duration::from_secs(DEFAULT_TIMEOUT_SECS),
-            None,
-        );
+        let client =
+            build_reqwest_client(&self.proxy, Duration::from_secs(DEFAULT_TIMEOUT_SECS), None);
         let resp = client
             .get(url)
             .send()
@@ -156,9 +151,17 @@ impl VisionTool {
                     "usage": resp.get("usage").cloned().unwrap_or(json!({})),
                 }))
             }
-            VisionBackend::OpenAi { api_key, api_base } | VisionBackend::LinkAi { api_key, api_base } => {
-                self.call_raw_http(api_key, api_base, model, question, image_block, &provider.name)
-                    .await
+            VisionBackend::OpenAi { api_key, api_base }
+            | VisionBackend::LinkAi { api_key, api_base } => {
+                self.call_raw_http(
+                    api_key,
+                    api_base,
+                    model,
+                    question,
+                    image_block,
+                    &provider.name,
+                )
+                .await
             }
         }
     }
@@ -172,11 +175,8 @@ impl VisionTool {
         image_block: &Value,
         provider_name: &str,
     ) -> Result<Value, String> {
-        let client = build_reqwest_client(
-            &self.proxy,
-            Duration::from_secs(DEFAULT_TIMEOUT_SECS),
-            None,
-        );
+        let client =
+            build_reqwest_client(&self.proxy, Duration::from_secs(DEFAULT_TIMEOUT_SECS), None);
         let url = format!("{}/chat/completions", api_base.trim_end_matches('/'));
         let body = json!({
             "model": model,
@@ -242,8 +242,8 @@ impl VisionTool {
         question: &str,
         image_block: &Value,
     ) -> ToolRunResult {
-        let default_model = user_vision_model(&self.config)
-            .unwrap_or_else(|| default_vision_model().to_string());
+        let default_model =
+            user_vision_model(&self.config).unwrap_or_else(|| default_vision_model().to_string());
         let mut errors = Vec::new();
         for (i, provider) in providers.iter().enumerate() {
             let model = provider

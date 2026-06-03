@@ -102,11 +102,7 @@ pub fn strip_thinking_blocks(messages: &[Value]) -> Vec<Value> {
             };
             let filtered: Vec<Value> = blocks
                 .iter()
-                .filter(|b| {
-                    b.get("type")
-                        .and_then(|t| t.as_str())
-                        != Some("thinking")
-                })
+                .filter(|b| b.get("type").and_then(|t| t.as_str()) != Some("thinking"))
                 .cloned()
                 .collect();
             if filtered.len() == blocks.len() {

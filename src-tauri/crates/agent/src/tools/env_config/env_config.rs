@@ -9,15 +9,21 @@ use tracing::info;
 
 use crate::tools::base_tool::{AgentTool, ToolRunResult};
 use crate::tools::env_config::dotenv_store::{
-    delete_process_env, ensure_env_file, env_file_path, mask_value, read_env_file, reload_process_env,
-    write_env_file,
+    delete_process_env, ensure_env_file, env_file_path, mask_value, read_env_file,
+    reload_process_env, write_env_file,
 };
 
 const API_KEY_REGISTRY: &[(&str, &str)] = &[
-    ("OPENAI_API_KEY", "OpenAI API 密钥 (用于GPT模型、Embedding模型)"),
+    (
+        "OPENAI_API_KEY",
+        "OpenAI API 密钥 (用于GPT模型、Embedding模型)",
+    ),
     ("GEMINI_API_KEY", "Google Gemini API 密钥"),
     ("CLAUDE_API_KEY", "Claude API 密钥 (用于Claude模型)"),
-    ("LINKAI_API_KEY", "LinkAI智能体平台 API 密钥，支持多种模型切换"),
+    (
+        "LINKAI_API_KEY",
+        "LinkAI智能体平台 API 密钥，支持多种模型切换",
+    ),
     ("BOCHA_API_KEY", "博查 AI 搜索 API 密钥"),
     ("ZHIPUAI_API_KEY", "智谱 AI API 密钥"),
     ("QIANFAN_API_KEY", "百度千帆 API 密钥"),
@@ -107,14 +113,8 @@ impl AgentTool for EnvConfigTool {
             .unwrap_or("")
             .trim();
 
-        let key = params
-            .get("key")
-            .and_then(|v| v.as_str())
-            .map(str::trim);
-        let value = params
-            .get("value")
-            .and_then(|v| v.as_str())
-            .map(str::trim);
+        let key = params.get("key").and_then(|v| v.as_str()).map(str::trim);
+        let value = params.get("value").and_then(|v| v.as_str()).map(str::trim);
 
         match action {
             "set" => {
@@ -256,7 +256,9 @@ mod tests {
         });
 
         let set = tool
-            .execute(json!({ "action": "set", "key": "BOCHA_API_KEY", "value": "test-key-12345678" }))
+            .execute(
+                json!({ "action": "set", "key": "BOCHA_API_KEY", "value": "test-key-12345678" }),
+            )
             .await;
         assert_eq!(set.status, "success");
 

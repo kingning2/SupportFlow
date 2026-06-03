@@ -22,7 +22,10 @@ fn show() -> Result<()> {
     println!("  Workspace:  {}", workspace.display());
     println!("  Config:     {}", rt.config_path.display());
     println!("  Skills:     {}", paths::skills_dir(workspace).display());
-    println!("  Knowledge:  {}", paths::knowledge_dir(workspace).display());
+    println!(
+        "  Knowledge:  {}",
+        paths::knowledge_dir(workspace).display()
+    );
     println!(
         "  Bot:        {} ({})",
         rt.config.bot_type,

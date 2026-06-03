@@ -19,10 +19,7 @@ pub struct AgentEventHandler {
 }
 
 impl AgentEventHandler {
-    pub fn new(
-        context: Option<Context>,
-        original: Option<agent::AgentEventCallback>,
-    ) -> Self {
+    pub fn new(context: Option<Context>, original: Option<agent::AgentEventCallback>) -> Self {
         let is_weixin = context
             .as_ref()
             .and_then(|c| c.get("channel_type"))
@@ -84,11 +81,17 @@ impl AgentEventHandler {
             return;
         }
         if !self.is_weixin {
-            debug!("[AgentEventHandler] intermediate: {}", truncate(message, 200));
+            debug!(
+                "[AgentEventHandler] intermediate: {}",
+                truncate(message, 200)
+            );
             return;
         }
         if self.thinking_sent_count < WEIXIN_THINKING_INSTANT_MAX {
-            debug!("[AgentEventHandler] weixin thinking: {}", truncate(message, 200));
+            debug!(
+                "[AgentEventHandler] weixin thinking: {}",
+                truncate(message, 200)
+            );
             self.thinking_sent_count += 1;
             return;
         }

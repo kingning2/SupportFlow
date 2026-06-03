@@ -78,10 +78,17 @@ impl AgentTool for BrowserTool {
             return ToolRunResult::error("Error: 'action' parameter is required");
         }
 
-        let timeout = params.get("timeout").and_then(|v| v.as_u64()).unwrap_or(5000);
+        let timeout = params
+            .get("timeout")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(5000);
         let result = match action.as_str() {
             "navigate" => {
-                let url = params.get("url").and_then(|v| v.as_str()).unwrap_or("").trim();
+                let url = params
+                    .get("url")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .trim();
                 if url.is_empty() {
                     return ToolRunResult::error("Error: 'url' is required for navigate");
                 }
@@ -127,21 +134,33 @@ impl AgentTool for BrowserTool {
             "back" => self.service.back().await,
             "forward" => self.service.forward().await,
             "get_text" => {
-                let sel = params.get("selector").and_then(|v| v.as_str()).unwrap_or("").trim();
+                let sel = params
+                    .get("selector")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .trim();
                 if sel.is_empty() {
                     return ToolRunResult::error("Error: 'selector' is required for get_text");
                 }
                 self.service.get_text(sel).await
             }
             "press" => {
-                let key = params.get("key").and_then(|v| v.as_str()).unwrap_or("").trim();
+                let key = params
+                    .get("key")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .trim();
                 if key.is_empty() {
                     return ToolRunResult::error("Error: 'key' is required for press");
                 }
                 self.service.press(key).await
             }
             "evaluate" => {
-                let script = params.get("script").and_then(|v| v.as_str()).unwrap_or("").trim();
+                let script = params
+                    .get("script")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .trim();
                 if script.is_empty() {
                     return ToolRunResult::error("Error: 'script' is required for evaluate");
                 }

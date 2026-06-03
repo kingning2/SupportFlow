@@ -25,7 +25,10 @@ pub fn resolve_workspace() -> Result<PathBuf> {
             if p.is_dir() {
                 return Ok(p);
             }
-            return Err(anyhow!("{ENV_WORKSPACE} is not a directory: {}", p.display()));
+            return Err(anyhow!(
+                "{ENV_WORKSPACE} is not a directory: {}",
+                p.display()
+            ));
         }
     }
     let p = default_data_dir()?;
@@ -52,14 +55,13 @@ pub fn resolve_config_path(workspace: &Path) -> Result<PathBuf> {
     }
 
     // Dev: src-tauri/resources/config.json
-    let dev = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../resources/config.json");
+    let dev = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../resources/config.json");
     if dev.is_file() {
         return Ok(dev.canonicalize().unwrap_or(dev));
     }
 
-    let template = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../resources/config-template.json");
+    let template =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../resources/config-template.json");
     if template.is_file() {
         return Ok(template.canonicalize().unwrap_or(template));
     }

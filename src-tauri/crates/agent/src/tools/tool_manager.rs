@@ -6,6 +6,7 @@ use std::sync::Arc;
 use models::ModelsConfig;
 
 use crate::tools::bash::{BashConfig, BashTool};
+use crate::tools::browser::BrowserTool;
 use crate::tools::edit::EditTool;
 use crate::tools::env_config::{EnvConfigTool, EnvConfigToolConfig};
 use crate::tools::ls::LsTool;
@@ -14,9 +15,8 @@ use crate::tools::memory::{
 };
 use crate::tools::read::ReadTool;
 use crate::tools::send::{noop_uploader, SendFileUploader, SendTool};
-use crate::tools::browser::BrowserTool;
-use crate::tools::web_fetch::WebFetchTool;
 use crate::tools::vision::VisionTool;
+use crate::tools::web_fetch::WebFetchTool;
 use crate::tools::web_search::WebSearchTool;
 use crate::tools::workspace::WorkspaceToolConfig;
 use crate::tools::write::WriteTool;

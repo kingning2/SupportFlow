@@ -19,6 +19,8 @@ async fn bash_echo_success() {
 #[tokio::test]
 async fn bash_blocks_supportflow_env() {
     let tool = BashTool::new(BashConfig::default());
-    let result = tool.execute(json!({ "command": "cat ~/.supportflow/.env" })).await;
+    let result = tool
+        .execute(json!({ "command": "cat ~/.supportflow/.env" }))
+        .await;
     assert_eq!(result.status, "error");
 }

@@ -114,13 +114,9 @@ async fn main() -> Result<()> {
         Some(TopCommand::Update) => commands::process::cmd_update()?,
         Some(TopCommand::Status) => commands::process::cmd_status()?,
         Some(TopCommand::Logs { lines }) => commands::process::cmd_logs(lines)?,
-        Some(TopCommand::Agent { command }) => {
-            commands::agent::run_command(command).await?
-        }
+        Some(TopCommand::Agent { command }) => commands::agent::run_command(command).await?,
         Some(TopCommand::Skill { command }) => commands::skill::run_command(command)?,
-        Some(TopCommand::Knowledge { command }) => {
-            commands::knowledge::run(command)?
-        }
+        Some(TopCommand::Knowledge { command }) => commands::knowledge::run(command)?,
         Some(TopCommand::Config { command }) => commands::config_cmd::run(command)?,
         Some(TopCommand::Context { command }) => commands::context::run(command)?,
         Some(TopCommand::InstallBrowser(a)) => commands::install_browser::run(a)?,

@@ -17,9 +17,7 @@ use crate::tools::web_fetch::document::{
     is_supported_doc_suffix, parse_document_file, rewrite_url_with_suffix, safe_filename,
     suffix_from_content_type, url_suffix, MAX_FILE_SIZE,
 };
-use crate::tools::web_fetch::html::{
-    detect_encoding, extract_text, extract_title, decode_bytes,
-};
+use crate::tools::web_fetch::html::{decode_bytes, detect_encoding, extract_text, extract_title};
 use crate::utils::{build_reqwest_client, log_http_proxy_settings, HttpProxySettings};
 
 const DEFAULT_TIMEOUT_SECS: u64 = 30;
@@ -256,7 +254,9 @@ impl AgentTool for WebFetchTool {
         };
 
         if parsed.scheme() != "http" && parsed.scheme() != "https" {
-            return ToolRunResult::error("Error: Invalid URL (must start with http:// or https://)");
+            return ToolRunResult::error(
+                "Error: Invalid URL (must start with http:// or https://)",
+            );
         }
 
         let result = if is_document_url(url) {

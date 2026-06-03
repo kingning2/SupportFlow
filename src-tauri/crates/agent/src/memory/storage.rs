@@ -230,7 +230,11 @@ impl MemoryStorage {
         }
 
         let scope_list: Vec<String> = scopes.iter().map(|s| s.to_string()).collect();
-        let scope_ph = scope_list.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+        let scope_ph = scope_list
+            .iter()
+            .map(|_| "?")
+            .collect::<Vec<_>>()
+            .join(", ");
 
         let conn = self.conn.lock().map_err(|e| e.to_string())?;
         let sql = if user_id.is_some() {
@@ -272,7 +276,9 @@ impl MemoryStorage {
 
         for row in rows.flatten() {
             let Some(blob) = row.6 else { continue };
-            let Some(vec) = decode_embedding(&blob) else { continue };
+            let Some(vec) = decode_embedding(&blob) else {
+                continue;
+            };
             if vec.len() != query_embedding.len() {
                 continue;
             }
@@ -331,7 +337,11 @@ impl MemoryStorage {
         limit: usize,
     ) -> Result<Vec<SearchResult>, String> {
         let scope_list: Vec<String> = scopes.iter().map(|s| s.to_string()).collect();
-        let scope_ph = scope_list.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+        let scope_ph = scope_list
+            .iter()
+            .map(|_| "?")
+            .collect::<Vec<_>>()
+            .join(", ");
         let conn = self.conn.lock().map_err(|e| e.to_string())?;
         let lim = limit as i64;
 
@@ -401,7 +411,10 @@ impl MemoryStorage {
         }
 
         let scope_ph = scopes.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
-        let like_parts: Vec<String> = words.iter().map(|_| "LOWER(text) LIKE ?".to_string()).collect();
+        let like_parts: Vec<String> = words
+            .iter()
+            .map(|_| "LOWER(text) LIKE ?".to_string())
+            .collect();
         let where_clause = like_parts.join(" OR ");
 
         let sql = if user_id.is_some() {
@@ -436,7 +449,8 @@ impl MemoryStorage {
         }
         bind.push(Box::new(limit as i64));
 
-        let params_ref: Vec<&dyn rusqlite::types::ToSql> = bind.iter().map(|b| b.as_ref()).collect();
+        let params_ref: Vec<&dyn rusqlite::types::ToSql> =
+            bind.iter().map(|b| b.as_ref()).collect();
         let rows = stmt
             .query_map(params_ref.as_slice(), |row| {
                 Ok((
@@ -453,7 +467,10 @@ impl MemoryStorage {
         let mut results = Vec::new();
         for row in rows.flatten() {
             let text_lower = row.3.to_lowercase();
-            let matched = words.iter().filter(|w| text_lower.contains(w.as_str())).count();
+            let matched = words
+                .iter()
+                .filter(|w| text_lower.contains(w.as_str()))
+                .count();
             if matched == 0 {
                 continue;
             }
@@ -479,11 +496,7 @@ impl MemoryStorage {
 }
 
 fn encode_embedding(embedding: Option<&[f32]>) -> Option<Vec<u8>> {
-    embedding.map(|e| {
-        e.iter()
-            .flat_map(|f| f.to_le_bytes())
-            .collect::<Vec<u8>>()
-    })
+    embedding.map(|e| e.iter().flat_map(|f| f.to_le_bytes()).collect::<Vec<u8>>())
 }
 
 fn decode_embedding(raw: &[u8]) -> Option<Vec<f32>> {

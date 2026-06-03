@@ -1,4 +1,4 @@
-﻿//! `models/openai/openai_http_client.py` — OpenAI-compatible HTTP + SSE.
+//! `models/openai/openai_http_client.py` — OpenAI-compatible HTTP + SSE.
 
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -65,11 +65,8 @@ impl OpenAiHttpClient {
         api_base: Option<String>,
         timeout_secs: u64,
     ) -> Self {
-        let client = build_reqwest_client(
-            proxy,
-            std::time::Duration::from_secs(timeout_secs),
-            None,
-        );
+        let client =
+            build_reqwest_client(proxy, std::time::Duration::from_secs(timeout_secs), None);
         Self {
             client,
             api_key,

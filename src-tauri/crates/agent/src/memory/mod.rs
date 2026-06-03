@@ -11,8 +11,7 @@ mod storage;
 
 pub use config::MemoryConfig;
 pub use conversation_store::{
-    conversation_store_for_workspace, persist_agent_run, restore_agent_messages,
-    ConversationStore,
+    conversation_store_for_workspace, persist_agent_run, restore_agent_messages, ConversationStore,
 };
 pub use factory::create_memory_manager;
 pub use manager::DbMemoryManager;

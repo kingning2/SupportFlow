@@ -82,10 +82,8 @@ async fn chat_once(
     verbose: bool,
 ) -> Result<models::Reply> {
     let mut ctx = AgentContext::new(ContextType::Text, message);
-    ctx.kwargs
-        .insert("session_id".into(), session.to_string());
-    ctx.kwargs
-        .insert("channel_type".into(), "cli".to_string());
+    ctx.kwargs.insert("session_id".into(), session.to_string());
+    ctx.kwargs.insert("channel_type".into(), "cli".to_string());
 
     let on_event = if verbose {
         Some(std::sync::Arc::new(move |ev: agent::AgentEvent| {

@@ -235,7 +235,8 @@ fn create_explicit_provider(
         Some(m) => m,
         None => return Ok(None),
     };
-    let (api_key, api_base) = resolve_embedding_credentials(config, provider, meta.default_base_url)?;
+    let (api_key, api_base) =
+        resolve_embedding_credentials(config, provider, meta.default_base_url)?;
     let Some(api_key) = api_key else {
         return Ok(None);
     };

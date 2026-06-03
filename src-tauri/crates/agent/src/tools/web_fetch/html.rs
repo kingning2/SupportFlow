@@ -38,7 +38,14 @@ pub fn detect_encoding(bytes: &[u8], content_type: &str) -> String {
     let encoding = detector.guess(None, true);
     let name = encoding.name().to_lowercase();
     let trusted = [
-        "utf", "gb", "big5", "euc", "shift_jis", "iso-2022", "windows", "ascii",
+        "utf",
+        "gb",
+        "big5",
+        "euc",
+        "shift_jis",
+        "iso-2022",
+        "windows",
+        "ascii",
     ];
     if trusted.iter().any(|p| name.starts_with(p)) {
         return encoding.name().to_string();

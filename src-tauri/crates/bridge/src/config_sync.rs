@@ -60,7 +60,10 @@ pub fn sync_config_to_dotenv(config: &ModelsConfig) -> Result<(), String> {
         body.push_str(&format!("{k}={v}\n"));
     }
     fs::write(&env_file, body).map_err(|e| e.to_string())?;
-    info!("[bridge] Synced API keys from config.json to {}", env_file.display());
+    info!(
+        "[bridge] Synced API keys from config.json to {}",
+        env_file.display()
+    );
     Ok(())
 }
 

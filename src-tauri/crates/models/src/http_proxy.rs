@@ -46,9 +46,7 @@ impl HttpProxySettings {
     pub fn describe(&self) -> String {
         if !self.use_proxy {
             if let Some(ignored) = Self::system_proxy_url() {
-                return format!(
-                    "disabled (use_proxy=false); ignoring system proxy {ignored}"
-                );
+                return format!("disabled (use_proxy=false); ignoring system proxy {ignored}");
             }
             return "disabled (use_proxy=false); direct connection".into();
         }

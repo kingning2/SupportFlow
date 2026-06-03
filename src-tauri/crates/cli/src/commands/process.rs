@@ -108,7 +108,7 @@ pub fn cmd_status() -> Result<()> {
         Some(pid) => println!("SupportFlow is running (PID: {pid})."),
         None => println!("SupportFlow is not running."),
     }
-  println!("  Workspace: {}", workspace.display());
+    println!("  Workspace: {}", workspace.display());
     Ok(())
 }
 
@@ -137,11 +137,9 @@ fn find_desktop_exe() -> Option<PathBuf> {
         }
     }
     let candidates = [
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../target/release/tauri-app.exe"),
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/release/tauri-app.exe"),
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/release/tauri-app"),
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../target/debug/tauri-app.exe"),
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/debug/tauri-app.exe"),
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/debug/tauri-app"),
     ];
     candidates.into_iter().find(|p| p.is_file())

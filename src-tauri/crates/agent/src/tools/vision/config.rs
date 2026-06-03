@@ -14,17 +14,9 @@ pub struct VisionProvider {
 }
 
 pub enum VisionBackend {
-    OpenAi {
-        api_key: String,
-        api_base: String,
-    },
-    LinkAi {
-        api_key: String,
-        api_base: String,
-    },
-    Bot {
-        bot: BotHandle,
-    },
+    OpenAi { api_key: String, api_base: String },
+    LinkAi { api_key: String, api_base: String },
+    Bot { bot: BotHandle },
 }
 
 pub fn user_vision_model(config: &ModelsConfig) -> Option<String> {
@@ -217,14 +209,54 @@ fn append_discoverable(config: Arc<ModelsConfig>, providers: &mut Vec<VisionProv
     let existing: std::collections::HashSet<String> =
         providers.iter().map(|p| p.name.clone()).collect();
     let entries: &[(&str, BotType, &str, &str)] = &[
-        ("moonshot_api_key", BotType::Moonshot, "moonshot-v1-8k", "Moonshot"),
-        ("ark_api_key", BotType::Doubao, "doubao-seed-2-0-pro", "Doubao"),
-        ("dashscope_api_key", BotType::QwenDashscope, "qwen-plus", "DashScope"),
-        ("claude_api_key", BotType::ClaudeApi, "claude-sonnet-4-20250514", "Claude"),
-        ("gemini_api_key", BotType::Gemini, "gemini-2.0-flash", "Gemini"),
-        ("qianfan_api_key", BotType::Qianfan, "ernie-4.5-turbo-vl", "Qianfan"),
-        ("zhipu_ai_api_key", BotType::ZhipuAi, "glm-4-flash", "ZhipuAI"),
-        ("minimax_api_key", BotType::Minimax, "abab6.5-chat", "MiniMax"),
+        (
+            "moonshot_api_key",
+            BotType::Moonshot,
+            "moonshot-v1-8k",
+            "Moonshot",
+        ),
+        (
+            "ark_api_key",
+            BotType::Doubao,
+            "doubao-seed-2-0-pro",
+            "Doubao",
+        ),
+        (
+            "dashscope_api_key",
+            BotType::QwenDashscope,
+            "qwen-plus",
+            "DashScope",
+        ),
+        (
+            "claude_api_key",
+            BotType::ClaudeApi,
+            "claude-sonnet-4-20250514",
+            "Claude",
+        ),
+        (
+            "gemini_api_key",
+            BotType::Gemini,
+            "gemini-2.0-flash",
+            "Gemini",
+        ),
+        (
+            "qianfan_api_key",
+            BotType::Qianfan,
+            "ernie-4.5-turbo-vl",
+            "Qianfan",
+        ),
+        (
+            "zhipu_ai_api_key",
+            BotType::ZhipuAi,
+            "glm-4-flash",
+            "ZhipuAI",
+        ),
+        (
+            "minimax_api_key",
+            BotType::Minimax,
+            "abab6.5-chat",
+            "MiniMax",
+        ),
     ];
     for (key_field, bot_type, default_model, name) in entries {
         if existing.contains(*name) {

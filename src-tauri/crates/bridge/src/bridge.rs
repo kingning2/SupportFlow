@@ -136,10 +136,7 @@ async fn simple_bot_reply(bot: &dyn OpenAICompatibleBot, query: &str) -> Result<
         model: Some(bot.get_api_config().model),
         ..Default::default()
     };
-    let result = bot
-        .call_with_tools(req)
-        .await
-        .map_err(|e| e.to_string())?;
+    let result = bot.call_with_tools(req).await.map_err(|e| e.to_string())?;
     let LlmResult::Complete(body) = result else {
         return Err("expected non-streaming response".into());
     };

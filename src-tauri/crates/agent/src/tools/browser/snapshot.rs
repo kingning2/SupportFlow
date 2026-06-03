@@ -107,7 +107,13 @@ pub const SNAPSHOT_JS: &str = r#"(() => {
     return { tree, refCount: refCounter };
 })()"#;
 
-pub fn format_snapshot(tree: &Value, ref_count: u64, title: &str, url: &str, max_chars: usize) -> String {
+pub fn format_snapshot(
+    tree: &Value,
+    ref_count: u64,
+    title: &str,
+    url: &str,
+    max_chars: usize,
+) -> String {
     let lines = flatten_tree(tree, 0);
     let body = lines.join("\n");
     let body = if body.len() > max_chars {
@@ -115,19 +121,14 @@ pub fn format_snapshot(tree: &Value, ref_count: u64, title: &str, url: &str, max
     } else {
         body
     };
-    format!(
-        "Page: {title}  ({url})\nInteractive elements: {ref_count}\n---\n{body}"
-    )
+    format!("Page: {title}  ({url})\nInteractive elements: {ref_count}\n---\n{body}")
 }
 
 pub fn flatten_tree(node: &Value, indent: usize) -> Vec<String> {
     match node {
         Value::Null => vec![],
         Value::String(s) => vec![format!("{}{}", " ".repeat(indent), s)],
-        Value::Array(arr) => arr
-            .iter()
-            .flat_map(|c| flatten_tree(c, indent))
-            .collect(),
+        Value::Array(arr) => arr.iter().flat_map(|c| flatten_tree(c, indent)).collect(),
         Value::Object(obj) => {
             let tag = obj.get("tag").and_then(|v| v.as_str()).unwrap_or("?");
             let mut parts = vec![if let Some(r) = obj.get("ref").and_then(|v| v.as_u64()) {
@@ -136,7 +137,14 @@ pub fn flatten_tree(node: &Value, indent: usize) -> Vec<String> {
                 tag.to_string()
             }];
             for attr in [
-                "type", "name", "href", "alt", "role", "ariaLabel", "placeholder", "value",
+                "type",
+                "name",
+                "href",
+                "alt",
+                "role",
+                "ariaLabel",
+                "placeholder",
+                "value",
             ] {
                 if let Some(val) = obj.get(attr).and_then(|v| v.as_str()) {
                     let s = if val.len() > 80 {

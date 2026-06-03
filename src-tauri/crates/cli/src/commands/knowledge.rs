@@ -42,8 +42,12 @@ fn stats() -> Result<String> {
     if !svc.knowledge_dir().is_dir() {
         return Ok("Knowledge base directory not found.".into());
     }
-    let mut cat_count: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
-    fn count_nodes(nodes: &[agent::knowledge::KnowledgeTreeNode], out: &mut std::collections::BTreeMap<String, usize>) {
+    let mut cat_count: std::collections::BTreeMap<String, usize> =
+        std::collections::BTreeMap::new();
+    fn count_nodes(
+        nodes: &[agent::knowledge::KnowledgeTreeNode],
+        out: &mut std::collections::BTreeMap<String, usize>,
+    ) {
         for n in nodes {
             if !n.files.is_empty() {
                 *out.entry(n.dir.clone()).or_default() += n.files.len();
@@ -138,7 +142,9 @@ fn upload(paths: &[PathBuf], category: &str) -> Result<()> {
     if result.memory_synced {
         println!("  Memory index updated.");
     } else if result.count > 0 {
-        println!("  Memory index sync skipped (keyword search still works after next agent start).");
+        println!(
+            "  Memory index sync skipped (keyword search still works after next agent start)."
+        );
     }
     println!();
     Ok(())

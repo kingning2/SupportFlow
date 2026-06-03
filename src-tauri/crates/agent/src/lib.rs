@@ -17,11 +17,16 @@
 pub mod knowledge;
 pub mod memory;
 pub mod prompt;
-pub mod utils;
 pub mod protocol;
 pub mod skills;
 pub mod tools;
+pub mod utils;
 
+pub use knowledge::IngestBatchResult;
+pub use memory::{
+    conversation_store_for_workspace, create_memory_manager, persist_agent_run,
+    restore_agent_messages, ConversationStore,
+};
 pub use prompt::{build_agent_system_prompt, load_context_files, ContextFile, PromptBuilder};
 pub use protocol::{
     compress_turn_to_text_only, drop_orphaned_tool_results_openai, estimate_message_tokens,
@@ -33,20 +38,13 @@ pub use protocol::{
     ParsedToolCall, RunStreamError, RunStreamOptions, SchemaStubTool, Task, TaskStatus, TaskType,
     TeamContext, ToolExecutionResult, ToolResult,
 };
-pub use knowledge::IngestBatchResult;
-pub use memory::{
-    conversation_store_for_workspace, create_memory_manager, persist_agent_run,
-    restore_agent_messages, ConversationStore,
-};
 pub use skills::{format_skills_for_prompt, Skill, SkillEntry, SkillManager};
 pub use tools::{
-    load_builtin_tools, load_mcp_configs, noop_uploader, AgentTool, BashConfig, BashTool, EditTool,
-    EnvConfigTool, EnvConfigToolConfig, FileKeywordMemoryManager, LsTool, McpClient,
-    McpDynamicTool, McpServerConfig, McpServerStatus, McpTool, McpToolLoader, McpToolMap,
-    McpToolRegistry, MemoryGetTool, MemoryManager, MemorySearchHit, MemorySearchTool, ReadTool,
-    SendFileUploader, SendTool, ToolManagerConfig, ToolRunResult, ToolStage, TruncationResult,
-    BrowserSettings, BrowserTool, VisionTool, WebFetchTool, WebSearchSettings, WebSearchTool,
-    WorkspaceToolConfig,
-    WriteTool, DEFAULT_MAX_BYTES,
-    DEFAULT_MAX_LINES,
+    load_builtin_tools, load_mcp_configs, noop_uploader, AgentTool, BashConfig, BashTool,
+    BrowserSettings, BrowserTool, EditTool, EnvConfigTool, EnvConfigToolConfig,
+    FileKeywordMemoryManager, LsTool, McpClient, McpDynamicTool, McpServerConfig, McpServerStatus,
+    McpTool, McpToolLoader, McpToolMap, McpToolRegistry, MemoryGetTool, MemoryManager,
+    MemorySearchHit, MemorySearchTool, ReadTool, SendFileUploader, SendTool, ToolManagerConfig,
+    ToolRunResult, ToolStage, TruncationResult, VisionTool, WebFetchTool, WebSearchSettings,
+    WebSearchTool, WorkspaceToolConfig, WriteTool, DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES,
 };

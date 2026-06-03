@@ -60,11 +60,8 @@ impl BrowserService {
         page.goto(url)
             .await
             .map_err(|e| format!("Navigation failed: {e}"))?;
-        let _ = tokio::time::timeout(
-            Duration::from_millis(8_000),
-            page.wait_for_navigation(),
-        )
-        .await;
+        let _ =
+            tokio::time::timeout(Duration::from_millis(8_000), page.wait_for_navigation()).await;
         tokio::time::sleep(Duration::from_millis(500)).await;
 
         let title = page_title(&page).await;
@@ -182,11 +179,7 @@ impl BrowserService {
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
         let path = dir.join(format!("screenshot_{}.png", uuid::Uuid::new_v4().simple()));
         let bytes = page
-            .screenshot(
-                ScreenshotParams::builder()
-                    .full_page(full_page)
-                    .build(),
-            )
+            .screenshot(ScreenshotParams::builder().full_page(full_page).build())
             .await
             .map_err(|e| format!("Screenshot failed: {e}"))?;
         std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
@@ -209,11 +202,7 @@ impl BrowserService {
         Ok(format!("Scrolled {direction}."))
     }
 
-    pub async fn wait(
-        &self,
-        selector: Option<&str>,
-        timeout_ms: u64,
-    ) -> Result<String, String> {
+    pub async fn wait(&self, selector: Option<&str>, timeout_ms: u64) -> Result<String, String> {
         let page = self.page().await?;
         if let Some(sel) = selector.filter(|s| !s.is_empty()) {
             page.find_element(sel)
@@ -277,7 +266,9 @@ impl BrowserService {
 
     pub async fn evaluate(&self, script: &str) -> Result<String, String> {
         let page = self.page().await?;
-        let wrapped = if script.trim_start().starts_with('(') || script.trim_start().starts_with("function") {
+        let wrapped = if script.trim_start().starts_with('(')
+            || script.trim_start().starts_with("function")
+        {
             script.to_string()
         } else {
             format!("() => {{ {script} }}")
@@ -300,18 +291,11 @@ async fn page_url(page: &Page) -> Result<String, String> {
 }
 
 async fn page_title(page: &Page) -> String {
-    page.get_title()
-        .await
-        .ok()
-        .flatten()
-        .unwrap_or_default()
+    page.get_title().await.ok().flatten().unwrap_or_default()
 }
 
 async fn eval_object(page: &Page, script: &str) -> Result<Value, String> {
-    let eval = page
-        .evaluate(script)
-        .await
-        .map_err(|e| e.to_string())?;
+    let eval = page.evaluate(script).await.map_err(|e| e.to_string())?;
     eval.into_value().map_err(|e| e.to_string())
 }
 
