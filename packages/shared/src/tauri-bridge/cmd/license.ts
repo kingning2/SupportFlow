@@ -13,3 +13,7 @@ export const getLicenseStatus = () => invokeWrapper<LicenseStatusDto>(TauriCmd.L
 /** Verify activation token, persist locally, refresh license status. */
 export const applyLicenseActivation = (token: string) =>
   invokeWrapper<LicenseStatusDto>(TauriCmd.LicenseApplyActivation, { token });
+
+/** Pick local activation key file and apply it. */
+export const pickAndApplyLicenseActivationKey = () =>
+  invokeWrapper<LicenseStatusDto>(TauriCmd.LicensePickAndApplyActivationKey);

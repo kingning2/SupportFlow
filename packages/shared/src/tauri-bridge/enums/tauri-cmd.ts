@@ -12,6 +12,7 @@ export enum TauriCmd {
   PreloadModalWindow = "preload_modal_window",
   LicenseGetStatus = "license_get_status",
   LicenseApplyActivation = "license_apply_activation",
+  LicensePickAndApplyActivationKey = "license_pick_and_apply_activation_key",
   AgentGetConsoleState = "agent_get_console_state",
   AgentSendMessage = "agent_send_message",
   AgentCancel = "agent_cancel",
