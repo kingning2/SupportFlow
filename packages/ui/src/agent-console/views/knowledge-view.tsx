@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BookOpen, FolderTree, Network, Upload } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import {
   getAgentKnowledgeGraph,
   listAgentKnowledge,
+  pickAndUploadKnowledge,
   readAgentKnowledge,
-  uploadAgentKnowledge,
   type AgentKnowledgeFile,
   type AgentKnowledgeGraphLink,
   type AgentKnowledgeGraphNode
@@ -19,24 +19,8 @@ import { cn } from "@supportflow/shared";
 
 type KnowledgeTab = "docs" | "graph";
 
-const KNOWLEDGE_UPLOAD_ACCEPT =
-  ".pdf,.docx,.txt,.md,.markdown,.rst,.csv,.tsv,.log,.json,.xml,.html,.htm,.xls,.xlsx,.ppt,.pptx";
-
-async function filesToUploadPayload(files: FileList) {
-  const out: { filename: string; data: number[] }[] = [];
-  for (const file of Array.from(files)) {
-    const buf = await file.arrayBuffer();
-    out.push({
-      filename: file.name,
-      data: Array.from(new Uint8Array(buf))
-    });
-  }
-  return out;
-}
-
 export function KnowledgeView() {
   const { t } = useTranslation("console");
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<KnowledgeTab>("docs");
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -106,22 +90,15 @@ export function KnowledgeView() {
     }
   };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = event.target.files;
-    event.target.value = "";
-    if (!picked?.length) return;
-
+  // Opens the system file dialog from Rust side. Rust reads the files directly (better for large docs,
+  // and ensures MarkItDown path is used with local FS access).
+  const handleUploadClick = async () => {
     setUploading(true);
     setStatusMessage(t("knowledge_uploading"));
     setStatusTone("info");
 
     try {
-      const payload = await filesToUploadPayload(picked);
-      const result = await uploadAgentKnowledge(payload, "uploads");
+      const result = await pickAndUploadKnowledge("uploads");
 
       if (result.count > 0) {
         let msg = t("knowledge_upload_success", { count: result.count });
@@ -160,15 +137,6 @@ export function KnowledgeView() {
   return (
     <ViewShell title={t("knowledge_title")} description={t("knowledge_desc")}>
       <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col gap-4">
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept={KNOWLEDGE_UPLOAD_ACCEPT}
-          className="hidden"
-          onChange={(e) => void handleFileChange(e)}
-        />
-
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div className="min-h-5 flex-1">
             {statusMessage ? (

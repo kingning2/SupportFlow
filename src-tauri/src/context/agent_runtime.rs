@@ -87,16 +87,8 @@ fn resolve_bundled_config(app: &AppHandle) -> Result<PathBuf, String> {
 fn resolve_workspace_dir(app: &AppHandle) -> Result<PathBuf, String> {
     const ENV_KEY: &str = "SUPPORT_FLOW_WORKSPACE";
 
-    if let Ok(raw) = std::env::var(ENV_KEY) {
-        let trimmed = raw.trim();
-        if !trimmed.is_empty() {
-            let path = PathBuf::from(trimmed);
-            if path.is_dir() {
-                crate::log_info!("agent workspace from {ENV_KEY}: {}", path.display());
-                return Ok(path);
-            }
-            crate::log_warn!("{ENV_KEY} is not a directory: {}", path.display());
-        }
+    if let Some(path) = crate::utils::env::dir_from_env(ENV_KEY) {
+        return Ok(path);
     }
 
     app.path()
@@ -121,6 +113,29 @@ fn resolve_agent_dirs(app: &AppHandle) -> Result<(PathBuf, PathBuf), String> {
         config_path.display()
     );
     Ok((workspace, config_path))
+}
+
+/// Resolve the markitdown_convert.py helper (for Rust knowledge ingest to call out to Python MarkItDown).
+/// Prefers bundled resource (listed in tauri.conf), falls back to dev source tree.
+fn resolve_markitdown_convert_script(app: &AppHandle) -> Result<PathBuf, String> {
+    // Resource (prod bundle + dev if copied to target/.../resources)
+    if let Ok(p) = app.path().resolve(
+        "channel_agent/scripts/markitdown_convert.py",
+        BaseDirectory::Resource,
+    ) {
+        if p.is_file() {
+            return Ok(p);
+        }
+    }
+
+    // Dev source tree (relative to tauri crate root)
+    let dev = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("channel_agent/scripts/markitdown_convert.py");
+    if dev.is_file() {
+        return Ok(dev);
+    }
+
+    Err("markitdown_convert.py not located in resources or dev tree".into())
 }
 
 fn load_models_config_from_path(path: &Path) -> ModelsConfig {
@@ -215,6 +230,17 @@ impl AgentRuntime {
     pub fn initialize(app: &AppHandle) -> Result<Self, String> {
         let (workspace, config_path) = resolve_agent_dirs(app)?;
         let config = load_models_config_from_path(&config_path);
+
+        // Wire markitdown script location into env for the parser (upload ingest path).
+        // This connects the bundled script (or dev tree) so MarkItDown Python conversion is used
+        // before fallbacks, for both Tauri IPC uploads and CLI.
+        if let Ok(script_path) = resolve_markitdown_convert_script(app) {
+            std::env::set_var("MARKITDOWN_SCRIPT", script_path.to_string_lossy().as_ref());
+            crate::log_info!("markitdown script resolved: {}", script_path.display());
+        } else {
+            crate::log_info!("markitdown script not resolvable via resource (will use dev CARGO fallback if present)");
+        }
+
         let mcp_loader = McpToolLoader::new(workspace.clone());
         mcp_loader.ensure_background_load();
         let session_id = format!("session_{}", uuid::Uuid::new_v4());
@@ -631,6 +657,12 @@ impl AgentRuntime {
         workspace_console::build_knowledge_graph(&self.workspace)
     }
 
+    /// Remove one knowledge file by relative path.
+    pub async fn remove_knowledge_file(&self, path: &str) -> Result<(), String> {
+        workspace_console::remove_knowledge_file(&self.workspace, path)?;
+        Ok(())
+    }
+
     /// Ingest uploads into `knowledge/` (aligned with Python `KnowledgeService.ingest_upload`).
     pub async fn upload_knowledge_files(
         &self,
@@ -642,6 +674,43 @@ impl AgentRuntime {
         let svc = agent::knowledge::KnowledgeService::new(&self.workspace);
         svc.ingest_upload(files, category.unwrap_or("uploads"), true, enabled, &config)
             .await
+    }
+
+    /// Open the native file picker, read selected files on disk, then ingest into `knowledge/`.
+    ///
+    /// # Arguments
+    ///
+    /// * `app` - Tauri app handle (used to open the dialog)
+    /// * `category` - optional target category folder under `knowledge/`
+    ///
+    /// # Returns
+    ///
+    /// * `IngestBatchResult` - empty success when the user cancels the dialog
+    pub async fn pick_and_upload_knowledge(
+        &self,
+        app: &AppHandle,
+        category: Option<&str>,
+    ) -> Result<agent::IngestBatchResult, String> {
+        let maybe_files =
+            crate::utils::knowledge_pick::pick_and_read_supported_knowledge_files(app)?;
+
+        let Some(files) = maybe_files else {
+            return Ok(agent::IngestBatchResult::default());
+        };
+
+        if files.is_empty() {
+            return Ok(agent::IngestBatchResult {
+                results: Vec::new(),
+                errors: vec![agent::knowledge::IngestError {
+                    file: "selection".into(),
+                    message: "no files could be read from the chosen paths".into(),
+                }],
+                count: 0,
+                memory_synced: false,
+            });
+        }
+
+        self.upload_knowledge_files(files, category).await
     }
 
     /// List configured channels from bundled config.

@@ -211,6 +211,13 @@ pub fn build_knowledge_graph(workspace: &Path) -> Result<KnowledgeGraphData, Str
     })
 }
 
+/// Remove one knowledge file by relative path.
+pub fn remove_knowledge_file(workspace: &Path, rel_path: &str) -> Result<(), String> {
+    let svc = agent::knowledge::KnowledgeService::new(workspace);
+    svc.remove_file(rel_path)?;
+    Ok(())
+}
+
 struct ChannelMeta {
     id: &'static str,
     label: &'static str,

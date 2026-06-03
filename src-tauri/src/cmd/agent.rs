@@ -279,6 +279,15 @@ pub struct AgentKnowledgeUploadRequest {
     pub category: Option<String>,
 }
 
+/// Request for the picker command (category only; dialog is shown on Rust side).
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentKnowledgePickUploadRequest {
+    #[serde(default)]
+    pub category: Option<String>,
+}
+
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -309,6 +318,37 @@ pub struct AgentKnowledgeUploadResult {
     pub errors: Vec<AgentKnowledgeIngestError>,
     pub count: u32,
     pub memory_synced: bool,
+}
+
+impl From<agent::IngestBatchResult> for AgentKnowledgeUploadResult {
+    fn from(batch: agent::IngestBatchResult) -> Self {
+        Self {
+            results: batch
+                .results
+                .into_iter()
+                .map(|r| AgentKnowledgeIngestItem {
+                    path: r.path,
+                    title: r.title,
+                    category: r.category,
+                    slug: r.slug,
+                    original_name: r.original_name,
+                    truncated: r.truncated,
+                    char_count: r.char_count as u32,
+                    archive: r.archive,
+                })
+                .collect(),
+            errors: batch
+                .errors
+                .into_iter()
+                .map(|e| AgentKnowledgeIngestError {
+                    file: e.file,
+                    message: e.message,
+                })
+                .collect(),
+            count: batch.count as u32,
+            memory_synced: batch.memory_synced,
+        }
+    }
 }
 
 #[typeshare]
@@ -502,6 +542,18 @@ pub async fn agent_read_knowledge(
 }
 
 #[tauri::command]
+/// Remove one knowledge document by relative path.
+pub async fn agent_remove_knowledge_file(
+    license: tauri::State<'_, LicenseStore>,
+    runtime: State<'_, Arc<AgentRuntime>>,
+    path: String,
+) -> Result<(), String> {
+    license.require_valid()?;
+    runtime.remove_knowledge_file(&path).await?;
+    Ok(())
+}
+
+#[tauri::command]
 /// Return knowledge graph nodes and links from markdown cross-references.
 pub async fn agent_get_knowledge_graph(
     license: tauri::State<'_, LicenseStore>,
@@ -543,35 +595,26 @@ pub async fn agent_upload_knowledge(
         .into_iter()
         .map(|f| (f.filename, f.data))
         .collect();
-    let batch = runtime
+    Ok(runtime
         .upload_knowledge_files(files, body.category.as_deref())
-        .await?;
-    Ok(AgentKnowledgeUploadResult {
-        results: batch
-            .results
-            .into_iter()
-            .map(|r| AgentKnowledgeIngestItem {
-                path: r.path,
-                title: r.title,
-                category: r.category,
-                slug: r.slug,
-                original_name: r.original_name,
-                truncated: r.truncated,
-                char_count: r.char_count as u32,
-                archive: r.archive,
-            })
-            .collect(),
-        errors: batch
-            .errors
-            .into_iter()
-            .map(|e| AgentKnowledgeIngestError {
-                file: e.file,
-                message: e.message,
-            })
-            .collect(),
-        count: batch.count as u32,
-        memory_synced: batch.memory_synced,
-    })
+        .await?
+        .into())
+}
+
+/// Pick supported knowledge files via the native OS dialog, then ingest them.
+#[tauri::command]
+pub async fn agent_pick_and_upload_knowledge(
+    app: AppHandle,
+    license: tauri::State<'_, LicenseStore>,
+    runtime: State<'_, Arc<AgentRuntime>>,
+    body: Option<AgentKnowledgePickUploadRequest>,
+) -> Result<AgentKnowledgeUploadResult, String> {
+    license.require_valid()?;
+    let category = body.and_then(|b| b.category);
+    Ok(runtime
+        .pick_and_upload_knowledge(&app, category.as_deref())
+        .await?
+        .into())
 }
 
 #[tauri::command]

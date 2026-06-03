@@ -36,7 +36,7 @@
 1. **渠道层**（channel）仍走 Python sidecar；**bridge 核心已 Rust 化**（`crates/bridge`）
 2. **语音 / 翻译**（voice、translate）— bridge 内为占位错误，待 Rust voice 模块
 3. **部分厂商 vision 原生格式**（Claude/Gemini 专用 multimodal，当前多走 OpenAI-compat）
-4. **CLI** — `crates/supportflow-cli`（`sf`）已覆盖主命令；Skill Hub 全格式安装等待补
+4. **CLI** — `crates/cli`（`sf`）已覆盖主命令；Skill Hub 全格式安装等待补
 5. **知识图谱增强**（ingest / list / read / graph / upload 已对齐 Python `KnowledgeService`）
 
 ---
@@ -96,7 +96,7 @@
 | P1     | proxy + 工具 HTTP 对齐                                 | ✅        |
 | P1     | web_search / env_config / web_fetch / browser / vision | ✅        |
 | P2     | 多通道、语音/翻译                                      | 待做      |
-| P2     | CLI（`supportflow-cli`）                               | ✅ 主命令 |
+| P2     | CLI（`cli`）                                           | ✅ 主命令 |
 
 ---
 

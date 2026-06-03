@@ -19,6 +19,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(context::session::SessionStore::load_from_disk())
         .setup(|app| {
             let runtime = std::sync::Arc::new(context::agent_runtime::AgentRuntime::initialize(
@@ -68,6 +69,8 @@ pub fn run() {
             cmd::agent::agent_read_knowledge,
             cmd::agent::agent_get_knowledge_graph,
             cmd::agent::agent_upload_knowledge,
+            cmd::agent::agent_pick_and_upload_knowledge,
+            cmd::agent::agent_remove_knowledge_file,
             cmd::agent::agent_list_channels,
             cmd::agent::agent_get_channel_catalog,
             cmd::agent::agent_channel_action,

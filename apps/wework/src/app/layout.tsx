@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import "antd/dist/reset.css";
+
 import { DesktopAppLayout } from "@supportflow/ui/app-shell";
 import "@supportflow/ui/design-system";
 import "@supportflow/ui/design-system/flavors/wework";

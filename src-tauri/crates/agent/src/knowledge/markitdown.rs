@@ -6,8 +6,25 @@ use std::process::Command;
 const EXIT_NOT_INSTALLED: i32 = 2;
 
 fn markitdown_script_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../channel_agent/scripts/markitdown_convert.py")
+    // 1. Explicit override (set by Tauri runtime at startup from bundled resource or dev tree)
+    if let Ok(raw) = std::env::var("MARKITDOWN_SCRIPT") {
+        let p = PathBuf::from(raw.trim());
+        if p.is_file() {
+            return p;
+        }
+    }
+
+    // 2. Dev fallback: baked compile-time path from agent crate (works inside source checkout)
+    let dev = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../channel_agent/scripts/markitdown_convert.py");
+    if dev.is_file() {
+        return dev;
+    }
+
+    // 3. Last resort: assume cwd layout
+    std::env::current_dir()
+        .unwrap_or_default()
+        .join("src-tauri/channel_agent/scripts/markitdown_convert.py")
 }
 
 /// Python 3.10+ with `pip install 'markitdown[all]'` (see `channel_agent/requirements-markitdown.txt`).

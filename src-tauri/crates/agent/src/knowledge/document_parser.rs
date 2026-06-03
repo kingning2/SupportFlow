@@ -12,7 +12,7 @@ use super::markitdown;
 pub const MAX_INGEST_BYTES: usize = 50 * 1024 * 1024;
 
 pub const PDF_SUFFIXES: &[&str] = &[".pdf"];
-pub const WORD_SUFFIXES: &[&str] = &[".docx", ".doc"];
+pub const WORD_SUFFIXES: &[&str] = &[".docx"];
 pub const TEXT_SUFFIXES: &[&str] = &[
     ".txt", ".md", ".markdown", ".rst", ".csv", ".tsv", ".log", ".json", ".xml", ".html", ".htm",
 ];
@@ -68,6 +68,13 @@ pub fn parse_document_file(file_path: impl AsRef<Path>, suffix: Option<&str>) ->
             path.display()
         ),
         Err(e) => tracing::debug!("[document_parser] MarkItDown skipped: {e}"),
+    }
+
+    // Legacy .doc (non-OXML) is not a ZIP package, so the Rust fallback
+    // docx parser will produce misleading "invalid Zip archive" errors.
+    // We intentionally only support .docx in the Rust fallback path.
+    if suffix == ".doc" {
+        return Err("Legacy .doc is not supported by the Rust parser; please convert/export it to .docx (or upload as PDF).".into());
     }
 
     if suffix_in_set(&suffix, PDF_SUFFIXES) {

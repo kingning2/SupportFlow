@@ -115,10 +115,7 @@ impl KnowledgeService {
             return (files, children);
         };
 
-        let mut names: Vec<_> = entries
-            .filter_map(|e| e.ok())
-            .map(|e| e.path())
-            .collect();
+        let mut names: Vec<_> = entries.filter_map(|e| e.ok()).map(|e| e.path()).collect();
         names.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
 
         for full in names {
@@ -144,11 +141,7 @@ impl KnowledgeService {
                     stats.size += size;
                 }
                 let title = title_from_md(&full, &name.replace(".md", ""));
-                files.push(KnowledgeFileEntry {
-                    name,
-                    title,
-                    size,
-                });
+                files.push(KnowledgeFileEntry { name, title, size });
             }
         }
         (files, children)
@@ -269,15 +262,9 @@ impl KnowledgeService {
         if files.is_empty() {
             return Err("no files provided".into());
         }
-        let mut result = ingest_files(
-            &self.knowledge_dir,
-            &files,
-            category,
-            knowledge_enabled,
-        );
+        let mut result = ingest_files(&self.knowledge_dir, &files, category, knowledge_enabled);
         if sync_memory && result.count > 0 {
-            result.memory_synced =
-                trigger_memory_sync(&self.workspace_root, models_config).await;
+            result.memory_synced = trigger_memory_sync(&self.workspace_root, models_config).await;
         }
         Ok(result)
     }
@@ -306,6 +293,13 @@ impl KnowledgeService {
         walk(&tree.tree, "", &mut out);
         out.sort_by(|a, b| a.0.cmp(&b.0));
         Ok(out)
+    }
+
+    /// Remove one knowledge file by relative path.
+    pub fn remove_file(&self, rel_path: &str) -> Result<(), String> {
+        let full = resolve_under_knowledge(&self.knowledge_dir, rel_path)?;
+        fs::remove_file(full).map_err(|e| e.to_string())?;
+        Ok(())
     }
 }
 
