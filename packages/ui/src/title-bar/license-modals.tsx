@@ -6,13 +6,12 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
-  applyLicenseActivation,
   getLicenseStatus,
+  pickAndApplyLicenseActivationKey,
   type LicenseStatusDto
 } from "@supportflow/shared/tauri-bridge/cmd/license";
 import { Button } from "@supportflow/ui/button";
 import { Input } from "@supportflow/ui/input";
-import { Textarea } from "@supportflow/ui/textarea";
 
 type LicenseModalProps = {
   open: boolean;
@@ -41,34 +40,26 @@ function useLicenseStatus() {
 export function LicenseActivationModal({ open, onOpenChange }: LicenseModalProps) {
   const { t } = useTranslation("title_bar");
   const { status, error, setError, loadStatus, setStatus } = useLicenseStatus();
-  const [activationToken, setActivationToken] = useState("");
   const [activating, setActivating] = useState(false);
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
-    setActivationToken("");
     setError(null);
   }, [onOpenChange, setError]);
 
   const handleApplyActivation = useCallback(async () => {
-    const token = activationToken.trim();
-    if (!token) {
-      setError(t("license_activation_empty"));
-      return;
-    }
     setActivating(true);
     setError(null);
     try {
-      const next = await applyLicenseActivation(token);
+      const next = await pickAndApplyLicenseActivationKey();
       setStatus(next);
-      setActivationToken("");
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
     } finally {
       setActivating(false);
     }
-  }, [activationToken, setError, setStatus, t]);
+  }, [setError, setStatus]);
 
   const isLicensed = status?.valid === true;
 
@@ -98,12 +89,6 @@ export function LicenseActivationModal({ open, onOpenChange }: LicenseModalProps
       <p className="text-muted-foreground mb-3 text-sm">
         {isLicensed ? t("license_activation_active") : t("license_activation_hint")}
       </p>
-      <Textarea
-        className="min-h-[96px] font-mono text-xs"
-        value={activationToken}
-        onChange={(e) => setActivationToken(e.target.value)}
-        placeholder={t("license_activation_placeholder")}
-      />
       {error ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
     </Modal>
   );
