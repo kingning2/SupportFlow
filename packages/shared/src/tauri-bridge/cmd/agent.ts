@@ -160,8 +160,8 @@ export function readAgentKnowledge(path: string) {
 }
 
 export function removeAgentKnowledge(path: string) {
-  return invokeWrapper<void>(TauriCmd.AgentRemoveKnowledge, {
-    body: { path }
+  return invokeWrapper<void>(TauriCmd.AgentRemoveKnowledgeFile, {
+    path
   });
 }
 

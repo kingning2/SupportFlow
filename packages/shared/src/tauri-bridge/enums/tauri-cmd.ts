@@ -29,7 +29,7 @@ export enum TauriCmd {
   AgentGetKnowledgeGraph = "agent_get_knowledge_graph",
   AgentUploadKnowledge = "agent_upload_knowledge",
   AgentPickAndUploadKnowledge = "agent_pick_and_upload_knowledge",
-  AgentRemoveKnowledge = "agent_remove_knowledge",
+  AgentRemoveKnowledgeFile = "agent_remove_knowledge_file",
   AgentListChannels = "agent_list_channels",
   AgentGetChannelCatalog = "agent_get_channel_catalog",
   AgentChannelAction = "agent_channel_action",
