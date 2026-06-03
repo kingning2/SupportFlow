@@ -6,8 +6,6 @@ import { useTranslation } from "react-i18next";
 
 import {
   channelAction,
-  channelFieldValueString,
-  isChannelMaskedSecret,
   type ChannelCatalogEntry
 } from "@supportflow/shared/tauri-bridge/cmd/channel-python-channels";
 import {
@@ -16,6 +14,7 @@ import {
   draftsFromChannel,
   type ChannelFieldDrafts
 } from "./channel-fields";
+import { channelModeTabClass, wecomHasCreds } from "./channel-utils";
 
 const WECOM_BOT_SDK_URL = "https://wwcdn.weixin.qq.com/node/wework/js/wecom-aibot-sdk@0.1.0.min.js";
 const WECOM_BOT_SOURCE = "SupportFlow";
@@ -30,18 +29,6 @@ declare global {
       }) => void;
     };
   }
-}
-
-function wecomHasCreds(ch: ChannelCatalogEntry) {
-  const id = ch.fields.find((f) => f.key === "wecom_bot_id");
-  const secret = ch.fields.find((f) => f.key === "wecom_bot_secret");
-  return !!(
-    id &&
-    secret &&
-    channelFieldValueString(id.value) &&
-    channelFieldValueString(secret.value) &&
-    !isChannelMaskedSecret(channelFieldValueString(secret.value))
-  );
 }
 
 function ensureWecomSdk(): Promise<void> {
@@ -121,11 +108,6 @@ export function WecomPanel({
     }
   }, [connectAfterAuth, t]);
 
-  const tabClass = (active: boolean) =>
-    active
-      ? "flex-1 rounded-md bg-white px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm dark:bg-slate-700 dark:text-slate-100"
-      : "flex-1 rounded-md px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200";
-
   if (variant === "active" && !wecomHasCreds(channel)) {
     return (
       <div className="flex flex-col items-center py-2">
@@ -153,14 +135,14 @@ export function WecomPanel({
       <div className="mb-5 flex items-center justify-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-white/5">
         <button
           type="button"
-          className={tabClass(mode === "scan")}
+          className={channelModeTabClass(mode === "scan")}
           onClick={() => setModeOverride("scan")}
         >
           {t("wecom_mode_scan")}
         </button>
         <button
           type="button"
-          className={tabClass(mode === "manual")}
+          className={channelModeTabClass(mode === "manual")}
           onClick={() => setModeOverride("manual")}
         >
           {t("wecom_mode_manual")}

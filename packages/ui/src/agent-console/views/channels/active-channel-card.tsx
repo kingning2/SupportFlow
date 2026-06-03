@@ -18,16 +18,11 @@ import {
   type ChannelFieldDrafts
 } from "./channel-fields";
 import { CHANNEL_ICON_MAP, channelColorClasses } from "./channel-theme";
+import { wecomHasCreds } from "./channel-utils";
 import { FeishuPanel } from "./feishu-panel";
 import { WecomPanel } from "./wecom-panel";
 import { WeixinQrPanel } from "./weixin-qr-panel";
 import { WxQrPanel } from "./wx-qr-panel";
-
-function wecomHasCreds(ch: ChannelCatalogEntry) {
-  const id = ch.fields.find((f) => f.key === "wecom_bot_id");
-  const secret = ch.fields.find((f) => f.key === "wecom_bot_secret");
-  return !!(id?.value && secret?.value);
-}
 
 interface ActiveChannelCardProps {
   channel: ChannelCatalogEntry;

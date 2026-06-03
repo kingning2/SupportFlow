@@ -17,6 +17,7 @@ import {
   draftsFromChannel,
   type ChannelFieldDrafts
 } from "./channel-fields";
+import { channelModeTabClass } from "./channel-utils";
 
 interface FeishuPanelProps {
   channel: ChannelCatalogEntry;
@@ -128,11 +129,6 @@ export function FeishuPanel({
 
   useEffect(() => () => stopPoll(), [stopPoll]);
 
-  const tabClass = (active: boolean) =>
-    active
-      ? "flex-1 rounded-md bg-white px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm dark:bg-slate-700 dark:text-slate-100"
-      : "flex-1 rounded-md px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200";
-
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -156,12 +152,16 @@ export function FeishuPanel({
   return (
     <div>
       <div className="mb-5 flex items-center justify-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-white/5">
-        <button type="button" className={tabClass(mode === "scan")} onClick={() => setMode("scan")}>
+        <button
+          type="button"
+          className={channelModeTabClass(mode === "scan")}
+          onClick={() => setMode("scan")}
+        >
           {t("feishu_mode_scan")}
         </button>
         <button
           type="button"
-          className={tabClass(mode === "manual")}
+          className={channelModeTabClass(mode === "manual")}
           onClick={() => setMode("manual")}
         >
           {t("feishu_mode_manual")}
