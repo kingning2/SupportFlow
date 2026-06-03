@@ -15,7 +15,22 @@
     "menu_contact_support": "Contact support",
     "menu_online_help": "Online help",
     "menu_check_updates": "Check for updates",
-    "menu_about": "About"
+    "menu_about": "About",
+    "menu_license_activation": "Activate subscription",
+    "menu_license_machine_code": "Machine code",
+    "license_modal_cancel": "Cancel",
+    "license_activation_title": "Subscription",
+    "license_activation_hint": "Paste the activation token from your administrator, then activate.",
+    "license_activation_active": "Activated — all features unlocked",
+    "license_activation_placeholder": "Paste activation token",
+    "license_activation_apply": "Activate",
+    "license_activation_applying": "Activating…",
+    "license_activation_empty": "Please enter an activation token",
+    "license_machine_code_label": "Machine code",
+    "license_machine_code_hint": "Copy and send to your administrator",
+    "license_machine_code_copy": "Copy machine code",
+    "license_machine_code_copied": "Copied",
+    "license_machine_code_clipboard_unavailable": "Clipboard API not available"
   },
   "common": {
     "error_title": "Something went wrong",

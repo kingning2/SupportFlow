@@ -15,7 +15,22 @@
     "menu_contact_support": "聯絡支援",
     "menu_online_help": "在線幫助",
     "menu_check_updates": "檢查更新",
-    "menu_about": "關於"
+    "menu_about": "關於",
+    "menu_license_activation": "訂閱激活",
+    "menu_license_machine_code": "機器碼",
+    "license_modal_cancel": "取消",
+    "license_activation_title": "订阅激活",
+    "license_activation_hint": "粘贴管理员提供的激活码后点击激活",
+    "license_activation_active": "已激活，可正常使用",
+    "license_activation_placeholder": "粘贴激活码",
+    "license_activation_apply": "激活",
+    "license_activation_applying": "激活中…",
+    "license_activation_empty": "请输入激活码",
+    "license_machine_code_label": "机器码",
+    "license_machine_code_hint": "复制机器码发给管理员",
+    "license_machine_code_copy": "复制机器码",
+    "license_machine_code_copied": "已复制",
+    "license_machine_code_clipboard_unavailable": "无法访问剪贴板"
   },
   "common": {
     "error_title": "出錯了",

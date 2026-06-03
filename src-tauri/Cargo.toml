@@ -42,3 +42,7 @@ agent = { path = "crates/agent" }
 channel_runtime = { path = "crates/channel_runtime" }
 bridge = { path = "crates/bridge" }
 rusqlite = { version = "0.32", features = ["bundled"] }
+base64 = "0.22"
+rsa = "0.9"
+sha2 = "0.10"
+signature = "2"

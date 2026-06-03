@@ -3,6 +3,7 @@
 pub mod agent_runtime;
 pub mod channel_bridge;
 pub mod channel_python_sidecar;
+pub mod license_store;
 pub mod session;
 pub mod wework_accounts;
 pub mod workspace_console;

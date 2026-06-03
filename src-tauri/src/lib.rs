@@ -27,15 +27,21 @@ pub fn run() {
             let wework_accounts =
                 context::wework_accounts::WeworkAccountsStore::open(app.handle())?;
             let runtime_bg = runtime.clone();
+            let license_store = tauri::async_runtime::block_on(
+                context::license_store::LicenseStore::initialize_async(app.handle()),
+            );
             tauri::async_runtime::spawn(async move {
                 runtime_bg.start_sidecar_deferred().await;
             });
             app.manage(runtime);
+            app.manage(license_store);
             app.manage(wework_accounts);
             events::setup(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            cmd::license::license_get_status,
+            cmd::license::license_apply_activation,
             cmd::lang::get_lang,
             cmd::lang::set_lang,
             cmd::session::get_app_session,

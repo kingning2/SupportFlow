@@ -8,6 +8,7 @@ use tauri::{AppHandle, State};
 use typeshare::typeshare;
 
 use crate::context::agent_runtime::{self, AgentRuntime};
+use crate::context::license_store::LicenseStore;
 use crate::events::payloads::{AgentConsoleState, SkillItem};
 
 #[typeshare]
@@ -67,8 +68,10 @@ pub struct AgentSetChatModelRequest {
 #[tauri::command]
 /// Load aggregated Agent console state for frontend bootstrap.
 pub async fn agent_get_console_state(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<AgentConsoleState, String> {
+    license.require_valid()?;
     runtime.console_state().await
 }
 
@@ -76,9 +79,11 @@ pub async fn agent_get_console_state(
 /// Submit a user message and start background streaming for the active session.
 pub async fn agent_send_message(
     app: AppHandle,
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentSendMessageRequest,
 ) -> Result<AgentSendMessageResponse, String> {
+    license.require_valid()?;
     let (request_id, session_id) = runtime
         .inner()
         .clone()
@@ -93,29 +98,44 @@ pub async fn agent_send_message(
 
 #[tauri::command]
 /// Cancel a running agent request by request id.
-pub fn agent_cancel(_app: AppHandle, body: AgentCancelRequest) -> Result<(), String> {
+pub fn agent_cancel(
+    _app: AppHandle,
+    license: tauri::State<'_, LicenseStore>,
+    body: AgentCancelRequest,
+) -> Result<(), String> {
+    license.require_valid()?;
     agent_runtime::cancel_request(&body.request_id);
     Ok(())
 }
 
 #[tauri::command]
 /// Clear in-memory conversation context for the current runtime session.
-pub async fn agent_clear_context(runtime: State<'_, Arc<AgentRuntime>>) -> Result<(), String> {
+pub async fn agent_clear_context(
+    license: tauri::State<'_, LicenseStore>,
+    runtime: State<'_, Arc<AgentRuntime>>,
+) -> Result<(), String> {
+    license.require_valid()?;
     runtime.clear_context().await
 }
 
 #[tauri::command]
 /// Create and switch to a new runtime session id.
-pub async fn agent_new_session(runtime: State<'_, Arc<AgentRuntime>>) -> Result<String, String> {
+pub async fn agent_new_session(
+    license: tauri::State<'_, LicenseStore>,
+    runtime: State<'_, Arc<AgentRuntime>>,
+) -> Result<String, String> {
+    license.require_valid()?;
     Ok(runtime.new_session().await)
 }
 
 #[tauri::command]
 /// Update provider credentials and optional api base in bundled config.
 pub async fn agent_update_provider(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentUpdateProviderRequest,
 ) -> Result<(), String> {
+    license.require_valid()?;
     runtime
         .update_provider(
             &body.provider_id,
@@ -129,18 +149,22 @@ pub async fn agent_update_provider(
 #[tauri::command]
 /// Clear provider credentials in bundled config.
 pub async fn agent_clear_provider(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentClearProviderRequest,
 ) -> Result<(), String> {
+    license.require_valid()?;
     runtime.clear_provider(&body.provider_id).await
 }
 
 #[tauri::command]
 /// Set active chat provider/model pair in bundled config.
 pub async fn agent_set_chat_model(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentSetChatModelRequest,
 ) -> Result<(), String> {
+    license.require_valid()?;
     runtime
         .set_active_chat(body.provider_id.as_deref(), body.model.as_deref())
         .await
@@ -149,8 +173,10 @@ pub async fn agent_set_chat_model(
 #[tauri::command]
 /// Refresh skill registry and return latest skill list.
 pub async fn agent_refresh_skills(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<Vec<SkillItem>, String> {
+    license.require_valid()?;
     runtime.refresh_skills().await
 }
 
@@ -394,8 +420,10 @@ pub struct AgentLogStreamState {
 #[tauri::command]
 /// List persisted sessions from workspace index.
 pub async fn agent_list_sessions(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<Vec<AgentSessionSummary>, String> {
+    license.require_valid()?;
     let rows = runtime.list_sessions().await?;
     Ok(rows
         .into_iter()
@@ -410,8 +438,10 @@ pub async fn agent_list_sessions(
 #[tauri::command]
 /// List memory files from runtime workspace.
 pub async fn agent_list_memory(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<Vec<AgentMemoryItem>, String> {
+    license.require_valid()?;
     let rows = runtime.list_memory_items().await?;
     Ok(rows
         .into_iter()
@@ -427,9 +457,11 @@ pub async fn agent_list_memory(
 #[tauri::command]
 /// Read memory file content by filename.
 pub async fn agent_read_memory(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentMemoryReadRequest,
 ) -> Result<AgentMemoryReadResult, String> {
+    license.require_valid()?;
     let content = runtime.read_memory_item(&body.filename).await?;
     Ok(AgentMemoryReadResult {
         filename: body.filename,
@@ -440,8 +472,10 @@ pub async fn agent_read_memory(
 #[tauri::command]
 /// List knowledge documents under workspace/knowledge.
 pub async fn agent_list_knowledge(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<Vec<AgentKnowledgeFile>, String> {
+    license.require_valid()?;
     let rows = runtime.list_knowledge_files().await?;
     Ok(rows
         .into_iter()
@@ -455,9 +489,11 @@ pub async fn agent_list_knowledge(
 #[tauri::command]
 /// Read one knowledge document by relative path.
 pub async fn agent_read_knowledge(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentKnowledgeReadRequest,
 ) -> Result<AgentKnowledgeReadResult, String> {
+    license.require_valid()?;
     let content = runtime.read_knowledge_file(&body.path).await?;
     Ok(AgentKnowledgeReadResult {
         path: body.path,
@@ -468,8 +504,10 @@ pub async fn agent_read_knowledge(
 #[tauri::command]
 /// Return knowledge graph nodes and links from markdown cross-references.
 pub async fn agent_get_knowledge_graph(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<AgentKnowledgeGraph, String> {
+    license.require_valid()?;
     let graph = runtime.knowledge_graph().await?;
     Ok(AgentKnowledgeGraph {
         nodes: graph
@@ -495,9 +533,11 @@ pub async fn agent_get_knowledge_graph(
 #[tauri::command]
 /// Ingest uploaded files into knowledge/ (parse → Markdown → index/log → memory sync).
 pub async fn agent_upload_knowledge(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentKnowledgeUploadRequest,
 ) -> Result<AgentKnowledgeUploadResult, String> {
+    license.require_valid()?;
     let files: Vec<(String, Vec<u8>)> = body
         .files
         .into_iter()
@@ -537,8 +577,10 @@ pub async fn agent_upload_knowledge(
 #[tauri::command]
 /// List active channel summaries (legacy/simple list).
 pub async fn agent_list_channels(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<Vec<AgentChannelSummary>, String> {
+    license.require_valid()?;
     let rows = runtime.list_channels().await?;
     Ok(rows
         .into_iter()
@@ -553,17 +595,21 @@ pub async fn agent_list_channels(
 #[tauri::command]
 /// Channel catalog proxied to SupportFlow Agent Python `GET /api/channels`.
 pub async fn agent_get_channel_catalog(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<serde_json::Value, String> {
+    license.require_valid()?;
     runtime.channel_python_channels_get().await
 }
 
 #[tauri::command]
 /// Channel connect/disconnect/save proxied to SupportFlow Agent Python `POST /api/channels`.
 pub async fn agent_channel_action(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentChannelActionRequest,
 ) -> Result<serde_json::Value, String> {
+    license.require_valid()?;
     let payload = serde_json::json!({
         "action": body.action,
         "channel": body.channel,
@@ -575,9 +621,11 @@ pub async fn agent_channel_action(
 #[tauri::command]
 /// Channel console APIs (QR login, Feishu register) proxied to Python sidecar.
 pub async fn agent_channel_console_api(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
     body: AgentChannelConsoleApiRequest,
 ) -> Result<serde_json::Value, String> {
+    license.require_valid()?;
     runtime
         .channel_console_api(&body.path, &body.method, body.body)
         .await
@@ -586,8 +634,10 @@ pub async fn agent_channel_console_api(
 #[tauri::command]
 /// List scheduled task summaries from runtime workspace.
 pub async fn agent_list_tasks(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<Vec<AgentTaskSummary>, String> {
+    license.require_valid()?;
     let rows = runtime.list_task_items().await?;
     Ok(rows
         .into_iter()
@@ -603,8 +653,10 @@ pub async fn agent_list_tasks(
 #[tauri::command]
 /// Return current log source path and availability for console log view.
 pub async fn agent_get_logs_status(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<AgentLogsStatus, String> {
+    license.require_valid()?;
     let (enabled, source) = runtime.logs_status().await?;
     Ok(AgentLogsStatus { enabled, source })
 }
@@ -613,8 +665,10 @@ pub async fn agent_get_logs_status(
 /// Start background log tailing and push deltas through AGENT_LOG_STREAM event.
 pub async fn agent_start_log_stream(
     app: AppHandle,
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<AgentLogStreamState, String> {
+    license.require_valid()?;
     let started = runtime.inner().clone().start_log_stream(app).await?;
     Ok(AgentLogStreamState { started })
 }
@@ -622,8 +676,10 @@ pub async fn agent_start_log_stream(
 #[tauri::command]
 /// Stop background log tailing loop.
 pub async fn agent_stop_log_stream(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
 ) -> Result<AgentLogStreamState, String> {
+    license.require_valid()?;
     runtime.stop_log_stream().await;
     Ok(AgentLogStreamState { started: false })
 }
@@ -631,9 +687,11 @@ pub async fn agent_stop_log_stream(
 #[tauri::command]
 /// Read latest log lines with optional line limit.
 pub async fn agent_read_logs(
+    license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,
     body: Option<AgentReadLogsRequest>,
 ) -> Result<AgentReadLogsResult, String> {
+    license.require_valid()?;
     let (source, content) = runtime.read_logs(body.and_then(|b| b.limit)).await?;
 
     Ok(AgentReadLogsResult { source, content })
