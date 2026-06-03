@@ -163,18 +163,6 @@ export function KnowledgeView() {
     }
   };
 
-  const statusAlert = status ? (
-    <Alert
-      type={status.type}
-      title={status.message}
-      showIcon
-      closable={{
-        onClose: clearStatus
-      }}
-      style={{ marginBottom: 16 }}
-    />
-  ) : null;
-
   const docsContent = (
     <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[300px,1fr]">
       <Card
@@ -228,7 +216,14 @@ export function KnowledgeView() {
                     size="small"
                     key="remove"
                     icon={<DeleteOutlined />}
-                    onClick={() => void removeAgentKnowledge(file.path)}
+                    onClick={async () => {
+                      await removeAgentKnowledge(file.path);
+                      if (activePath === file.path) {
+                        setActivePath(null);
+                        setContent("");
+                      }
+                      await loadFiles();
+                    }}
                     disabled={loading}
                   >
                     {t("knowledge_remove_btn")}
@@ -382,7 +377,7 @@ export function KnowledgeView() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-auto p-6">
-          {statusAlert}
+          {/* {statusAlert} */}
 
           <Tabs
             activeKey={tab}
