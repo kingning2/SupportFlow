@@ -80,10 +80,7 @@ fn safe_category(category: &str) -> Result<String, String> {
     if category.is_empty() {
         category = "uploads".into();
     }
-    if matches!(
-        category.as_str(),
-        "." | ".." | "index" | "log" | "_sources"
-    ) {
+    if matches!(category.as_str(), "." | ".." | "index" | "log" | "_sources") {
         return Err("invalid category name".into());
     }
     Ok(category)
@@ -96,9 +93,7 @@ fn unique_slug(knowledge_dir: &Path, category: &str, slug: &str) -> String {
     }
     for i in 2..1000 {
         let candidate = format!("{slug}-{i}");
-        let path = knowledge_dir
-            .join(category)
-            .join(format!("{candidate}.md"));
+        let path = knowledge_dir.join(category).join(format!("{candidate}.md"));
         if !path.is_file() {
             return candidate;
         }
@@ -147,29 +142,38 @@ pub fn ingest_bytes(
     fs::create_dir_all(&sources_dir).map_err(|e| e.to_string())?;
     let safe_name: String = Regex::new(r"[^\w.\-]+")
         .unwrap()
-        .replace_all(Path::new(filename).file_name().unwrap_or_default().to_str().unwrap_or("file"), "_")
+        .replace_all(
+            Path::new(filename)
+                .file_name()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap_or("file"),
+            "_",
+        )
         .into_owned();
     let safe_archive = format!("{}_{}", &Uuid::new_v4().to_string()[..8], safe_name);
     let archive_path = sources_dir.join(&safe_archive);
     fs::write(&archive_path, &data).map_err(|e| e.to_string())?;
 
     let text = parse_document_file(&archive_path, Some(&ext));
-    let (body, truncated, parse_error) = match text {
+    let (body, truncated) = match text {
         Ok(t) if !t.trim().is_empty() => {
             let tr = truncate_head(&t, Some(INGEST_MAX_LINES), Some(INGEST_MAX_BYTES));
-            (tr.content, tr.truncated, None)
+            (tr.content, tr.truncated)
         }
-        Ok(_) => (
-            "_(No text could be extracted from this file.)_".into(),
-            false,
-            None,
-        ),
+        Ok(_) => {
+            let note = if ext == ".pdf" {
+                "_(No text could be extracted from this PDF. It may be image-only/scanned; try OCR first, then upload again.)_"
+            } else {
+                "_(No text could be extracted from this file.)_"
+            };
+            (note.into(), false)
+        }
         Err(e) => {
             tracing::warn!("[KnowledgeIngest] Parse failed for {filename}: {e}");
-            (format!("_(Could not extract text: {e})_"), false, Some(e))
+            (format!("_(Could not extract text: {e})_"), false)
         }
     };
-    let _ = parse_error;
 
     let title = Path::new(filename)
         .file_stem()
@@ -246,7 +250,12 @@ pub fn ingest_files(
     }
 }
 
-fn append_index(knowledge_dir: &Path, rel_path: &str, title: &str, summary: &str) -> Result<(), String> {
+fn append_index(
+    knowledge_dir: &Path,
+    rel_path: &str,
+    title: &str,
+    summary: &str,
+) -> Result<(), String> {
     let index_path = knowledge_dir.join("index.md");
     if !index_path.is_file() {
         fs::write(&index_path, "# Knowledge Index\n\n").map_err(|e| e.to_string())?;
@@ -255,10 +264,7 @@ fn append_index(knowledge_dir: &Path, rel_path: &str, title: &str, summary: &str
 
     let category = rel_path.split('/').next().unwrap_or("root");
     let section_title = category.replace('-', " ");
-    let section_header = format!(
-        "## {}",
-        title_case_section(&section_title)
-    );
+    let section_header = format!("## {}", title_case_section(&section_title));
     let line = format!("- [{title}]({rel_path}) — {summary}\n");
 
     if content.contains(&section_header) {

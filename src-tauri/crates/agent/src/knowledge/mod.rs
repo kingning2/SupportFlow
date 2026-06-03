@@ -14,6 +14,6 @@ pub use ingest::{
     IngestError, IngestResult, INGEST_MAX_BYTES, INGEST_MAX_LINES,
 };
 pub use service::{
-    KnowledgeFileEntry, KnowledgeGraph, KnowledgeGraphLink, KnowledgeGraphNode, KnowledgeReadResult,
-    KnowledgeService, KnowledgeTree, KnowledgeTreeNode, KnowledgeTreeStats,
+    KnowledgeFileEntry, KnowledgeGraph, KnowledgeGraphLink, KnowledgeGraphNode,
+    KnowledgeReadResult, KnowledgeService, KnowledgeTree, KnowledgeTreeNode, KnowledgeTreeStats,
 };

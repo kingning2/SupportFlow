@@ -73,14 +73,12 @@ pub fn resolve_markitdown_python() -> Option<PathBuf> {
 
 /// Convert a local file to Markdown text via MarkItDown. Returns empty string if output is blank.
 pub fn convert_file_to_markdown(path: &Path) -> Result<String, String> {
-    let python = resolve_markitdown_python()
-        .ok_or_else(|| "MarkItDown: no Python found (set CHANNEL_MARKITDOWN_PYTHON, Python 3.10+)".to_string())?;
+    let python = resolve_markitdown_python().ok_or_else(|| {
+        "MarkItDown: no Python found (set CHANNEL_MARKITDOWN_PYTHON, Python 3.10+)".to_string()
+    })?;
     let script = markitdown_script_path();
     if !script.is_file() {
-        return Err(format!(
-            "MarkItDown helper missing: {}",
-            script.display()
-        ));
+        return Err(format!("MarkItDown helper missing: {}", script.display()));
     }
 
     let output = Command::new(&python)
@@ -91,8 +89,7 @@ pub fn convert_file_to_markdown(path: &Path) -> Result<String, String> {
 
     if output.status.code() == Some(EXIT_NOT_INSTALLED) {
         return Err(
-            "markitdown package not installed (pip install 'markitdown[all]', Python 3.10+)"
-                .into(),
+            "markitdown package not installed (pip install 'markitdown[all]', Python 3.10+)".into(),
         );
     }
     if !output.status.success() {

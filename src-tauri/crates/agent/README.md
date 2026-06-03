@@ -55,7 +55,7 @@ Rust port of Python `agent/`, **incremental** — one slice per PR.
 | `tools/utils/{truncate,diff}.py` | `tools/utils/{truncate,diff}.rs` |
 | `tools/tool_manager.py` (core load) | `tools/tool_manager.rs` |
 
-Uploads / documents: **MarkItDown** → Markdown first, then `memory/chunker` (fallback: pdf-extract, calamine, OOXML). Install: `pip install -r requirements-markitdown.txt` (Python 3.10+, `CHANNEL_MARKITDOWN_PYTHON`).
+Uploads / documents: **MarkItDown** → Markdown first, then `memory/chunker` (fallback: pdf-extract, calamine, OOXML). For PDF, Python helper also tries `pypdf` when MarkItDown returns empty text. Install: `pip install -r requirements-markitdown.txt` (Python 3.10+, `CHANNEL_MARKITDOWN_PYTHON`).
 
 ## Step 6: `send` + memory tools
 

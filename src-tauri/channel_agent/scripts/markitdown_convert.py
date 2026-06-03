@@ -6,6 +6,29 @@ from pathlib import Path
 import os
 
 
+def _extract_pdf_text_with_pypdf(path: Path) -> str:
+    """Fallback extractor for PDF when MarkItDown returns empty text."""
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return ""
+
+    try:
+        reader = PdfReader(str(path))
+    except Exception:
+        return ""
+
+    parts: list[str] = []
+    for page in reader.pages:
+        try:
+            text = page.extract_text() or ""
+        except Exception:
+            text = ""
+        if text.strip():
+            parts.append(text)
+    return "\n\n".join(parts).strip()
+
+
 def main() -> int:
     if len(sys.argv) < 2:
         print("usage: markitdown_convert.py <path>", file=sys.stderr)
@@ -31,7 +54,14 @@ def main() -> int:
     md = MarkItDown(enable_plugins=enable_plugins)
     convert = getattr(md, "convert_local", None) or md.convert
     result = convert(str(path))
-    text = getattr(result, "text_content", None) or ""
+    text = (getattr(result, "text_content", None) or "").strip()
+
+    # Some PDFs are readable by pure Python PDF parsers even when MarkItDown
+    # returns empty (for example due to parser edge cases / plugin differences).
+    # Keep this as a lightweight fallback before Rust legacy parser.
+    if not text and suffix == ".pdf":
+        text = _extract_pdf_text_with_pypdf(path)
+
     sys.stdout.write(text)
     return 0
 

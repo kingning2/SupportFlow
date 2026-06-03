@@ -14,7 +14,17 @@ pub const MAX_INGEST_BYTES: usize = 50 * 1024 * 1024;
 pub const PDF_SUFFIXES: &[&str] = &[".pdf"];
 pub const WORD_SUFFIXES: &[&str] = &[".docx"];
 pub const TEXT_SUFFIXES: &[&str] = &[
-    ".txt", ".md", ".markdown", ".rst", ".csv", ".tsv", ".log", ".json", ".xml", ".html", ".htm",
+    ".txt",
+    ".md",
+    ".markdown",
+    ".rst",
+    ".csv",
+    ".tsv",
+    ".log",
+    ".json",
+    ".xml",
+    ".html",
+    ".htm",
 ];
 pub const SPREADSHEET_SUFFIXES: &[&str] = &[".xls", ".xlsx"];
 pub const PPT_SUFFIXES: &[&str] = &[".ppt", ".pptx"];
@@ -51,15 +61,16 @@ pub fn is_supported_filename(filename: &str) -> bool {
     is_supported_suffix(&ext)
 }
 
-pub fn parse_document_file(file_path: impl AsRef<Path>, suffix: Option<&str>) -> Result<String, String> {
+pub fn parse_document_file(
+    file_path: impl AsRef<Path>,
+    suffix: Option<&str>,
+) -> Result<String, String> {
     let path = file_path.as_ref();
-    let suffix = suffix
-        .map(|s| s.to_lowercase())
-        .unwrap_or_else(|| {
-            path.extension()
-                .map(|e| format!(".{}", e.to_string_lossy().to_lowercase()))
-                .unwrap_or_default()
-        });
+    let suffix = suffix.map(|s| s.to_lowercase()).unwrap_or_else(|| {
+        path.extension()
+            .map(|e| format!(".{}", e.to_string_lossy().to_lowercase()))
+            .unwrap_or_default()
+    });
 
     match markitdown::convert_file_to_markdown(path) {
         Ok(text) if !text.trim().is_empty() => return Ok(text),
@@ -148,8 +159,7 @@ fn parse_text(path: &Path) -> Result<String, String> {
 }
 
 fn parse_spreadsheet(path: &Path) -> Result<String, String> {
-    let mut workbook =
-        open_workbook_auto(path).map_err(|e| format!("open spreadsheet: {e}"))?;
+    let mut workbook = open_workbook_auto(path).map_err(|e| format!("open spreadsheet: {e}"))?;
     let sheet_names = workbook.sheet_names().to_vec();
     let mut parts = Vec::new();
 
@@ -189,9 +199,7 @@ fn parse_ppt(path: &Path) -> Result<String, String> {
         .map(|e| e.to_string_lossy().to_lowercase())
         .unwrap_or_default();
     if suffix == "ppt" {
-        return Err(
-            "Legacy .ppt format is not supported; convert to .pptx or use browser.".into(),
-        );
+        return Err("Legacy .ppt format is not supported; convert to .pptx or use browser.".into());
     }
     parse_pptx_zip(path)
 }
@@ -216,7 +224,9 @@ fn parse_pptx_zip(path: &Path) -> Result<String, String> {
 
     let mut parts = Vec::new();
     for (idx, name) in slide_files.iter().enumerate() {
-        let mut entry = archive.by_name(name).map_err(|e| format!("slide {name}: {e}"))?;
+        let mut entry = archive
+            .by_name(name)
+            .map_err(|e| format!("slide {name}: {e}"))?;
         let mut xml = String::new();
         entry
             .read_to_string(&mut xml)
