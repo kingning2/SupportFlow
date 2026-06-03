@@ -155,7 +155,7 @@ export function AgentConsoleApp() {
 
   return (
     <TooltipProvider>
-      <div className="agent-console flex h-full min-h-0 flex-1 overflow-hidden bg-gray-50 font-sans text-slate-800 dark:bg-[#111111] dark:text-slate-200">
+      <div className="agent-console relative flex h-full min-h-0 flex-1 overflow-hidden bg-gray-50 font-sans text-slate-800 dark:bg-[#111111] dark:text-slate-200">
         <ConsoleSidebar
           navGroups={sidebarNavGroups}
           activeView={activeView}

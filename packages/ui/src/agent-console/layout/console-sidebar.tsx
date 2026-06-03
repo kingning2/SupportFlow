@@ -36,7 +36,7 @@ export function ConsoleSidebar({
     <>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-52 flex-col bg-[#0A0A0A] text-neutral-400 transition-transform duration-300 ease-in-out",
+          "absolute inset-y-0 left-0 z-50 flex w-52 flex-col bg-[#0A0A0A] text-neutral-400 transition-transform duration-300 ease-in-out",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:relative lg:translate-x-0"
         )}
       >

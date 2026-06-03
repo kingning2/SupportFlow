@@ -1,32 +1,93 @@
 "use client";
 
+import { Tooltip as AntdTooltip } from "antd";
 import * as React from "react";
-import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 import { cn } from "@supportflow/shared";
 
-const TooltipProvider = TooltipPrimitive.Provider;
+const TooltipProvider = ({ children }: { children: React.ReactNode; delayDuration?: number }) => (
+  <>{children}</>
+);
 
-const Tooltip = TooltipPrimitive.Root;
+type TooltipProps = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children: React.ReactNode;
+};
 
-const TooltipTrigger = TooltipPrimitive.Trigger;
+const Tooltip = ({ children }: TooltipProps) => <>{children}</>;
+
+const TooltipTrigger = ({
+  asChild,
+  children
+}: {
+  asChild?: boolean;
+  children: React.ReactElement;
+}) => (asChild ? children : children);
 
 const TooltipContent = React.forwardRef<
-  React.ElementRef<typeof TooltipPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => (
-  <TooltipPrimitive.Portal>
-    <TooltipPrimitive.Content
-      ref={ref}
-      sideOffset={sideOffset}
-      className={cn(
-        "bg-primary text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 origin-[--radix-tooltip-content-transform-origin] overflow-hidden rounded-md px-3 py-1.5 text-xs",
-        className
-      )}
-      {...props}
-    />
-  </TooltipPrimitive.Portal>
-));
-TooltipContent.displayName = TooltipPrimitive.Content.displayName;
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    side?: "top" | "right" | "bottom" | "left";
+    sideOffset?: number;
+  }
+>(({ className, side = "top", children, ...props }, ref) => {
+  return (
+    <div ref={ref} className={cn("hidden", className)} data-side={side} {...props}>
+      {children}
+    </div>
+  );
+});
+TooltipContent.displayName = "TooltipContent";
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
+type TooltipCompoundProps = {
+  children: React.ReactNode;
+};
+
+/** Resolves shadcn-style Tooltip + Trigger + Content tree into one antd Tooltip. */
+function TooltipCompound({ children }: TooltipCompoundProps) {
+  let trigger: React.ReactNode = null;
+  let content: React.ReactNode = null;
+  let side: "top" | "right" | "bottom" | "left" = "top";
+
+  React.Children.forEach(children, (child) => {
+    if (!React.isValidElement(child)) return;
+    if (child.type === TooltipTrigger) {
+      trigger = (child.props as { children: React.ReactNode }).children;
+    }
+    if (child.type === TooltipContent) {
+      const props = child.props as {
+        children: React.ReactNode;
+        side?: "top" | "right" | "bottom" | "left";
+      };
+      content = props.children;
+      side = props.side ?? "top";
+    }
+  });
+
+  if (!trigger) {
+    return <>{children}</>;
+  }
+
+  return (
+    <AntdTooltip title={content} placement={side}>
+      <span className="inline-flex">{trigger}</span>
+    </AntdTooltip>
+  );
+}
+
+const TooltipRoot = ({ children, ...props }: TooltipProps) => {
+  void props;
+  const childArray = React.Children.toArray(children);
+  const hasContent = childArray.some(
+    (child) => React.isValidElement(child) && child.type === TooltipContent
+  );
+
+  if (hasContent) {
+    return <TooltipCompound>{children}</TooltipCompound>;
+  }
+
+  return <Tooltip>{children}</Tooltip>;
+};
+
+export { TooltipRoot as Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
