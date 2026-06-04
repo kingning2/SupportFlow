@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@supportflow/shared";
+import { Button } from "@supportflow/ui/button";
 
 import type { WeworkConversationSummary } from "../types/wework-conversation";
 
@@ -18,64 +19,71 @@ export function ConversationDetail({ conversation }: ConversationDetailProps) {
 
   if (collapsed) {
     return (
-      <div className="flex w-10 shrink-0 flex-col border-l border-[hsl(var(--border))] bg-white">
-        <button
+      <div className="wework-detail-panel bg-card/88 flex w-10 shrink-0 flex-col border-l border-[hsl(var(--border))]">
+        <Button
           type="button"
-          className="flex flex-1 cursor-pointer items-center justify-center text-slate-400 hover:text-[var(--wework-blue)]"
+          variant="ghost"
+          className="text-muted-foreground hover:text-channel flex flex-1 items-center justify-center rounded-none"
           onClick={() => setCollapsed(false)}
           aria-label={t("wework_detail_expand")}
         >
           <ChevronLeft className="size-4" />
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
     <aside className="wework-inbox-detail flex min-h-0 shrink-0 flex-col">
-      <div className="flex shrink-0 items-center justify-between border-b border-[hsl(var(--border))] px-3 py-2">
-        <span className="text-xs font-semibold text-slate-600">{t("wework_detail_title")}</span>
-        <button
+      <div className="border-border/70 flex shrink-0 items-center justify-between border-b px-3 py-3">
+        <span className="text-foreground text-sm font-semibold">{t("wework_detail_title")}</span>
+        <Button
           type="button"
-          className="cursor-pointer rounded p-1 text-slate-400 hover:bg-slate-100"
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground"
           onClick={() => setCollapsed(true)}
           aria-label={t("wework_detail_collapse")}
         >
           <ChevronRight className="size-4" />
-        </button>
+        </Button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-3 text-sm">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 text-sm">
         {!conversation ? (
-          <p className="text-slate-400">{t("wework_detail_empty")}</p>
+          <p className="text-muted-foreground">{t("wework_detail_empty")}</p>
         ) : (
           <dl className="space-y-3">
             <div>
-              <dt className="text-xs text-slate-500">{t("wework_detail_session")}</dt>
-              <dd className="mt-0.5 font-mono text-xs break-all text-[#1A2B4A]">
+              <dt className="text-muted-foreground text-xs">{t("wework_detail_session")}</dt>
+              <dd className="text-foreground mt-0.5 font-mono text-xs break-all">
                 {conversation.sessionId}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-500">{t("wework_detail_conversation_id")}</dt>
-              <dd className="mt-0.5 font-mono text-xs break-all text-[#1A2B4A]">
+              <dt className="text-muted-foreground text-xs">
+                {t("wework_detail_conversation_id")}
+              </dt>
+              <dd className="text-foreground mt-0.5 font-mono text-xs break-all">
                 {conversation.conversationId}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-500">{t("wework_detail_ai")}</dt>
+              <dt className="text-muted-foreground text-xs">{t("wework_detail_ai")}</dt>
               <dd className="mt-1">
                 <span
                   className={cn(
                     "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-                    "bg-[var(--wework-blue-light)] text-[var(--wework-blue)]"
+                    "bg-channel-muted text-channel"
                   )}
                 >
                   {t("wework_detail_ai_on")}
                 </span>
               </dd>
             </div>
-            <p className="text-xs leading-relaxed text-slate-500">{t("wework_detail_mock_hint")}</p>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              {t("wework_detail_mock_hint")}
+            </p>
           </dl>
         )}
       </div>

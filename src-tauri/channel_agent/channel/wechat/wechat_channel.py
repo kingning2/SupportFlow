@@ -1,17 +1,15 @@
 # encoding:utf-8
-"""
-Personal WeChat channel via vendored itchat (channel_type=wx).
-
-Distinct from channel_type=weixin (official ilink bot API).
-"""
+"""Personal WeChat channel via vendored itchat (channel_type=wx)."""
 
 import io
 import json
 import os
 import threading
 import time
+import base64
 
 import requests
+import qrcode as qr_lib
 
 from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
@@ -83,35 +81,58 @@ def _module_qr_callback(uuid, status, qrcode):
         url = f"https://login.weixin.qq.com/l/{uuid}"
         ch._current_qr_url = url
         ch.login_status = "waiting_scan"
+        ch.notify_channel_status(
+            "waiting_scan",
+            qr_code_url=url,
+            qr_image=_qr_to_data_uri(url),
+        )
         logger.info(f"[WechatChannel] QR ready: {url}")
         _print_terminal_qr(uuid)
         _notify_cloud_qrcode(url)
     elif status == "201":
         ch.login_status = "scanned"
+        ch.notify_channel_status(
+            "scanned",
+            qr_code_url=ch._current_qr_url,
+            qr_image=_qr_to_data_uri(ch._current_qr_url),
+        )
     elif status == "200":
         ch.login_status = "logged_in"
         ch._current_qr_url = ""
+        ch.notify_channel_status("logged_in")
+
+
+def _qr_to_data_uri(data: str) -> str:
+    """Convert a QR URL into an inline PNG data URI for the frontend."""
+    if not data:
+        return ""
+    qr = qr_lib.QRCode(error_correction=qr_lib.constants.ERROR_CORRECT_L, box_size=6, border=2)
+    qr.add_data(data)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+    return f"data:image/png;base64,{b64}"
 
 
 def _print_terminal_qr(uuid):
-    """Log QR link for terminal users; image is shown in Web console only (no desktop viewer)."""
+    """Log QR link for terminal users and print an ASCII QR."""
     url = f"https://login.weixin.qq.com/l/{uuid}"
-    port = conf().get("web_port", 9899)
     print("\n" + "=" * 60)
     print("  个人微信(itchat) 请扫码登录")
     print(f"  Web 控制台: http://127.0.0.1:{port}  → 通道 → 查看二维码")
     print(f"  或直接打开链接: {url}")
     print("=" * 60)
     # Optional ASCII QR when not using web UI (no PIL Image.show — avoids popping OS photo viewer)
-    if not conf().get("web_console", True):
-        try:
-            import qrcode as qr_lib
-            qr = qr_lib.QRCode(border=1)
-            qr.add_data(url)
-            qr.make(fit=True)
-            qr.print_ascii(invert=True)
-        except UnicodeEncodeError:
-            pass
+    try:
+        import qrcode as qr_lib
+        qr = qr_lib.QRCode(border=1)
+        qr.add_data(url)
+        qr.make(fit=True)
+        qr.print_ascii(invert=True)
+    except UnicodeEncodeError:
+        pass
 
 
 @singleton
@@ -135,6 +156,7 @@ class WechatChannel(ChatChannel):
         self._stop_event.clear()
         logger.info("[WechatChannel] Starting itchat (channel_type=wx)...")
         self.login_status = self.LOGIN_STATUS_WAITING
+        self.notify_channel_status("waiting_scan")
 
         hot_reload = conf().get("hot_reload", False)
         status_path = os.path.join(get_appdata_dir(), "itchat.pkl")
@@ -160,6 +182,11 @@ class WechatChannel(ChatChannel):
             self.name = itchat.instance.storageClass.nickName
             self.login_status = self.LOGIN_STATUS_OK
             self._current_qr_url = ""
+            self.notify_channel_status(
+                "logged_in",
+                user_id=str(self.user_id),
+                display_name=str(self.name),
+            )
             logger.info(
                 "[WechatChannel] Login success, user_id=%s nickname=%s",
                 self.user_id,
@@ -170,6 +197,7 @@ class WechatChannel(ChatChannel):
             itchat.run()
         except Exception as e:
             self.login_status = self.LOGIN_STATUS_IDLE
+            self.notify_channel_status("stopped", message=str(e))
             if not self._stop_event.is_set():
                 logger.exception(f"[WechatChannel] startup failed: {e}")
 
@@ -178,6 +206,7 @@ class WechatChannel(ChatChannel):
         self._stop_event.set()
         self.login_status = self.LOGIN_STATUS_IDLE
         self._current_qr_url = ""
+        self.notify_channel_status("stopped")
         try:
             itchat.logout()
         except Exception as e:

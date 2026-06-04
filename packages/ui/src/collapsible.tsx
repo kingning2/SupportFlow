@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
+import { Button } from "./button";
 
 type CollapsibleContextValue = {
   open: boolean;
@@ -50,7 +51,7 @@ const Collapsible = ({
 const CollapsibleTrigger = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean }
->(({ asChild, children, onClick, ...props }, ref) => {
+>(({ asChild, children, onClick, color: _color, ...props }, ref) => {
   const ctx = React.useContext(CollapsibleContext);
   if (!ctx) {
     throw new Error("CollapsibleTrigger must be used within Collapsible");
@@ -70,9 +71,9 @@ const CollapsibleTrigger = React.forwardRef<
   }
 
   return (
-    <button ref={ref} type="button" onClick={handleClick} {...props}>
+    <Button ref={ref} type="button" onClick={handleClick} {...props}>
       {children}
-    </button>
+    </Button>
   );
 });
 CollapsibleTrigger.displayName = "CollapsibleTrigger";

@@ -4,6 +4,7 @@ import { MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@supportflow/shared";
+import { Input } from "@supportflow/ui/input";
 
 import type { WeworkConversationSummary, WeworkMessage } from "../types/wework-conversation";
 
@@ -26,29 +27,33 @@ export function MessageThread({ conversation, messages }: MessageThreadProps) {
 
   if (!conversation) {
     return (
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-2 bg-[hsl(var(--muted)/0.35)] p-6 text-center">
-        <MessageSquare className="size-10 text-slate-300" />
-        <p className="text-sm text-slate-500">{t("wework_inbox_select_conversation")}</p>
+      <div className="wework-thread-panel flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+        <div className="bg-channel-muted/70 flex size-18 items-center justify-center rounded-3xl">
+          <MessageSquare className="text-channel/50 size-9" />
+        </div>
+        <p className="text-foreground text-base font-medium">
+          {t("wework_inbox_select_conversation")}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[hsl(var(--muted)/0.35)]">
-      <header className="flex shrink-0 items-center justify-between border-b border-[hsl(var(--border))] bg-white px-4 py-3">
+    <div className="wework-thread-panel flex min-h-0 min-w-0 flex-1 flex-col">
+      <header className="bg-card/88 border-border/70 flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur">
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-[#1A2B4A]">{conversation.title}</h3>
-          <p className="truncate text-xs text-slate-500">{conversation.conversationId}</p>
+          <h3 className="text-foreground truncate text-sm font-semibold">{conversation.title}</h3>
+          <p className="text-muted-foreground truncate text-xs">{conversation.conversationId}</p>
         </div>
-        <span className="rounded-full bg-[var(--wework-blue-light)] px-2 py-0.5 text-[10px] font-medium text-[var(--wework-blue)]">
+        <span className="bg-channel-muted text-channel inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium">
           {conversation.kind === "group" ? t("wework_kind_group") : t("wework_kind_direct")}
         </span>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-        <div className="mx-auto flex max-w-3xl flex-col gap-3">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+        <div className="mx-auto flex max-w-3xl flex-col gap-4">
           {messages.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">
+            <p className="text-muted-foreground py-8 text-center text-sm">
               {t("wework_inbox_no_messages")}
             </p>
           ) : (
@@ -60,7 +65,7 @@ export function MessageThread({ conversation, messages }: MessageThreadProps) {
                   className={cn("flex flex-col gap-0.5", isOutbound ? "items-end" : "items-start")}
                 >
                   {msg.senderName && !isOutbound ? (
-                    <span className="px-1 text-[10px] text-slate-500">{msg.senderName}</span>
+                    <span className="text-muted-foreground px-1 text-[10px]">{msg.senderName}</span>
                   ) : null}
                   <div
                     className={cn(
@@ -73,7 +78,7 @@ export function MessageThread({ conversation, messages }: MessageThreadProps) {
                   >
                     {msg.content}
                   </div>
-                  <span className="px-1 text-[10px] text-slate-400">
+                  <span className="text-muted-foreground px-1 text-[10px]">
                     {formatMessageTime(msg.createdAt)}
                   </span>
                 </div>
@@ -83,15 +88,15 @@ export function MessageThread({ conversation, messages }: MessageThreadProps) {
         </div>
       </div>
 
-      <footer className="shrink-0 border-t border-[hsl(var(--border))] bg-white p-3">
+      <footer className="bg-card/88 border-border/70 shrink-0 border-t p-3 backdrop-blur">
         <div className="mx-auto max-w-3xl">
-          <input
+          <Input
             type="text"
             disabled
             placeholder={t("wework_inbox_composer_placeholder")}
-            className="w-full cursor-not-allowed rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] px-3 py-2 text-sm text-slate-400"
+            className="bg-background border-border text-muted-foreground h-10 w-full rounded-xl text-sm"
           />
-          <p className="mt-1 text-center text-[10px] text-slate-400">
+          <p className="text-muted-foreground mt-1 text-center text-[10px]">
             {t("wework_inbox_composer_hint")}
           </p>
         </div>

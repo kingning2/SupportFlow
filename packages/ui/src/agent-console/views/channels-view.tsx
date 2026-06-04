@@ -14,6 +14,7 @@ import { ActiveChannelCard } from "../views/channels/active-channel-card";
 import { ChannelAddPanel } from "../views/channels/channel-add-panel";
 import { channelLabelKey } from "@supportflow/shared/tauri-bridge/enums";
 import { getDevChannel } from "../lib/agent-console/dev-channel";
+import { Button } from "@supportflow/ui/button";
 
 export function ChannelsView() {
   const { t, i18n } = useTranslation("console");
@@ -95,41 +96,40 @@ export function ChannelsView() {
         <div className="mx-auto max-w-4xl">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                {t(pageTitleKey)}
-              </h2>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t(pageDescKey)}</p>
+              <h2 className="text-foreground text-xl font-bold">{t(pageTitleKey)}</h2>
+              <p className="text-muted-foreground mt-1 text-sm">{t(pageDescKey)}</p>
             </div>
             {!devChannel ? (
-              <button
+              <Button
                 type="button"
                 disabled={!!loadError}
-                className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#35A85B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#228547] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center gap-2"
                 onClick={() => setAddOpen(true)}
               >
                 <Plus className="size-3.5" />
                 {t("channels_add")}
-              </button>
+              </Button>
             ) : null}
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
+            <div className="text-muted-foreground flex items-center justify-center gap-2 py-8 text-sm">
               <Loader2 className="size-4 animate-spin" />
               <span>{t("channels_loading")}</span>
             </div>
           ) : loadError ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+            <div className="bg-warning/10 text-warning-foreground border-warning/30 rounded-xl border p-4 text-sm">
               <p className="font-medium">{t("channels_python_unreachable_title")}</p>
               <p className="mt-2 text-xs opacity-90">{loadError}</p>
               <p className="mt-3 text-xs opacity-80">{t("channels_python_unreachable_hint")}</p>
-              <button
+              <Button
                 type="button"
-                className="mt-4 cursor-pointer rounded-lg border border-amber-300 px-3 py-1.5 text-xs dark:border-amber-800"
+                variant="outline"
+                className="border-warning/40 mt-4 text-xs"
                 onClick={() => void load()}
               >
                 {t("channels_retry")}
-              </button>
+              </Button>
             </div>
           ) : (
             <>
@@ -140,15 +140,11 @@ export function ChannelsView() {
               >
                 {activeChannels.length === 0 && !addOpen && !devChannel ? (
                   <div className="flex flex-col items-center justify-center py-20">
-                    <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20">
-                      <Radio className="size-7 text-blue-400" />
+                    <div className="bg-info/10 mb-4 flex size-16 items-center justify-center rounded-2xl">
+                      <Radio className="text-info size-7" />
                     </div>
-                    <p className="font-medium text-slate-500 dark:text-slate-400">
-                      {t("channels_empty")}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">
-                      {t("channels_empty_desc")}
-                    </p>
+                    <p className="text-muted-foreground font-medium">{t("channels_empty")}</p>
+                    <p className="text-muted-foreground mt-1 text-sm">{t("channels_empty_desc")}</p>
                   </div>
                 ) : (
                   activeChannels.map((channel) => (

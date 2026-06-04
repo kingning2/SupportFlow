@@ -230,44 +230,12 @@ struct ChannelMeta {
 
 const KNOWN_CHANNELS: &[ChannelMeta] = &[
     ChannelMeta {
-        id: "feishu",
-        label: "飞书",
-    },
-    ChannelMeta {
-        id: "dingtalk",
-        label: "钉钉",
-    },
-    ChannelMeta {
-        id: "weixin",
-        label: "微信",
-    },
-    ChannelMeta {
         id: "wx",
-        label: "微信 (itchat)",
+        label: "个人微信",
     },
     ChannelMeta {
         id: "wework",
-        label: "企业微信",
-    },
-    ChannelMeta {
-        id: "wechatmp",
-        label: "微信公众号",
-    },
-    ChannelMeta {
-        id: "wechatmp_service",
-        label: "微信公众号（服务号）",
-    },
-    ChannelMeta {
-        id: "wechatcom_app",
-        label: "企业微信应用",
-    },
-    ChannelMeta {
-        id: "wecom_bot",
-        label: "企微机器人",
-    },
-    ChannelMeta {
-        id: "qq",
-        label: "QQ",
+        label: "企微个人号",
     },
     ChannelMeta {
         id: "terminal",

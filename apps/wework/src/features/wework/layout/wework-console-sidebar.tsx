@@ -1,6 +1,8 @@
 "use client";
 
-import { Building2, ChevronRight } from "lucide-react";
+import { Collapse, Menu } from "antd";
+import type { MenuItemType } from "antd/es/menu/interface";
+import { Building2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@supportflow/shared";
@@ -40,20 +42,23 @@ export function WeworkConsoleSidebar({
 }: WeworkConsoleSidebarProps) {
   const { t } = useTranslation("console");
   const showAccount = connectionStatus === "ready" && connectedAccountName;
+  const activeGroupKeys = WEWORK_NAV_GROUPS.filter((group) => openGroups[group.id]).map(
+    (group) => group.id
+  );
 
   return (
     <aside className="wework-console-sidebar flex min-h-0 shrink-0 flex-col">
       <div
         className={cn(
-          "shrink-0 border-b border-[hsl(var(--border))] px-4",
-          showAccount ? "py-3" : "flex h-14 items-center"
+          "shrink-0 border-b border-[hsl(var(--border))] px-3",
+          showAccount ? "py-2.5" : "flex h-12 items-center"
         )}
       >
         {showAccount ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <AccountAvatar name={connectedAccountName} size="md" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-[#1A2B4A]">
+              <p className="text-foreground truncate text-sm font-semibold">
                 {connectedAccountName}
               </p>
               <p className="flex items-center gap-1.5 text-[10px] text-emerald-600">
@@ -64,18 +69,18 @@ export function WeworkConsoleSidebar({
           </div>
         ) : (
           <div className="flex w-full items-center gap-3">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--wework-blue)]">
+            <div className="bg-channel flex size-8 shrink-0 items-center justify-center rounded-xl shadow-sm">
               <Building2 className="size-4 text-white" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-[#1A2B4A]">
+              <p className="text-foreground truncate text-sm font-semibold">
                 {t("wework_brand_title")}
               </p>
-              <p className="flex items-center gap-1.5 text-[10px] text-slate-500">
+              <p className="text-muted-foreground flex items-center gap-1.5 text-[10px]">
                 <span
                   className={cn(
                     "size-1.5 rounded-full",
-                    connectionStatus === "connecting" ? "bg-amber-400" : "bg-slate-300"
+                    connectionStatus === "connecting" ? "bg-warning" : "bg-muted-foreground/40"
                   )}
                 />
                 {t(connectionLabelKey(connectionStatus))}
@@ -85,44 +90,47 @@ export function WeworkConsoleSidebar({
         )}
       </div>
 
-      <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
-        {WEWORK_NAV_GROUPS.map((group) => (
-          <div key={group.id} className="mb-2">
-            <button
-              type="button"
-              className="flex w-full cursor-pointer items-center gap-1 px-2 py-1.5 text-[10px] font-semibold tracking-wide text-slate-400 uppercase"
-              onClick={() => onToggleGroup(group.id)}
-            >
-              <ChevronRight
-                className={cn("size-3 transition-transform", openGroups[group.id] && "rotate-90")}
-              />
-              {t(group.labelKey)}
-            </button>
-            {openGroups[group.id] ? (
-              <ul className="mt-0.5 space-y-0.5 pl-1">
-                {group.items.map((item) => {
+      <nav className="min-h-0 flex-1 overflow-y-auto px-1.5 py-2">
+        <Collapse
+          ghost
+          activeKey={activeGroupKeys}
+          onChange={(keys) => {
+            const nextKeys = new Set(Array.isArray(keys) ? keys : [keys]);
+            for (const group of WEWORK_NAV_GROUPS) {
+              const isOpen = openGroups[group.id];
+              const nextOpen = nextKeys.has(group.id);
+              if (isOpen !== nextOpen) {
+                onToggleGroup(group.id);
+              }
+            }
+          }}
+          items={WEWORK_NAV_GROUPS.map((group) => ({
+            key: group.id,
+            label: (
+              <span className="text-muted-foreground text-[10px] font-semibold tracking-[0.18em] uppercase">
+                {t(group.labelKey)}
+              </span>
+            ),
+            children: (
+              <Menu
+                mode="inline"
+                selectedKeys={[activeRoute]}
+                items={group.items.map((item) => {
                   const Icon = item.icon;
-                  const isActive = activeRoute === item.route;
-                  return (
-                    <li key={item.route}>
-                      <button
-                        type="button"
-                        className={cn(
-                          "wework-console-sidebar-item flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-50",
-                          isActive && "active"
-                        )}
-                        onClick={() => onNavigate(item.route)}
-                      >
-                        <Icon className="size-4 shrink-0 opacity-80" />
-                        <span className="truncate">{t(item.labelKey)}</span>
-                      </button>
-                    </li>
-                  );
+                  return {
+                    key: item.route,
+                    icon: <Icon className="size-4 shrink-0 opacity-80" />,
+                    label: <span className="truncate">{t(item.labelKey)}</span>
+                  } satisfies MenuItemType;
                 })}
-              </ul>
-            ) : null}
-          </div>
-        ))}
+                className="wework-sidebar-menu border-none bg-transparent"
+                onClick={({ key }) => onNavigate(key as WeworkConsoleRoute)}
+              />
+            ),
+            className: "!mb-1 !border-none !bg-transparent"
+          }))}
+          className="wework-sidebar-collapse bg-transparent"
+        />
       </nav>
     </aside>
   );

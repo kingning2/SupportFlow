@@ -1,13 +1,11 @@
 # encoding:utf-8
-"""Channel lifecycle (extracted from SupportFlow Agent app.py)."""
+"""Channel lifecycle for the supported desktop channels."""
 
 from __future__ import annotations
 
 import threading
 import time
 
-from channel import channel_factory
-from common import const
 from common.log import logger
 
 _channel_mgr = None
@@ -15,15 +13,18 @@ _singleton_cache: dict = {}
 
 
 def get_channel_manager():
+    """获取当前激活的通道管理器单例。"""
     return _channel_mgr
 
 
 def set_channel_manager(mgr) -> None:
+    """设置当前激活的通道管理器单例。"""
     global _channel_mgr
     _channel_mgr = mgr
 
 
 def clear_singleton_cache(channel_name: str | None = None) -> None:
+    """清理指定通道或全部通道的单例缓存。"""
     if channel_name is None:
         _singleton_cache.clear()
         return
@@ -31,15 +32,6 @@ def clear_singleton_cache(channel_name: str | None = None) -> None:
     _singleton_cache.pop(channel_name, None)
 
     cls_map = {
-        "web": "channel.web.web_channel.WebChannel",
-        "wechatmp": "channel.wechatmp.wechatmp_channel.WechatMPChannel",
-        "wechatmp_service": "channel.wechatmp.wechatmp_channel.WechatMPChannel",
-        "wechatcom_app": "channel.wechatcom.wechatcomapp_channel.WechatComAppChannel",
-        const.FEISHU: "channel.feishu.feishu_channel.FeiShuChanel",
-        const.DINGTALK: "channel.dingtalk.dingtalk_channel.DingTalkChanel",
-        const.WECOM_BOT: "channel.wecom_bot.wecom_bot_channel.WecomBotChannel",
-        const.QQ: "channel.qq.qq_channel.QQChannel",
-        const.WEIXIN: "channel.weixin.weixin_channel.WeixinChannel",
         "wx": "channel.wechat.wechat_channel.WechatChannel",
         "wework": "channel.wework.wework_channel.WeworkChannel",
     }
@@ -49,9 +41,7 @@ def clear_singleton_cache(channel_name: str | None = None) -> None:
 
             reset_wework_client()
         except Exception as e:
-            logger.warning(
-                "[ChannelManager] Failed to reset wework ntwork client: %s", e
-            )
+            logger.warning("[ChannelManager] Failed to reset wework ntwork client: %s", e)
 
     module_path = cls_map.get(channel_name)
     if not module_path:
@@ -59,8 +49,7 @@ def clear_singleton_cache(channel_name: str | None = None) -> None:
     try:
         import importlib
 
-        parts = module_path.rsplit(".", 1)
-        module_name, class_name = parts[0], parts[1]
+        module_name, class_name = module_path.rsplit(".", 1)
         module = importlib.import_module(module_name)
         wrapper = getattr(module, class_name, None)
         if wrapper and hasattr(wrapper, "__closure__") and wrapper.__closure__:
@@ -70,8 +59,7 @@ def clear_singleton_cache(channel_name: str | None = None) -> None:
                     if isinstance(cell_contents, dict):
                         cell_contents.clear()
                         logger.debug(
-                            "[ChannelManager] Cleared singleton cache for %s",
-                            class_name,
+                            "[ChannelManager] Cleared singleton cache for %s", class_name
                         )
                         break
                 except ValueError:
@@ -81,7 +69,7 @@ def clear_singleton_cache(channel_name: str | None = None) -> None:
 
 
 def parse_channel_type(raw) -> list:
-    """Parse channel_type; dedupe while preserving order (avoids multiple wework startups)."""
+    """解析 channel_type 并在保持顺序的前提下去重。"""
     if isinstance(raw, list):
         items = [str(ch).strip() for ch in raw if ch and str(ch).strip()]
     elif isinstance(raw, str):
@@ -99,12 +87,31 @@ def parse_channel_type(raw) -> list:
 
 
 def parse_external_channel_type(raw) -> list:
-    """解析桌面端可启动的外部渠道，过滤 web/terminal 这类内置渠道。"""
-    return [name for name in parse_channel_type(raw) if name not in ("web", "terminal")]
+    """解析桌面侧可启动的外部通道列表。"""
+    return parse_channel_type(raw)
+
+
+def create_channel(channel_type: str):
+    """根据通道类型创建对应的通道实例。"""
+    if channel_type == "wx":
+        from channel.wechat.wechat_channel import WechatChannel
+
+        ch = WechatChannel()
+    elif channel_type == "wework":
+        from channel.wework.wework_channel import WeworkChannel
+
+        ch = WeworkChannel()
+    else:
+        raise RuntimeError(f"unknown channel type: {channel_type!r}")
+    ch.channel_type = channel_type
+    return ch
 
 
 class ChannelManager:
+    """管理 sidecar 中的通道实例与工作线程。"""
+
     def __init__(self):
+        """初始化空的运行时状态。"""
         self._channels = {}
         self._threads = {}
         self._primary_channel = None
@@ -113,22 +120,26 @@ class ChannelManager:
 
     @property
     def channel(self):
+        """返回首个启动的通道实例。"""
         return self._primary_channel
 
     def get_channel(self, channel_name: str):
+        """按名称返回当前运行中的通道实例。"""
         return self._channels.get(channel_name)
 
     def is_channel_running(self, channel_name: str) -> bool:
+        """判断指定通道线程是否仍然存活。"""
         with self._lock:
             thread = self._threads.get(channel_name)
             return thread is not None and thread.is_alive()
 
     def start(self, channel_names: list, first_start: bool = False):
+        """启动指定通道列表中尚未运行的通道。"""
         channel_names = parse_external_channel_type(channel_names)
         with self._lock:
             channels = []
             for name in channel_names:
-                ch = channel_factory.create_channel(name)
+                ch = create_channel(name)
                 ch.cloud_mode = self.cloud_mode
                 self._channels[name] = ch
                 channels.append((name, ch))
@@ -148,18 +159,24 @@ class ChannelManager:
                     continue
                 if i > 0:
                     time.sleep(0.1)
-                t = threading.Thread(target=self._run_channel, args=(name, ch), daemon=True)
-                self._threads[name] = t
-                t.start()
+                thread = threading.Thread(
+                    target=self._run_channel,
+                    args=(name, ch),
+                    daemon=True,
+                )
+                self._threads[name] = thread
+                thread.start()
                 logger.info("[ChannelManager] started '%s'", name)
 
     def _run_channel(self, name: str, channel):
+        """在线程中执行单个通道的启动流程。"""
         try:
             channel.startup()
         except Exception as e:
             logger.error("[ChannelManager] channel '%s' crashed: %s", name, e, exc_info=True)
 
     def stop(self, channel_name: str):
+        """停止指定通道。"""
         with self._lock:
             ch = self._channels.pop(channel_name, None)
             self._threads.pop(channel_name, None)
@@ -170,6 +187,7 @@ class ChannelManager:
                 logger.warning("[ChannelManager] stop '%s': %s", channel_name, e)
 
     def restart(self, channel_name: str):
+        """重启指定通道，并同步清理其单例缓存。"""
         self.stop(channel_name)
         clear_singleton_cache(channel_name)
         time.sleep(1)

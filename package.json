@@ -16,7 +16,6 @@
     "build:flavor:full": "node scripts/build-flavor.mjs full",
     "build:flavor:wework": "node scripts/build-flavor.mjs wework",
     "build:flavor:wechat": "node scripts/build-flavor.mjs wechat",
-    "create:channel": "node scripts/create-channel-app.mjs",
     "start": "pnpm --filter @supportflow/app-full start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -36,19 +35,11 @@
     "prepare": "husky",
     "tauri:dev": "tauri dev --no-watch",
     "tauri:dev:wechat": "node scripts/tauri-dev-channel.mjs wechat",
-    "tauri:dev:weixin": "node scripts/tauri-dev-channel.mjs weixin",
     "tauri:dev:wx": "node scripts/tauri-dev-channel.mjs wx",
-    "tauri:dev:feishu": "node scripts/tauri-dev-channel.mjs feishu",
-    "tauri:dev:dingtalk": "node scripts/tauri-dev-channel.mjs dingtalk",
-    "tauri:dev:wecom": "node scripts/tauri-dev-channel.mjs wecom",
-    "tauri:dev:wecom_bot": "node scripts/tauri-dev-channel.mjs wecom_bot",
     "tauri:dev:wework": "node scripts/tauri-dev-channel.mjs wework",
     "tauri:build": "node scripts/tauri-build-flavor.mjs full",
     "tauri:build:wework": "node scripts/tauri-build-flavor.mjs wework",
-    "tauri:build:wechat": "node scripts/tauri-build-flavor.mjs wechat",
-    "tauri:dev:qq": "node scripts/tauri-dev-channel.mjs qq",
-    "tauri:dev:wechatcom": "node scripts/tauri-dev-channel.mjs wechatcom",
-    "tauri:dev:wechatmp": "node scripts/tauri-dev-channel.mjs wechatmp"
+    "tauri:build:wechat": "node scripts/tauri-build-flavor.mjs wechat"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.1",

@@ -48,6 +48,25 @@ fn should_skip_deferred_channel_autostart() -> bool {
         .unwrap_or(false)
 }
 
+fn deferred_autostart_channels(config_path: &Path) -> Result<Vec<String>, String> {
+    let raw = crate::utils::fs::read_to_string(config_path)?;
+    let root: serde_json::Value = crate::utils::json::from_str(&raw)?;
+    let configured = crate::utils::channel::parse_desktop_channel_types(root.get("channel_type"));
+    if let Some(dev_channel) = crate::utils::env::get("DEV_CHANNEL") {
+        let trimmed = dev_channel.trim().to_string();
+        if trimmed == "wework" || trimmed == "wx" {
+            return Ok(Vec::new());
+        }
+        if !trimmed.is_empty() {
+            return Ok(configured
+                .into_iter()
+                .filter(|name| name == &trimmed)
+                .collect());
+        }
+    }
+    Ok(configured)
+}
+
 /// Bundled agent config (`src-tauri/resources/config.json` or template). Single source of truth.
 fn resolve_bundled_config(app: &AppHandle) -> Result<PathBuf, String> {
     // Dev: `src-tauri/resources/config.json` is gitignored and often not copied to
@@ -222,6 +241,15 @@ fn collect_markdown_files(root: &Path, out: &mut Vec<PathBuf>) -> Result<(), Str
 }
 
 impl AgentRuntime {
+    /// Return the owning Tauri app handle for cross-context helpers.
+    ///
+    /// # Returns
+    ///
+    /// * `AppHandle` - Cloned app handle
+    pub fn app_handle(&self) -> AppHandle {
+        self.app.clone()
+    }
+
     /// Initialize runtime with writable workspace, bundled config, and lazy agent state.
     pub fn initialize(app: &AppHandle) -> Result<Self, String> {
         let (workspace, config_path) = resolve_agent_dirs(app)?;
@@ -274,28 +302,26 @@ impl AgentRuntime {
                     .await;
                 *self.channel_sidecar.lock().await = Some(sidecar.clone());
                 crate::log_info!("Channel sidecar ready (deferred start)");
-                if should_skip_deferred_channel_autostart() {
-                    crate::log_info!(
-                        "Channel autostart skipped (DEV_CHANNEL manual-connect preset)"
-                    );
-                } else if let Err(e) = sidecar.channels_autostart().await {
-                    crate::log_warn!("Channel autostart RPC failed: {e}");
-                } else if let Ok(status) = sidecar.channels_status().await {
-                    let running = status
-                        .get("running")
-                        .and_then(|v| v.as_array())
-                        .map(|a| {
-                            a.iter()
-                                .filter_map(|v| v.as_str())
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        })
-                        .unwrap_or_default();
-                    if running.is_empty() {
-                        crate::log_info!("Channel sidecar: no external channels running");
+                let channels = deferred_autostart_channels(&self.config_path).unwrap_or_default();
+                if channels.is_empty() {
+                    if should_skip_deferred_channel_autostart() {
+                        crate::log_info!(
+                            "Channel autostart skipped (DEV_CHANNEL manual-connect preset)"
+                        );
                     } else {
-                        crate::log_info!("Channel sidecar running: {running}");
+                        crate::log_info!("Channel sidecar: no external channels configured");
                     }
+                } else {
+                    for channel in &channels {
+                        if let Err(e) = sidecar.channel_start(channel).await {
+                            crate::log_warn!(
+                                "Channel autostart start failed for {}: {}",
+                                channel,
+                                e
+                            );
+                        }
+                    }
+                    crate::log_info!("Channel sidecar running: {}", channels.join(", "));
                 }
             }
             Err(e) => {
@@ -318,6 +344,17 @@ impl AgentRuntime {
             .await;
         *self.channel_sidecar.lock().await = Some(sidecar.clone());
         Ok(sidecar)
+    }
+
+    /// Return a running channel sidecar instance, starting it on demand.
+    ///
+    /// # Returns
+    ///
+    /// * `Arc<ChannelPythonSidecar>` - Shared sidecar handle ready for runtime RPCs
+    pub async fn ensure_channel_sidecar(
+        self: &Arc<Self>,
+    ) -> Result<Arc<crate::context::channel_python_sidecar::ChannelPythonSidecar>, String> {
+        self.ensure_sidecar().await
     }
 
     /// LLM reply for external channels (Python sidecar calls via `agent.reply` RPC).
@@ -714,12 +751,11 @@ impl AgentRuntime {
         workspace_console::list_channels_from_config(&self.config_path)
     }
 
-    /// Channel catalog via SupportFlow Agent Python stdio RPC.
+    /// Channel catalog aggregated in Rust using static definitions and runtime status.
     pub async fn channel_python_channels_get(
         self: &Arc<Self>,
     ) -> Result<serde_json::Value, String> {
-        let sidecar = self.ensure_sidecar().await?;
-        sidecar.channels_get().await
+        crate::context::channel_catalog::build_catalog(&self.app, &self.config_path)
     }
 
     /// Push channel lifecycle updates from Python sidecar to all Webviews.
@@ -753,30 +789,34 @@ impl AgentRuntime {
                 .and_then(|v| v.as_str())
                 .map(str::to_string),
             wait_seconds: params.get("wait_seconds").and_then(|v| v.as_i64()),
+            qr_code_url: params
+                .get("qr_code_url")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            qr_image: params
+                .get("qr_image")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
         };
+        if let Some(store) = self
+            .app
+            .try_state::<crate::context::channel_status::ChannelStatusStore>()
+        {
+            let _ = store.apply(&payload);
+        }
         if let Err(e) = channel_status_changed_all(&self.app, &payload) {
             crate::log_warn!("channel status emit failed: {e}");
         }
     }
 
-    /// Sidecar channel health (configured vs running threads).
-    #[allow(dead_code)]
-    pub async fn channel_python_channels_status(
-        self: &Arc<Self>,
-    ) -> Result<serde_json::Value, String> {
-        let sidecar = self.ensure_sidecar().await?;
-        sidecar.channels_status().await
-    }
-
-    /// Channel connect/disconnect/save via SupportFlow Agent Python stdio RPC.
+    /// Channel console APIs handled in Rust using status store plus narrow runtime RPCs.
     pub async fn channel_console_api(
         self: &Arc<Self>,
         path: &str,
         method: &str,
         body: serde_json::Value,
     ) -> Result<serde_json::Value, String> {
-        let sidecar = self.ensure_sidecar().await?;
-        sidecar.console_api(path, method, body).await
+        crate::context::channel_console_api::dispatch(&self.app, self, path, method, &body).await
     }
 
     pub async fn channel_python_channels_post(
@@ -793,28 +833,65 @@ impl AgentRuntime {
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
+        let config = payload
+            .get("config")
+            .and_then(|v| v.as_object())
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .collect::<std::collections::HashMap<_, _>>();
+
         let sidecar = self.ensure_sidecar().await?;
-        let result = sidecar.channels_post(payload).await?;
-        self.reload_config_from_disk().await?;
-        self.channel_bridge
-            .on_action_result(&self.config_path, &action, &channel, &result)?;
-        if result.get("status").and_then(|v| v.as_str()) == Some("success")
-            && (action == "connect" || action == "save")
-        {
-            if let Ok(status) = sidecar.channels_status().await {
-                let running = status
-                    .get("running")
-                    .and_then(|v| v.as_array())
-                    .map(|a| {
-                        a.iter()
-                            .filter_map(|v| v.as_str())
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    })
-                    .unwrap_or_default();
-                crate::log_info!("Channel '{channel}' action={action} ok; running=[{running}]");
+        let result = match action.as_str() {
+            "save" => {
+                let applied = crate::context::channel_runtime::persist_channel_config(
+                    &self.config_path,
+                    &channel,
+                    &config,
+                )?;
+                self.reload_config_from_disk().await?;
+                self.channel_bridge
+                    .sync_from_config_file(&self.config_path)?;
+
+                let restarted =
+                    crate::context::channel_runtime::should_restart_channel(&channel, &applied);
+                if restarted {
+                    let _ = sidecar.channel_restart(&channel).await?;
+                }
+
+                crate::context::channel_runtime::action_response(
+                    self.channel_bridge.active_channels().join(","),
+                    restarted,
+                    applied,
+                )
             }
-        }
+            "connect" => {
+                let (channel_type, applied) = crate::context::channel_runtime::connect_channel(
+                    &self.config_path,
+                    &channel,
+                    &config,
+                )?;
+                self.reload_config_from_disk().await?;
+                self.channel_bridge
+                    .sync_from_config_file(&self.config_path)?;
+                let _ = sidecar.channel_start(&channel).await?;
+                crate::context::channel_runtime::action_response(channel_type, true, applied)
+            }
+            "disconnect" => {
+                let channel_type = crate::context::channel_runtime::disconnect_channel(
+                    &self.config_path,
+                    &channel,
+                )?;
+                self.reload_config_from_disk().await?;
+                self.channel_bridge
+                    .sync_from_config_file(&self.config_path)?;
+                let _ = sidecar.channel_stop(&channel).await?;
+                crate::context::channel_runtime::action_response(channel_type, true, Vec::new())
+            }
+            _ => {
+                return Err(format!("unknown channel action: {action}"));
+            }
+        };
         Ok(result)
     }
 

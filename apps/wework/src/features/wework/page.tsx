@@ -3,7 +3,12 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { channelAction, channelLangFromI18n, fetchChannels } from "@supportflow/ui/app-shell";
+import {
+  channelAction,
+  channelLangFromI18n,
+  fetchChannelConsoleApi,
+  fetchChannels
+} from "@supportflow/ui/app-shell";
 
 import { WeworkConsoleApp } from "@/features/wework/wework-console-app";
 
@@ -22,6 +27,9 @@ export function WeworkAppPage() {
       },
       save: async (config: Record<string, string | number | boolean>) => {
         await channelAction({ action: "save", channel: "wework", config });
+      },
+      syncContacts: async () => {
+        await fetchChannelConsoleApi("wework/contacts_sync", "POST", { action: "start" });
       }
     }),
     []

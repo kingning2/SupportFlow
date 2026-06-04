@@ -1,34 +1,28 @@
-﻿# Agent / 协作者说明
+# 仓库协作规则
 
-本仓库为 **Tauri 2 + Next.js** 桌面应用模板。编写或审查代码前请先读：
+本仓库只保留三类核心协作文档：`Python`、`Rust`、`TypeScript`。
+AI 在编写对应语言代码时，必须先遵守对应的“代码规范 + 架构文档 + 文件夹结构文档”。
 
-- **角色 × 目录（各职位改哪里）**：[`docs/development-rules/roles-and-directories.md`](docs/development-rules/roles-and-directories.md)
-- **总规范索引**：[`docs/development-rules/README.md`](docs/development-rules/README.md)
-- **前端**：[`docs/development-rules/frontend.md`](docs/development-rules/frontend.md)
-- **Rust 后端**：[`docs/development-rules/backend-rust.md`](docs/development-rules/backend-rust.md)
-- **IPC 契约**：[`docs/development-rules/fullstack-ipc.md`](docs/development-rules/fullstack-ipc.md)
-- **Rust API 速查**：[`docs/rust-api-reference.md`](docs/rust-api-reference.md)（现有 Command / Event / 前端封装）
-- **Agent 控制台**：[`docs/agent-console.md`](docs/agent-console.md)（AI Elements、SupportFlow 布局、IPC 流式）
-- **PR 自检**：[`docs/development-rules/review-checklist.md`](docs/development-rules/review-checklist.md)
+## 按文件类型强制遵守
 
-## 不可违反的三条
+- 修改 `src-tauri/channel_agent/**/*.py`、`**/*.py` 时，必须先遵守：
+  - `docs/python-coding-rules.md`
+  - `docs/python-architecture.md`
+  - `docs/python-folder-structure.md`
 
-1. 固定字符串 → `apps/full/src/enums/`（或 Rust `events/names.rs`）；展示文案 → i18n。
-2. Tauri：**Command** 走 `invokeWrapper` + `TauriCmd`；**Event** 走 `TauriEvent`；改 IPC 必须走完 [`fullstack-ipc.md`](docs/development-rules/fullstack-ipc.md) 清单。
-3. Rust 分层：`cmd` 薄、`context` 存跨 Webview 态、`utils` 无 Store 业务、`platform/` 分 OS。
+- 修改 `src-tauri/src/**/*.rs`、`src-tauri/crates/**/*.rs` 时，必须先遵守：
+  - `docs/rust-coding-rules.md`
+  - `docs/rust-architecture.md`
+  - `docs/rust-folder-structure.md`
 
-## 常用命令
+- 修改 `apps/**/*.ts`、`apps/**/*.tsx`、`packages/**/*.ts`、`packages/**/*.tsx` 时，必须先遵守：
+  - `docs/ts-coding-rules.md`
+  - `docs/ts-architecture.md`
+  - `docs/ts-folder-structure.md`
 
-```bash
-pnpm run dev          # apps/full 前端
-pnpm run tauri dev    # 桌面调试（完整控制台）
-pnpm run check        # format + lint + typecheck
-pnpm run check:rust   # cargo check
-pnpm run generate:contracts
-```
+## 通用要求
 
-前端 monorepo 见 [`apps/README.md`](apps/README.md)（`apps/full` · `apps/wework` · `apps/wechat`）。
-
-## 深度参考（场景化）
-
-技能包：`.agents/skills/tauri-next-coding-notes/`（含布局、标题栏、i18n、事件总线等细分 rule）。
+1. Python sidecar 目标：只保留 `wx` / `wework` SDK 适配与 `markitdown` 最小骨架，不再承载应用编排层。
+2. Rust 目标：拥有桌面应用编排、配置、状态、IPC、AI 工具链与跨端共享业务逻辑。
+3. TypeScript 目标：拥有前端界面、状态管理、调用 Rust IPC 的薄桥接，不直接承载后端策略。
+4. 若某段旧代码与上述目标冲突，优先朝“Python 更薄、Rust 更重、TS 更清晰”方向整理。

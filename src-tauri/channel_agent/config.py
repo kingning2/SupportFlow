@@ -1,5 +1,5 @@
 # encoding:utf-8
-"""Channel-only config module for Tauri sidecar."""
+"""Minimal runtime config for the Tauri channel sidecar."""
 
 from __future__ import annotations
 
@@ -9,12 +9,8 @@ import os
 from common.log import logger
 
 available_setting = {
-    "agent": True,
     "channel_type": "",
     "group_shared_session": True,
-    "group_name_white_list": [],
-    "group_name_keyword_white_list": [],
-    "group_chat_in_one_session": [],
     "group_chat_prefix": ["@bot"],
     "group_chat_keyword": [],
     "group_chat_reply_prefix": "",
@@ -23,56 +19,19 @@ available_setting = {
     "single_chat_prefix": [""],
     "single_chat_reply_prefix": "",
     "single_chat_reply_suffix": "",
-    "nick_name_black_list": [],
-    "trigger_by_self": False,
     "image_create_prefix": [],
-    "concurrency_in_session": 1,
     "expires_in_seconds": 3600,
     "speech_recognition": True,
     "group_speech_recognition": False,
-    "voice_reply_voice": False,
-    "always_reply_voice": False,
-    "subscribe_msg": "",
     "appdata_dir": ".appdata",
     "agent_workspace": "~/supportflow",
     "use_proxy": False,
     "proxy": "",
     "hot_reload": False,
-    "web_console": False,
-    "web_port": 9899,
-    "weixin_token": "",
-    "weixin_base_url": "https://ilinkai.weixin.qq.com",
-    "weixin_cdn_base_url": "https://novac2c.cdn.weixin.qq.com/c2c",
-    "weixin_credentials_path": "~/.weixin_channel_credentials.json",
     "wework_exe_path": "",
     "wework_version": "",
     "wework_smart": True,
     "wework_init_wait_seconds": 60,
-    "feishu_port": 9891,
-    "feishu_app_id": "",
-    "feishu_app_secret": "",
-    "feishu_token": "",
-    "feishu_event_mode": "websocket",
-    "feishu_stream_reply": True,
-    "dingtalk_client_id": "",
-    "dingtalk_client_secret": "",
-    "dingtalk_robot_code": "",
-    "dingtalk_card_enabled": False,
-    "wecom_bot_id": "",
-    "wecom_bot_secret": "",
-    "wechatmp_token": "",
-    "wechatmp_port": 8080,
-    "wechatmp_app_id": "",
-    "wechatmp_app_secret": "",
-    "wechatmp_aes_key": "",
-    "wechatcom_corp_id": "",
-    "wechatcomapp_token": "",
-    "wechatcomapp_port": 9898,
-    "wechatcomapp_secret": "",
-    "wechatcomapp_agent_id": "",
-    "wechatcomapp_aes_key": "",
-    "qq_app_id": "",
-    "qq_app_secret": "",
 }
 
 config: dict = {}
@@ -82,16 +41,6 @@ def _merge_defaults(raw: dict) -> dict:
     merged = dict(available_setting)
     merged.update(raw)
     return merged
-
-
-def _mask_sensitive(values: dict) -> dict:
-    masked = dict(values)
-    for key, value in list(masked.items()):
-        if not isinstance(value, str):
-            continue
-        if ("key" in key or "secret" in key or "token" in key) and len(value) >= 8:
-            masked[key] = value[:3] + "*" * 5 + value[-3:]
-    return masked
 
 
 def get_root():
@@ -122,7 +71,6 @@ def load_config():
     if not isinstance(raw, dict):
         raise ValueError("config must be a JSON object")
     config = _merge_defaults(raw)
-    # logger.info("[INIT] load channel config: %s", _mask_sensitive(config))
 
 
 def conf():
@@ -134,9 +82,3 @@ def get_appdata_dir():
     if not os.path.exists(data_path):
         os.makedirs(data_path, exist_ok=True)
     return data_path
-
-
-def subscribe_msg():
-    trigger_prefix = conf().get("single_chat_prefix", [""])[0]
-    msg = conf().get("subscribe_msg", "")
-    return msg.format(trigger_prefix=trigger_prefix)

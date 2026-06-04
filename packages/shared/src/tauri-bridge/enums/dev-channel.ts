@@ -1,15 +1,5 @@
 /** SupportFlow Agent channel ids (must match Python `ChannelsHandler.CHANNEL_DEFS`). */
-export const CHANNEL_IDS = [
-  "weixin",
-  "wx",
-  "feishu",
-  "dingtalk",
-  "wecom_bot",
-  "wework",
-  "qq",
-  "wechatcom_app",
-  "wechatmp"
-] as const;
+export const CHANNEL_IDS = ["wx", "wework"] as const;
 
 export type ChannelCatalogEntryId = (typeof CHANNEL_IDS)[number];
 
@@ -19,19 +9,8 @@ const CHANNEL_ID_SET = new Set<string>(CHANNEL_IDS);
 export const DEV_CHANNEL_ALIASES: Record<string, ChannelCatalogEntryId> = {
   wechat: "wx",
   personal_wechat: "wx",
-  weixin: "weixin",
-  official_wechat: "weixin",
-  feishu: "feishu",
-  lark: "feishu",
-  dingtalk: "dingtalk",
-  wecom: "wecom_bot",
-  wecom_bot: "wecom_bot",
-  wework: "wework",
-  qq: "qq",
-  wechatcom: "wechatcom_app",
-  wechatcom_app: "wechatcom_app",
-  wechatmp: "wechatmp",
-  mp: "wechatmp"
+  wx: "wx",
+  wework: "wework"
 };
 
 export function isChannelCatalogEntryId(value: string): value is ChannelCatalogEntryId {

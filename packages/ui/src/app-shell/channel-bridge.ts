@@ -1,5 +1,6 @@
 export {
   channelAction,
+  fetchChannelConsoleApi,
   channelLangFromI18n,
   fetchChannels,
   type ChannelActionRequest

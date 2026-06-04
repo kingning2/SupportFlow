@@ -68,7 +68,9 @@ function dtoToAccount(dto: WeworkSavedAccountDto): WeworkSavedAccount {
     },
     createdAt: dto.createdAt,
     lastConnectedAt: dto.lastConnectedAt,
-    weworkUserId: dto.weworkUserId
+    weworkUserId: dto.weworkUserId,
+    contactsSynced: dto.contactsSynced,
+    contactsSyncedAt: dto.contactsSyncedAt
   };
 }
 
@@ -84,7 +86,9 @@ function accountToDto(account: WeworkSavedAccount): WeworkSavedAccountDto {
     },
     createdAt: account.createdAt,
     lastConnectedAt: account.lastConnectedAt,
-    weworkUserId: account.weworkUserId
+    weworkUserId: account.weworkUserId,
+    contactsSynced: account.contactsSynced,
+    contactsSyncedAt: account.contactsSyncedAt
   };
 }
 
@@ -144,7 +148,9 @@ export async function upsertSavedAccount(
       config: { ...existing.config, ...config },
       label: trimmedLabel || existing.label,
       weworkUserId: trimmedUserId || existing.weworkUserId,
-      lastConnectedAt: now
+      lastConnectedAt: now,
+      contactsSynced: existing.contactsSynced,
+      contactsSyncedAt: existing.contactsSyncedAt
     };
     await weworkUpsertAccount(accountToDto(next));
     const nextAccounts = accounts.map((a) => (a.id === existing!.id ? next : a));
@@ -157,7 +163,9 @@ export async function upsertSavedAccount(
     config,
     createdAt: now,
     lastConnectedAt: now,
-    weworkUserId: trimmedUserId || undefined
+    weworkUserId: trimmedUserId || undefined,
+    contactsSynced: false,
+    contactsSyncedAt: undefined
   };
   await weworkUpsertAccount(accountToDto(account));
   return { accounts: [account, ...accounts], account };

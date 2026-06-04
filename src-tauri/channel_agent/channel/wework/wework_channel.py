@@ -22,12 +22,12 @@ from bridge.context import Context, ContextType
 from bridge.reply import Reply, ReplyType
 from channel.chat_channel import ChatChannel
 from channel.chat_message import ChatMessage
+from channel.rust_ipc import call_rust, call_rust_bool
 from channel.wework.run import (
     get_wework,
     init_wework_client,
     register_message_handlers,
     run_until_stopped,
-    wework_session_ready,
 )
 from channel.wework.wework_message import WeworkMessage, get_with_retry
 from common.expired_dict import ExpiredDict
@@ -58,6 +58,51 @@ def _interruptible_sleep(seconds: float, stop_event: threading.Event) -> bool:
             return False
         time.sleep(min(0.1, end - time.time()))
     return True
+
+
+def _write_sync_snapshot(client, directory: str) -> None:
+    """Fetch and persist WeCom contacts / rooms / members into local snapshot files."""
+    contacts = get_with_retry(client.get_external_contacts)
+    rooms = get_with_retry(client.get_rooms)
+    if not contacts or not rooms:
+        raise RuntimeError("Failed to fetch contacts or rooms from WeCom client")
+
+    with open(os.path.join(directory, "wework_contacts.json"), "w", encoding="utf-8") as f:
+        json.dump(contacts, f, ensure_ascii=False, indent=4)
+    with open(os.path.join(directory, "wework_rooms.json"), "w", encoding="utf-8") as f:
+        json.dump(rooms, f, ensure_ascii=False, indent=4)
+
+    result = {}
+    for room in rooms.get("room_list", []):
+        room_wxid = room["conversation_id"]
+        result[room_wxid] = client.get_room_members(room_wxid)
+    with open(os.path.join(directory, "wework_room_members.json"), "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=4)
+
+
+def _contacts_sync_done(user_id: str) -> bool:
+    """Return whether contact sync has already completed for this WeCom account."""
+    if not user_id:
+        return False
+    try:
+        return call_rust_bool("wework.contacts_synced", {"wework_user_id": user_id}, timeout=15.0)
+    except Exception as e:
+        logger.warning("[Wework] query contacts synced state failed: %s", e)
+        return False
+
+
+def _mark_contacts_sync_done(user_id: str) -> None:
+    """Persist successful contact sync marker for this WeCom account."""
+    if not user_id:
+        return
+    try:
+        call_rust(
+            "wework.mark_contacts_synced",
+            {"wework_user_id": user_id, "synced_at": int(time.time() * 1000)},
+            timeout=15.0,
+        )
+    except Exception as e:
+        logger.warning("[Wework] mark contacts synced failed: %s", e)
 
 
 def download_and_compress_image(url, filename):
@@ -140,6 +185,7 @@ class WeworkChannel(ChatChannel):
         super().__init__()
         self._stop_event = threading.Event()
         self._channel_ready = False
+        self._sync_thread = None
         self.received_msgs = ExpiredDict(conf().get("expires_in_seconds", 3600))
 
     @property
@@ -174,30 +220,21 @@ class WeworkChannel(ChatChannel):
 
         register_message_handlers(client)
 
-        from channel.wework.run import wework_desktop_process_running
-
-        smart = conf().get("wework_smart", True)
         self.notify_channel_status("waiting_login")
         try:
-            if wework_session_ready() or wework_desktop_process_running():
-                logger.info(
-                    "[Wework] WeCom desktop already running; skip client.open() "
-                    "(avoid launching another instance)"
-                )
-                if not wework_session_ready():
-                    logger.info("[Wework] Waiting for WeCom desktop login...")
-                    client.wait_login()
-            else:
-                client.open(smart)
-                logger.info("[Wework] Waiting for WeCom desktop login...")
-                client.wait_login()
+            logger.info("[Wework] Opening WeCom desktop with smart=True")
+            client.open(smart=True)
+            logger.info("[Wework] Waiting for WeCom desktop login...")
+            client.wait_login()
+            login_info = client.get_login_info() or {}
+            if not login_info.get("user_id"):
+                raise RuntimeError("WeCom login finished but get_login_info returned empty user_id")
         except Exception as e:
             err = f"WeCom login failed: {e}"
             logger.error(f"[Wework] {err}")
             self.report_startup_error(err)
             return
 
-        login_info = client.get_login_info()
         self.user_id = login_info.get("user_id", "")
         self.name = login_info.get("nickname") or login_info.get("username", "")
         logger.info(f"[Wework] Logged in user_id={self.user_id} name={self.name}")
@@ -206,48 +243,10 @@ class WeworkChannel(ChatChannel):
             user_id=str(self.user_id),
             display_name=str(self.name),
         )
-
-        init_wait = int(conf().get("wework_init_wait_seconds", 60))
-        if init_wait > 0:
-            self.notify_channel_status("syncing", wait_seconds=init_wait)
-            logger.info(
-                f"[Wework] Waiting {init_wait}s for client data sync (do not operate WeCom)..."
-            )
-            if not _interruptible_sleep(init_wait, self._stop_event):
-                logger.info("[Wework] Startup cancelled during init wait")
-                return
-
-        if self._stop_event.is_set():
-            return
-
-        directory = _tmp_dir()
-        contacts = get_with_retry(client.get_external_contacts)
-        rooms = get_with_retry(client.get_rooms)
-        if not contacts or not rooms:
-            err = "Failed to fetch contacts or rooms from WeCom client"
-            logger.error(f"[Wework] {err}")
-            self.report_startup_error(err)
-            try:
-                ntwork.exit_()
-            except Exception:
-                pass
-            return
-
-        with open(os.path.join(directory, "wework_contacts.json"), "w", encoding="utf-8") as f:
-            json.dump(contacts, f, ensure_ascii=False, indent=4)
-        with open(os.path.join(directory, "wework_rooms.json"), "w", encoding="utf-8") as f:
-            json.dump(rooms, f, ensure_ascii=False, indent=4)
-
-        result = {}
-        for room in rooms.get("room_list", []):
-            room_wxid = room["conversation_id"]
-            result[room_wxid] = client.get_room_members(room_wxid)
-        with open(os.path.join(directory, "wework_room_members.json"), "w", encoding="utf-8") as f:
-            json.dump(result, f, ensure_ascii=False, indent=4)
-
-        logger.info("[Wework] Channel ready (desktop client / ntwork)")
         self._channel_ready = True
         self.report_startup_success()
+        logger.info("[Wework] Channel ready (desktop client / ntwork)")
+        self._maybe_start_background_sync(client, force=False)
         run_until_stopped(self._stop_event)
         logger.info("[Wework] Event loop ended")
 
@@ -259,6 +258,44 @@ class WeworkChannel(ChatChannel):
                 ntwork.exit_()
             except Exception as e:
                 logger.warning(f"[Wework] ntwork.exit_ error: {e}")
+
+    def _maybe_start_background_sync(self, client, force: bool) -> bool:
+        """Start contact sync in background when needed."""
+        if self._sync_thread is not None and self._sync_thread.is_alive():
+            return False
+        if not force and _contacts_sync_done(str(self.user_id or "")):
+            logger.info("[Wework] Contact sync already completed for user_id=%s", self.user_id)
+            return False
+
+        self._sync_thread = threading.Thread(
+            target=self._run_background_sync,
+            args=(client, force),
+            daemon=True,
+            name="wework-contacts-sync",
+        )
+        self._sync_thread.start()
+        return True
+
+    def _run_background_sync(self, client, force: bool) -> None:
+        """Fetch contacts and rooms in background without blocking channel readiness."""
+        user_id = str(self.user_id or "")
+        if not force and _contacts_sync_done(user_id):
+            return
+        try:
+            self.notify_channel_status("syncing")
+            logger.info("[Wework] Background contact sync started for user_id=%s", user_id)
+            _write_sync_snapshot(client, _tmp_dir())
+            _mark_contacts_sync_done(user_id)
+            logger.info("[Wework] Background contact sync completed for user_id=%s", user_id)
+        except Exception as e:
+            logger.warning("[Wework] Background contact sync failed: %s", e, exc_info=True)
+
+    def start_contacts_sync(self, force: bool = False) -> bool:
+        """Start background contact sync on demand."""
+        client = get_wework()
+        if client is None:
+            raise RuntimeError("ntwork not available")
+        return self._maybe_start_background_sync(client, force=force)
 
     def _should_skip(self, cmsg: ChatMessage) -> bool:
         """Return True if this message should be ignored."""
@@ -306,7 +343,7 @@ class WeworkChannel(ChatChannel):
         else:
             logger.info(
                 f"[Wework] group message not triggered "
-                f"(check group_name_white_list / @bot / group_chat_prefix): "
+                f"(check Rust channel trigger config / @bot prefix): "
                 f"content={str(cmsg.content)[:80]!r}"
             )
 

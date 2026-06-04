@@ -52,3 +52,24 @@ pub fn wework_set_active_account_id(
     license.require_valid()?;
     store.set_active_account_id(id.as_deref())
 }
+
+#[tauri::command]
+pub fn wework_mark_contacts_synced(
+    license: State<'_, LicenseStore>,
+    store: State<'_, WeworkAccountsStore>,
+    wework_user_id: String,
+    synced_at: i64,
+) -> Result<(), String> {
+    license.require_valid()?;
+    store.mark_contacts_synced(&wework_user_id, synced_at)
+}
+
+#[tauri::command]
+pub fn wework_contacts_synced(
+    license: State<'_, LicenseStore>,
+    store: State<'_, WeworkAccountsStore>,
+    wework_user_id: String,
+) -> Result<bool, String> {
+    license.require_valid()?;
+    store.contacts_synced(&wework_user_id)
+}

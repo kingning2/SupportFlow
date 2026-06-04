@@ -34,6 +34,10 @@ pub struct WeworkSavedAccountDto {
     pub last_connected_at: Option<i64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub wework_user_id: Option<String>,
+    #[serde(default)]
+    pub contacts_synced: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contacts_synced_at: Option<i64>,
 }
 
 pub struct WeworkAccountsStore {
@@ -69,6 +73,10 @@ impl WeworkAccountsStore {
                 id INTEGER PRIMARY KEY CHECK (id = 1),
                 account_id TEXT
             );
+            CREATE TABLE IF NOT EXISTS wework_contact_sync_state (
+                wework_user_id TEXT PRIMARY KEY NOT NULL,
+                contacts_synced_at INTEGER NOT NULL
+            );
             "#,
         )
         .map_err(|e| e.to_string())?;
@@ -81,14 +89,18 @@ impl WeworkAccountsStore {
         let conn = crate::utils::err::lock_mutex(&self.conn)?;
         let mut stmt = conn
             .prepare(
-                r#"SELECT id, label, wework_user_id, wework_exe_path, wework_version,
-                          wework_smart, wework_init_wait_seconds, created_at, last_connected_at
-                   FROM wework_accounts
-                   ORDER BY COALESCE(last_connected_at, created_at) DESC"#,
+                r#"SELECT a.id, a.label, a.wework_user_id, a.wework_exe_path, a.wework_version,
+                          a.wework_smart, a.wework_init_wait_seconds, a.created_at, a.last_connected_at,
+                          s.contacts_synced_at
+                   FROM wework_accounts AS a
+                   LEFT JOIN wework_contact_sync_state AS s
+                     ON s.wework_user_id = a.wework_user_id
+                   ORDER BY COALESCE(a.last_connected_at, a.created_at) DESC"#,
             )
             .map_err(|e| e.to_string())?;
         let rows = stmt
             .query_map([], |row| {
+                let contacts_synced_at: Option<i64> = row.get(9)?;
                 Ok(WeworkSavedAccountDto {
                     id: row.get(0)?,
                     label: row.get(1)?,
@@ -101,6 +113,8 @@ impl WeworkAccountsStore {
                     },
                     created_at: row.get(7)?,
                     last_connected_at: row.get(8)?,
+                    contacts_synced: contacts_synced_at.is_some(),
+                    contacts_synced_at,
                 })
             })
             .map_err(|e| e.to_string())?;
@@ -188,5 +202,49 @@ impl WeworkAccountsStore {
             }
         }
         Ok(())
+    }
+
+    /// Mark the given WeCom account as having completed contact sync.
+    ///
+    /// # Arguments
+    ///
+    /// * `wework_user_id` - WeCom user id returned by ntwork
+    /// * `synced_at` - Unix timestamp in milliseconds
+    ///
+    /// # Returns
+    ///
+    /// * `()` - Success when the sync marker is persisted
+    pub fn mark_contacts_synced(&self, wework_user_id: &str, synced_at: i64) -> Result<(), String> {
+        let conn = crate::utils::err::lock_mutex(&self.conn)?;
+        conn.execute(
+            r#"INSERT INTO wework_contact_sync_state (wework_user_id, contacts_synced_at)
+               VALUES (?1, ?2)
+               ON CONFLICT(wework_user_id) DO UPDATE SET contacts_synced_at = excluded.contacts_synced_at"#,
+            params![wework_user_id, synced_at],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    /// Query whether the given WeCom account has already completed contact sync.
+    ///
+    /// # Arguments
+    ///
+    /// * `wework_user_id` - WeCom user id returned by ntwork
+    ///
+    /// # Returns
+    ///
+    /// * `bool` - True when a sync marker already exists
+    pub fn contacts_synced(&self, wework_user_id: &str) -> Result<bool, String> {
+        let conn = crate::utils::err::lock_mutex(&self.conn)?;
+        let mut stmt = conn
+            .prepare(
+                "SELECT contacts_synced_at FROM wework_contact_sync_state WHERE wework_user_id = ?1",
+            )
+            .map_err(|e| e.to_string())?;
+        let mut rows = stmt
+            .query(params![wework_user_id])
+            .map_err(|e| e.to_string())?;
+        Ok(rows.next().map_err(|e| e.to_string())?.is_some())
     }
 }

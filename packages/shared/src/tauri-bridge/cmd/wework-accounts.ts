@@ -15,6 +15,8 @@ export interface WeworkSavedAccountDto {
   createdAt: number;
   lastConnectedAt?: number;
   weworkUserId?: string;
+  contactsSynced: boolean;
+  contactsSyncedAt?: number;
 }
 
 export async function weworkListAccounts(): Promise<WeworkSavedAccountDto[]> {
@@ -37,4 +39,18 @@ export async function weworkGetActiveAccountId(): Promise<string | null> {
 
 export async function weworkSetActiveAccountId(id: string | null): Promise<void> {
   await invokeWrapper<void>(TauriCmd.WeworkSetActiveAccountId, { id });
+}
+
+export async function weworkMarkContactsSynced(
+  weworkUserId: string,
+  syncedAt: number
+): Promise<void> {
+  await invokeWrapper<void>(TauriCmd.WeworkMarkContactsSynced, {
+    weworkUserId,
+    syncedAt
+  });
+}
+
+export async function weworkContactsSynced(weworkUserId: string): Promise<boolean> {
+  return invokeWrapper<boolean>(TauriCmd.WeworkContactsSynced, { weworkUserId });
 }

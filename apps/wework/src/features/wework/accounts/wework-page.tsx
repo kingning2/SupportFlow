@@ -39,6 +39,7 @@ export interface WeworkPageActions {
   connect: (config: Record<string, string | number | boolean>) => Promise<void>;
   disconnect: () => Promise<void>;
   save: (config: Record<string, string | number | boolean>) => Promise<void>;
+  syncContacts: () => Promise<void>;
 }
 
 export interface WeworkPageProps {
@@ -87,13 +88,17 @@ export function WeworkPage({
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [switchTarget, setSwitchTarget] = useState<WeworkSavedAccount | null>(null);
   const [switching, setSwitching] = useState(false);
+  const [syncingContacts, setSyncingContacts] = useState(false);
 
   const backendReady = !channelLoading && !channelError;
   const backendErrorMessage =
     channelError === "channels_load_failed" ? t("channels_load_failed") : channelError;
 
-  /** 仅在后端确认通道 active 且非加载中时展示「已连接」 */
-  const channelActive = backendReady && connectionStatus === "ready" && Boolean(channel?.active);
+  /** 登录成功即视为已连接；active 不再作为唯一条件。 */
+  const channelActive =
+    backendReady &&
+    (connectionStatus === "ready" ||
+      resolveWeworkLoginFromCatalog(channel).weworkUserId !== undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -174,23 +179,6 @@ export function WeworkPage({
     [actions]
   );
 
-  const waitUntilActive = useCallback(async () => {
-    // wework_init_wait_seconds defaults to 60; allow headroom for contact sync
-    for (let i = 0; i < 60; i++) {
-      try {
-        const catalog = await actions.fetchChannels();
-        const row = catalog.find((c) => c.name === "wework");
-        if (row?.active) {
-          return true;
-        }
-      } catch {
-        // catalog RPC may fail while sidecar is starting/syncing
-      }
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-    return false;
-  }, [actions]);
-
   const performDisconnect = useCallback(async () => {
     await actions.disconnect();
     await persistActiveAccountId(null);
@@ -203,18 +191,15 @@ export function WeworkPage({
       setConnectingId(account.id);
       try {
         await actions.connect(account.config as Record<string, string | number | boolean>);
-        const ok = await waitUntilActive();
-        if (ok) {
-          await persistAfterConnect(account.config, account.label);
-          onChannelUpdated?.();
-        }
+        await persistAfterConnect(account.config, account.label);
+        onChannelUpdated?.();
       } catch {
         // keep list
       } finally {
         setConnectingId(null);
       }
     },
-    [actions, onChannelUpdated, persistAfterConnect, waitUntilActive]
+    [actions, onChannelUpdated, persistAfterConnect]
   );
 
   const handleAccountClick = useCallback(
@@ -264,17 +249,27 @@ export function WeworkPage({
     setNewConnecting(true);
     try {
       await actions.connect(config);
-      const ok = await waitUntilActive();
-      if (ok) {
-        const accountConfig = toAccountConfig(config);
-        await persistAfterConnect(accountConfig);
-        setShowNewForm(false);
-        onChannelUpdated?.();
-      }
+      const accountConfig = toAccountConfig(config);
+      await persistAfterConnect(accountConfig);
+      setShowNewForm(false);
+      onChannelUpdated?.();
     } catch {
       // keep form open
     } finally {
       setNewConnecting(false);
+    }
+  };
+
+  const handleSyncContacts = async () => {
+    setSyncingContacts(true);
+    try {
+      await actions.syncContacts();
+      setAccounts(await loadSavedAccounts());
+      onChannelUpdated?.();
+    } catch {
+      // noop
+    } finally {
+      setSyncingContacts(false);
     }
   };
 
@@ -312,65 +307,83 @@ export function WeworkPage({
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="shrink-0 border-b border-[hsl(var(--border))] px-6 py-5">
         <div className="flex items-start gap-4">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--wework-blue-light)]">
-            <Building2 className="size-5 text-[var(--wework-blue)]" />
+          <div className="bg-channel-muted flex size-11 shrink-0 items-center justify-center rounded-2xl">
+            <Building2 className="text-channel size-5" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-[#1A2B4A]">{t("wework_menu_account")}</h1>
-            <p className="mt-0.5 text-sm text-slate-500">{t("wework_accounts_desc")}</p>
+            <h1 className="text-foreground text-lg font-bold">{t("wework_menu_account")}</h1>
+            <p className="text-muted-foreground mt-0.5 text-sm">{t("wework_accounts_desc")}</p>
           </div>
         </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
         {!accountsLoaded || channelLoading ? (
-          <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-400">
+          <div className="text-muted-foreground flex items-center justify-center gap-2 py-16 text-sm">
             <Loader2 className="size-4 animate-spin" />
             <span>{t("channels_loading")}</span>
           </div>
         ) : (
           <>
             {channelError ? (
-              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <div className="bg-warning/10 text-warning-foreground border-warning/30 mb-4 rounded-xl border p-4 text-sm">
                 <p className="font-medium">{t("channels_python_unreachable_title")}</p>
                 <p className="mt-2 text-xs opacity-90">{backendErrorMessage}</p>
                 <p className="mt-2 text-xs opacity-80">{t("wework_accounts_backend_offline")}</p>
-                <button
+                <Button
                   type="button"
-                  className="mt-4 cursor-pointer rounded-lg border border-amber-300 px-3 py-1.5 text-xs"
+                  variant="outline"
+                  className="border-warning/40 mt-4 text-xs"
                   onClick={() => onChannelUpdated?.()}
                 >
                   {t("channels_retry")}
-                </button>
+                </Button>
               </div>
             ) : null}
 
             {channelActive && activeAccount ? (
-              <div className="mb-5 flex items-center gap-4 rounded-xl border border-[var(--wework-blue)]/30 bg-white p-4 shadow-sm">
+              <div className="border-channel/30 bg-card mb-5 flex items-center gap-4 rounded-xl border p-4 shadow-sm">
                 <AccountAvatar name={activeAccount.label} size="lg" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-slate-500">{t("wework_current_account")}</p>
-                  <p className="truncate text-lg font-semibold text-[#1A2B4A]">
+                  <p className="text-muted-foreground text-xs">{t("wework_current_account")}</p>
+                  <p className="text-foreground truncate text-lg font-semibold">
                     {activeAccount.label}
                   </p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-xs text-emerald-600">
-                    <span className="size-1.5 rounded-full bg-emerald-500" />
+                  <p className="text-success mt-0.5 flex items-center gap-1.5 text-xs">
+                    <span className="bg-success size-1.5 rounded-full" />
                     {t("wework_account_connected")}
                   </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {activeAccount.contactsSynced
+                      ? t("wework_contacts_synced")
+                      : t("wework_contacts_not_synced")}
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  disabled={disconnecting}
-                  className="shrink-0 cursor-pointer rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-                  onClick={() => void handleDisconnect()}
-                >
-                  {disconnecting ? t("channels_connecting") : t("channels_disconnect")}
-                </button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={disconnecting || syncingContacts}
+                    className="h-auto px-3 py-1.5 text-xs"
+                    onClick={() => void handleSyncContacts()}
+                  >
+                    {syncingContacts ? t("channels_connecting") : t("wework_contacts_sync")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={disconnecting}
+                    className="h-auto px-3 py-1.5 text-xs"
+                    onClick={() => void handleDisconnect()}
+                  >
+                    {disconnecting ? t("channels_connecting") : t("channels_disconnect")}
+                  </Button>
+                </div>
               </div>
             ) : null}
 
             {accounts.length === 0 && !showNewForm ? (
-              <p className="py-8 text-center text-sm text-slate-400">
+              <p className="text-muted-foreground py-8 text-center text-sm">
                 {t("wework_accounts_empty")}
               </p>
             ) : (
@@ -390,11 +403,11 @@ export function WeworkPage({
                       tabIndex={rowClickable ? 0 : -1}
                       className={cn(
                         "rounded-xl border bg-white p-4 shadow-sm transition-colors",
+                        "bg-card",
                         isActive
-                          ? "border-[var(--wework-blue)]/40 ring-1 ring-[var(--wework-blue)]/20"
+                          ? "border-channel/40 ring-channel/20 ring-1"
                           : "border-[hsl(var(--border))]",
-                        rowClickable &&
-                          "cursor-pointer hover:border-[var(--wework-blue)]/30 hover:bg-slate-50/80",
+                        rowClickable && "hover:border-channel/30 hover:bg-accent/40 cursor-pointer",
                         rowBusy && !isConnecting && "pointer-events-none opacity-60",
                         !backendReady && "opacity-90"
                       )}
@@ -410,42 +423,50 @@ export function WeworkPage({
                         <AccountAvatar name={account.label} size="md" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="truncate text-base font-semibold text-[#1A2B4A]">
+                            <span className="text-foreground truncate text-base font-semibold">
                               {account.label}
                             </span>
                             {isActive ? (
-                              <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                              <span className="bg-success/10 text-success shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium">
                                 {t("wework_account_connected")}
                               </span>
                             ) : null}
                           </div>
-                          <p className="mt-0.5 truncate font-mono text-xs text-slate-500">{path}</p>
+                          <p className="text-muted-foreground mt-0.5 truncate font-mono text-xs">
+                            {path}
+                          </p>
                           {account.lastConnectedAt ? (
-                            <p className="mt-1 text-[10px] text-slate-400">
+                            <p className="text-muted-foreground mt-1 text-[10px]">
                               {t("wework_account_last_connected", {
                                 time: new Date(account.lastConnectedAt).toLocaleString()
                               })}
                             </p>
                           ) : null}
+                          <p className="text-muted-foreground mt-1 text-[10px]">
+                            {account.contactsSynced
+                              ? t("wework_contacts_synced")
+                              : t("wework_contacts_not_synced")}
+                          </p>
                         </div>
                         <div className="relative flex shrink-0 items-center gap-1">
                           {isActive ? (
-                            <button
+                            <Button
                               type="button"
+                              variant="destructive"
                               disabled={disconnecting}
-                              className="cursor-pointer rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                              className="h-auto px-2.5 py-1 text-xs"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 void handleDisconnect();
                               }}
                             >
                               {disconnecting ? t("channels_connecting") : t("channels_disconnect")}
-                            </button>
+                            </Button>
                           ) : (
-                            <button
+                            <Button
                               type="button"
                               disabled={rowBusy || !backendReady}
-                              className="cursor-pointer rounded-lg bg-[var(--wework-blue)] px-3 py-1 text-xs font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="bg-channel text-channel-foreground hover:bg-channel/90 h-auto px-3 py-1 text-xs"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleAccountClick(account);
@@ -456,23 +477,26 @@ export function WeworkPage({
                               ) : (
                                 t("wework_account_connect")
                               )}
-                            </button>
+                            </Button>
                           )}
-                          <button
+                          <Button
                             type="button"
-                            className="cursor-pointer rounded-lg p-1 text-slate-400 hover:bg-slate-100"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-muted-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               setMenuOpenId((id) => (id === account.id ? null : account.id));
                             }}
                           >
                             <MoreHorizontal className="size-4" />
-                          </button>
+                          </Button>
                           {menuOpenId === account.id ? (
-                            <div className="absolute top-8 right-0 z-10 min-w-[7rem] rounded-lg border border-[hsl(var(--border))] bg-white py-1 shadow-lg">
-                              <button
+                            <div className="bg-card border-border absolute top-8 right-0 z-10 min-w-[7rem] rounded-lg border py-1 shadow-lg">
+                              <Button
                                 type="button"
-                                className="flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50"
+                                variant="ghost"
+                                className="text-destructive hover:bg-destructive/10 flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteAccount(account.id);
@@ -480,7 +504,7 @@ export function WeworkPage({
                               >
                                 <Trash2 className="size-3.5" />
                                 {t("wework_account_delete")}
-                              </button>
+                              </Button>
                             </div>
                           ) : null}
                         </div>
@@ -492,10 +516,10 @@ export function WeworkPage({
             )}
 
             {showNewForm && channel ? (
-              <div className="mt-4 rounded-xl border border-[var(--wework-blue)]/25 bg-white p-5 shadow-sm">
+              <div className="border-channel/25 bg-card mt-4 rounded-xl border p-5 shadow-sm">
                 <div className="mb-4 flex items-center gap-2">
-                  <Radio className="size-4 text-[var(--wework-blue)]" />
-                  <h2 className="font-semibold text-[#1A2B4A]">{t("wework_account_new")}</h2>
+                  <Radio className="text-channel size-4" />
+                  <h2 className="text-foreground font-semibold">{t("wework_account_new")}</h2>
                 </div>
                 <WeworkConnectPanel
                   channel={channel}
@@ -557,15 +581,16 @@ export function WeworkPage({
       </Dialog>
 
       <div className="shrink-0 border-t border-[hsl(var(--border))] bg-white px-6 py-4">
-        <button
+        <Button
           type="button"
+          variant="outline"
           disabled={channelLoading || Boolean(channelError) || !channel || showNewForm}
-          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--wework-blue)]/50 bg-[var(--wework-blue-light)]/40 py-3 text-sm font-medium text-[var(--wework-blue)] transition-colors hover:bg-[var(--wework-blue-light)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="border-channel/50 bg-channel-muted/40 text-channel hover:bg-channel-muted flex w-full items-center justify-center gap-2 border-dashed py-3 text-sm font-medium"
           onClick={() => setShowNewForm(true)}
         >
           <Plus className="size-4" />
           {t("wework_account_new")}
-        </button>
+        </Button>
       </div>
     </div>
   );

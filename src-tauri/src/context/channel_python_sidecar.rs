@@ -13,7 +13,7 @@ use std::time::Duration;
 use std::os::windows::process::CommandExt;
 
 use serde_json::{json, Value};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, ChildStdin, Command};
 use tokio::sync::{oneshot, Mutex};
@@ -261,6 +261,52 @@ impl ChannelPythonSidecar {
                     "result": { "status": "success" }
                 })
             }
+            "wework.contacts_synced" => match self.runtime_handle().await {
+                Ok(rt) => {
+                    let wework_user_id = params
+                        .get("wework_user_id")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
+                    if wework_user_id.is_empty() {
+                        json!({ "id": id, "error": "wework_user_id required" })
+                    } else {
+                        match rt
+                            .app_handle()
+                            .state::<crate::context::wework_accounts::WeworkAccountsStore>()
+                            .contacts_synced(wework_user_id)
+                        {
+                            Ok(value) => json!({ "id": id, "result": { "value": value } }),
+                            Err(e) => json!({ "id": id, "error": e }),
+                        }
+                    }
+                }
+                Err(e) => json!({ "id": id, "error": e }),
+            },
+            "wework.mark_contacts_synced" => match self.runtime_handle().await {
+                Ok(rt) => {
+                    let wework_user_id = params
+                        .get("wework_user_id")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
+                    let synced_at = params
+                        .get("synced_at")
+                        .and_then(|v| v.as_i64())
+                        .unwrap_or_default();
+                    if wework_user_id.is_empty() || synced_at <= 0 {
+                        json!({ "id": id, "error": "wework_user_id and synced_at required" })
+                    } else {
+                        match rt
+                            .app_handle()
+                            .state::<crate::context::wework_accounts::WeworkAccountsStore>()
+                            .mark_contacts_synced(wework_user_id, synced_at)
+                        {
+                            Ok(()) => json!({ "id": id, "result": { "status": "success" } }),
+                            Err(e) => json!({ "id": id, "error": e }),
+                        }
+                    }
+                }
+                Err(e) => json!({ "id": id, "error": e }),
+            },
             _ => json!({ "id": id, "error": format!("unknown method: {method}") }),
         };
         result
@@ -275,33 +321,23 @@ impl ChannelPythonSidecar {
             .ok_or_else(|| "AgentRuntime not registered".to_string())
     }
 
-    pub async fn channels_get(self: &Arc<Self>) -> Result<Value, String> {
-        self.rpc("channels.list", json!({})).await
+    pub async fn channel_start(self: &Arc<Self>, channel: &str) -> Result<Value, String> {
+        self.rpc("channel.start", json!({ "channel": channel }))
+            .await
     }
 
-    pub async fn channels_post(self: &Arc<Self>, payload: Value) -> Result<Value, String> {
-        self.rpc("channels.action", payload).await
+    pub async fn channel_stop(self: &Arc<Self>, channel: &str) -> Result<Value, String> {
+        self.rpc("channel.stop", json!({ "channel": channel }))
+            .await
     }
 
-    pub async fn channels_status(self: &Arc<Self>) -> Result<Value, String> {
-        self.rpc("channels.status", json!({})).await
+    pub async fn channel_restart(self: &Arc<Self>, channel: &str) -> Result<Value, String> {
+        self.rpc("channel.restart", json!({ "channel": channel }))
+            .await
     }
 
-    pub async fn channels_autostart(self: &Arc<Self>) -> Result<Value, String> {
-        self.rpc("channels.autostart", json!({})).await
-    }
-
-    pub async fn console_api(
-        self: &Arc<Self>,
-        path: &str,
-        method: &str,
-        body: Value,
-    ) -> Result<Value, String> {
-        self.rpc(
-            "console.api",
-            json!({ "path": path, "method": method, "body": body }),
-        )
-        .await
+    pub async fn wework_sync_contacts(self: &Arc<Self>) -> Result<Value, String> {
+        self.rpc("wework.sync_contacts", json!({})).await
     }
 
     async fn rpc(self: &Arc<Self>, method: &str, params: Value) -> Result<Value, String> {

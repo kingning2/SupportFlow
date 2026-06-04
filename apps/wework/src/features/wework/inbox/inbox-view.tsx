@@ -14,7 +14,7 @@ export function InboxView({ connectionStatus }: InboxViewProps) {
   const inbox = useWeworkInbox({ connectionStatus });
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+    <div className="wework-inbox-shell flex min-h-0 min-w-0 flex-1 gap-3 overflow-hidden p-3">
       <ConversationList
         loading={inbox.loading}
         conversations={inbox.conversations}

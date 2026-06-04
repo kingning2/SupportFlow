@@ -5,13 +5,14 @@ import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@supportflow/ui/button";
+import { Checkbox } from "@supportflow/ui/checkbox";
+import { Input } from "@supportflow/ui/input";
 import {
   channelFieldValueString,
   localizeChannelText,
   type ChannelCatalogEntry,
   type ChannelFieldDrafts
 } from "@supportflow/shared";
-import { Input } from "antd";
 
 const WEWORK_DEFAULT_VERSION = "4.0.8.6027";
 const WEWORK_DEFAULT_INIT_WAIT_SECONDS = 60;
@@ -81,7 +82,7 @@ export function WeworkConnectPanel({
       <div>
         <label
           htmlFor="wework-exe-path"
-          className="mb-1.5 block text-sm font-medium text-[#1A2B4A]"
+          className="text-foreground mb-1.5 block text-sm font-medium"
         >
           {pathLabel}
         </label>
@@ -99,22 +100,20 @@ export function WeworkConnectPanel({
         />
       </div>
 
-      <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
-        <input
-          type="checkbox"
-          className="size-4 rounded border-slate-300"
+      <label className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm">
+        <Checkbox
           checked={drafts.bools.wework_smart ?? true}
           onChange={(e) =>
             setDrafts((prev) => ({
               ...prev,
-              bools: { ...prev.bools, wework_smart: e.target.checked }
+              bools: { ...prev.bools, wework_smart: Boolean(e.target.checked) }
             }))
           }
         />
         {t("wework_connect_reuse_client")}
       </label>
 
-      <div className="border-border flex shrink-0 items-center justify-end gap-2 border-t pt-4">
+      <div className="border-border flex shrink-0 items-center justify-end gap-2 pt-4">
         {onCancel ? (
           <Button type="button" variant="ghost" disabled={connecting} onClick={onCancel}>
             {t("wework_account_cancel_new")}
@@ -123,17 +122,11 @@ export function WeworkConnectPanel({
         <Button
           type="button"
           disabled={connecting || !pathValue.trim()}
-          className="min-w-22 bg-(--wework-blue) hover:opacity-90"
+          loading={connecting}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-22"
           onClick={() => void onConnect(buildWeworkConnectConfig(drafts))}
         >
-          {connecting ? (
-            <>
-              <Loader2 className="animate-spin" />
-              {t("channels_connecting")}
-            </>
-          ) : (
-            t("channels_connect_btn")
-          )}
+          {t("channels_connect_btn")}
         </Button>
       </div>
     </div>

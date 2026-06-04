@@ -1,41 +1,19 @@
 #!/usr/bin/env node
 /**
- * Run `tauri dev` with a single channel preset (no in-app channel picker).
- * Standalone flavors (wework / wx) use separate Next apps — other channels use full console.
+ * Run `tauri dev` with a single supported personal channel preset.
  * Usage: node scripts/tauri-dev-channel.mjs wechat
  */
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const CHANNEL_IDS = new Set([
-  "weixin",
-  "wx",
-  "feishu",
-  "dingtalk",
-  "wecom_bot",
-  "wework",
-  "qq",
-  "wechatcom_app",
-  "wechatmp"
-]);
+const CHANNEL_IDS = new Set(["wx", "wework"]);
 
 const ALIASES = {
   wechat: "wx",
   personal_wechat: "wx",
-  weixin: "weixin",
-  official_wechat: "weixin",
-  feishu: "feishu",
-  lark: "feishu",
-  dingtalk: "dingtalk",
-  wecom: "wecom_bot",
-  wecom_bot: "wecom_bot",
-  wework: "wework",
-  qq: "qq",
-  wechatcom: "wechatcom_app",
-  wechatcom_app: "wechatcom_app",
-  wechatmp: "wechatmp",
-  mp: "wechatmp"
+  wx: "wx",
+  wework: "wework"
 };
 
 /** Channel id → standalone Tauri config (separate Next app, isolated bundle). */
@@ -66,7 +44,7 @@ if (!channel) {
     "Usage: node scripts/tauri-dev-channel.mjs <channel>\n" +
       "Channels: " +
       [...CHANNEL_IDS].join(", ") +
-      "\nAliases: wechat→wx, wecom→wecom_bot, wechatcom→wechatcom_app, …"
+      "\nAliases: wechat→wx"
   );
   process.exit(1);
 }

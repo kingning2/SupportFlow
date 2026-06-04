@@ -21,6 +21,12 @@ export function useWeworkChannel(actions: WeworkPageActions) {
   const [channelLoading, setChannelLoading] = useState(true);
   const [channelError, setChannelError] = useState<string | null>(null);
   const [lifecyclePhase, setLifecyclePhase] = useState<string | null>(null);
+  const [eventLoginProfile, setEventLoginProfile] = useState<{
+    user_id: string;
+    display_name: string;
+  } | null>(null);
+  const [eventLoginStatus, setEventLoginStatus] = useState<string | null>(null);
+  const [eventActive, setEventActive] = useState(false);
 
   const refreshSeq = useRef(0);
   const statusDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -107,6 +113,36 @@ export function useWeworkChannel(actions: WeworkPageActions) {
       }
       setLifecyclePhase(payload.phase);
 
+      if (payload.phase === "waiting_login" || payload.phase === "starting") {
+        setEventLoginStatus("unknown");
+        setEventActive(false);
+      }
+
+      if (payload.phase === "logged_in") {
+        setEventLoginStatus("logged_in");
+        setEventActive(false);
+        if (payload.userId) {
+          setEventLoginProfile({
+            user_id: payload.userId,
+            display_name: payload.displayName ?? ""
+          });
+        }
+      }
+
+      if (payload.phase === "syncing") {
+        setEventLoginStatus("logged_in");
+        setEventActive(false);
+      }
+
+      if (payload.phase === "ready") {
+        setEventLoginStatus("logged_in");
+        setEventActive(true);
+      }
+
+      if (payload.phase === "error") {
+        setEventActive(false);
+      }
+
       if (statusDebounceRef.current) {
         clearTimeout(statusDebounceRef.current);
       }
@@ -118,6 +154,9 @@ export function useWeworkChannel(actions: WeworkPageActions) {
   }, [refreshChannel]);
 
   const connectionStatus: WeworkConnectionStatus = (() => {
+    if (eventActive) {
+      return "ready";
+    }
     if (channelLoading) {
       return "connecting";
     }
@@ -134,8 +173,27 @@ export function useWeworkChannel(actions: WeworkPageActions) {
     return "disconnected";
   })();
 
+  const effectiveChannel: ChannelCatalogEntry | null = (() => {
+    if (!channel && !eventLoginStatus && !eventLoginProfile) {
+      return null;
+    }
+
+    return {
+      name: channel?.name ?? "wework",
+      label: channel?.label ?? { zh: "企业微信个人号", en: "WeCom Desktop" },
+      active: channel?.active ?? eventActive,
+      fields: channel?.fields ?? [],
+      hint: channel?.hint,
+      icon: channel?.icon,
+      color: channel?.color,
+      login_status: channel?.login_status ?? channel?.loginStatus ?? eventLoginStatus ?? undefined,
+      loginStatus: channel?.loginStatus ?? channel?.login_status ?? eventLoginStatus ?? undefined,
+      login_profile: channel?.login_profile ?? eventLoginProfile ?? undefined
+    };
+  })();
+
   return {
-    channel,
+    channel: effectiveChannel,
     channelLoading,
     channelError,
     connectionStatus,

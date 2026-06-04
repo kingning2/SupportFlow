@@ -11,6 +11,7 @@
     "./button": "./src/button.tsx",
     "./button-group": "./src/button-group.tsx",
     "./card": "./src/card.tsx",
+    "./checkbox": "./src/checkbox.tsx",
     "./collapsible": "./src/collapsible.tsx",
     "./command": "./src/command.tsx",
     "./content-container": "./src/content-container.tsx",

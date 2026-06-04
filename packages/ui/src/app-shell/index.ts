@@ -13,6 +13,7 @@ export type { TitleBarAccent as ChannelShellAccent } from "@supportflow/ui/title
 
 export {
   channelAction,
+  fetchChannelConsoleApi,
   channelLangFromI18n,
   fetchChannels,
   type ChannelActionRequest

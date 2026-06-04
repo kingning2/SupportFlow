@@ -44,5 +44,7 @@ export enum TauriCmd {
   WeworkUpsertAccount = "wework_upsert_account",
   WeworkDeleteAccount = "wework_delete_account",
   WeworkGetActiveAccountId = "wework_get_active_account_id",
-  WeworkSetActiveAccountId = "wework_set_active_account_id"
+  WeworkSetActiveAccountId = "wework_set_active_account_id",
+  WeworkMarkContactsSynced = "wework_mark_contacts_synced",
+  WeworkContactsSynced = "wework_contacts_synced"
 }

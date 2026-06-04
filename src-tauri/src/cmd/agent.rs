@@ -662,7 +662,7 @@ pub async fn agent_channel_action(
 }
 
 #[tauri::command]
-/// Channel console APIs (QR login, Feishu register) proxied to Python sidecar.
+/// Channel console APIs (WX QR login, WeWork contact sync) proxied to Python sidecar.
 pub async fn agent_channel_console_api(
     license: tauri::State<'_, LicenseStore>,
     runtime: State<'_, Arc<AgentRuntime>>,

@@ -21,6 +21,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(context::session::SessionStore::load_from_disk())
+        .manage(context::channel_status::ChannelStatusStore::default())
         .setup(|app| {
             let runtime = std::sync::Arc::new(context::agent_runtime::AgentRuntime::initialize(
                 app.handle(),
@@ -86,6 +87,8 @@ pub fn run() {
             cmd::wework_accounts::wework_delete_account,
             cmd::wework_accounts::wework_get_active_account_id,
             cmd::wework_accounts::wework_set_active_account_id,
+            cmd::wework_accounts::wework_mark_contacts_synced,
+            cmd::wework_accounts::wework_contacts_synced,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

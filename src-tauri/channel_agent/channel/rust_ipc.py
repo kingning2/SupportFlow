@@ -86,3 +86,12 @@ def call_rust(method: str, params: dict | None = None, timeout: float = 300.0) -
     if not isinstance(result, dict):
         raise RuntimeError(f"invalid Rust RPC result for {method}")
     return result
+
+
+def call_rust_bool(method: str, params: dict | None = None, timeout: float = 300.0) -> bool:
+    """Call Rust RPC and read a boolean `value` field."""
+    result = call_rust(method, params, timeout=timeout)
+    value = result.get("value")
+    if isinstance(value, bool):
+        return value
+    raise RuntimeError(f"invalid Rust RPC bool result for {method}")

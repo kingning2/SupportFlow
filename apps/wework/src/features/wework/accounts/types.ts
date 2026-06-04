@@ -15,4 +15,6 @@ export interface WeworkSavedAccount {
   lastConnectedAt?: number;
   /** 企微 user_id，用于同账号去重 */
   weworkUserId?: string;
+  contactsSynced: boolean;
+  contactsSyncedAt?: number;
 }

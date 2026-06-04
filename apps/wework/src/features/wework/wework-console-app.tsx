@@ -101,10 +101,10 @@ export function WeworkConsoleApp({ lang, actions }: WeworkConsoleAppProps) {
         openGroups={openGroups}
         onToggleGroup={toggleGroup}
       />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--main-window-bg)]">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--wework-canvas)]">
         <WeworkConsoleHeader activeRoute={activeRoute} />
         {connectionStatus !== "ready" && activeRoute === WeworkConsoleRoute.Inbox ? (
-          <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-900">
+          <div className="bg-warning/10 border-warning/20 mx-3 mt-3 shrink-0 rounded-xl border px-3 py-2 text-xs">
             {t("wework_connect_required")}
           </div>
         ) : null}

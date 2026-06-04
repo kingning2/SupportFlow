@@ -41,22 +41,4 @@ impl ChannelBridge {
     pub fn active_channels(&self) -> Vec<String> {
         self.active.read().map(|g| g.clone()).unwrap_or_default()
     }
-
-    /// Apply sidecar `channels.action` result and refresh active set from disk.
-    pub fn on_action_result(
-        &self,
-        config_path: &Path,
-        action: &str,
-        channel: &str,
-        result: &Value,
-    ) -> Result<(), String> {
-        if result.get("status").and_then(|v| v.as_str()) != Some("success") {
-            return Ok(());
-        }
-        self.sync_from_config_file(config_path)?;
-        crate::log_info!(
-            "[ChannelBridge] action={action} channel={channel} (runtime messaging via Rust agent)"
-        );
-        Ok(())
-    }
 }

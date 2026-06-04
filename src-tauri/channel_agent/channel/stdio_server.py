@@ -6,12 +6,10 @@ from __future__ import annotations
 import os
 import signal
 import sys
-import threading
 import time
 
 from channel import channel_manager
 from channel.channel_manager import ChannelManager, parse_external_channel_type
-from channel.rpc_handlers import handle_rust_request
 from channel.rust_ipc import _ensure_reader
 from common.log import logger
 from config import conf, load_config
@@ -51,9 +49,6 @@ def run_stdio_server() -> None:
     load_config()
     _ensure_reader()
 
-    conf()["web_console"] = False
-    conf()["agent"] = conf().get("agent", True)
-
     def _sig(_signum, _frame):
         logger.info("[ChannelStdio] shutdown signal")
         sys.exit(0)
@@ -62,20 +57,5 @@ def run_stdio_server() -> None:
     if hasattr(signal, "SIGTERM"):
         signal.signal(signal.SIGTERM, _sig)
 
-    # Tauri desktop calls `channels.autostart` over RPC after sidecar is up.
-    # Built-in deferred autostart here would start the same channels twice
-    # (each wework thread calls ntwork open() → multiple WeCom processes).
-    if os.environ.get("TAURI_CHANNEL_MODE") != "1":
-        def _deferred_autostart() -> None:
-            delay = float(os.environ.get("CHANNEL_START_DELAY_SECS", "1"))
-            if delay > 0:
-                time.sleep(delay)
-            _start_configured_channels(first_start=True)
-
-        threading.Thread(
-            target=_deferred_autostart,
-            name="channel-autostart",
-            daemon=True,
-        ).start()
     while True:
         time.sleep(3600)

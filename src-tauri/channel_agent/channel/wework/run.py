@@ -7,6 +7,7 @@ Client is created lazily so config (e.g. wework_exe_path) is applied first.
 import os
 import sys
 import time
+import threading
 
 from common.log import logger
 
@@ -214,6 +215,52 @@ def wework_desktop_process_running() -> bool:
         except Exception:
             continue
     return False
+
+
+def ensure_wework_login(client, timeout: float = 90.0) -> dict:
+    """
+    Ensure ntwork is attached to an already-logged-in WeCom session.
+
+    Behaviour:
+    - If the current ntwork client already has login info, return immediately.
+    - If desktop WeCom is already running, do not call `open()` again.
+    - Never block forever inside `wait_login()`; poll `get_login_info()` until timeout.
+    """
+    deadline = time.time() + max(timeout, 1.0)
+
+    def _read_login_info() -> dict | None:
+      try:
+          info = client.get_login_info() or {}
+      except Exception:
+          return None
+      return info if info.get("user_id") else None
+
+    info = _read_login_info()
+    if info:
+        return info
+
+    client.open(smart=True)
+
+    wait_error: list[BaseException] = []
+
+    def _wait_login() -> None:
+        try:
+            client.wait_login()
+        except Exception as exc:
+            wait_error.append(exc)
+
+    waiter = threading.Thread(target=_wait_login, name="wework-wait-login", daemon=True)
+    waiter.start()
+
+    while time.time() < deadline:
+        info = _read_login_info()
+        if info:
+            return info
+        if wait_error:
+            raise RuntimeError(str(wait_error[0]) or type(wait_error[0]).__name__)
+        time.sleep(0.5)
+
+    raise TimeoutError("Timed out while waiting for WeCom login session")
 
 
 def init_wework_client():
