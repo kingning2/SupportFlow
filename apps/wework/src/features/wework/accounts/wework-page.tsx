@@ -22,7 +22,7 @@ import {
   DialogTitle
 } from "@supportflow/ui/dialog";
 
-import { AccountAvatar } from "@/console/accounts/account-avatar";
+import { AccountAvatar } from "@/features/wework/accounts/account-avatar";
 import {
   loadActiveAccountId,
   loadSavedAccounts,
@@ -30,9 +30,9 @@ import {
   removeSavedAccount,
   resolveWeworkLoginFromCatalog,
   upsertSavedAccount
-} from "@/console/accounts/storage";
-import type { WeworkAccountConfig, WeworkSavedAccount } from "@/console/accounts/types";
-import type { WeworkConnectionStatus } from "@/console/types/wework-conversation";
+} from "@/features/wework/accounts/storage";
+import type { WeworkAccountConfig, WeworkSavedAccount } from "@/features/wework/accounts/types";
+import type { WeworkConnectionStatus } from "@/features/wework/types/wework-conversation";
 
 export interface WeworkPageActions {
   fetchChannels: () => Promise<ChannelCatalogEntry[]>;

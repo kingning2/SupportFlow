@@ -9,7 +9,7 @@ import {
   WeworkConsoleRoute
 } from "@supportflow/shared/tauri-bridge/enums";
 
-import { WeworkPage, type WeworkPageActions } from "@/wework-page";
+import { WeworkPage, type WeworkPageActions } from "@/features/wework/accounts/wework-page";
 
 import { WEWORK_ROUTE_PAGE_LABEL } from "./constants/wework-nav";
 import { useActiveWeworkAccount } from "./hooks/use-active-wework-account";

@@ -7,6 +7,7 @@
 | 文档                                                       | 适用场景                                             |
 | ---------------------------------------------------------- | ---------------------------------------------------- |
 | **[roles-and-directories.md](./roles-and-directories.md)** | **按职位看「该改哪个文件夹」**（新人 / 协作必读）    |
+| **[frontend-structure.md](./frontend-structure.md)**       | **前端目录结构基线（只看前端代码）**                 |
 | [frontend.md](./frontend.md)                               | Next.js / React / Redux / UI                         |
 | [backend-rust.md](./backend-rust.md)                       | Tauri / Rust 分层与实现                              |
 | [fullstack-ipc.md](./fullstack-ipc.md)                     | Command / Event / typeshare 契约                     |

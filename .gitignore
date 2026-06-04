@@ -42,3 +42,5 @@ src-tauri/channel_agent/dist/
 src-tauri/channel_agent/*.spec
 
 subscription-activation-generator
+
+.codegraph

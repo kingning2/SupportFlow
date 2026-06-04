@@ -9,7 +9,7 @@ import { TauriEvent } from "@supportflow/shared/tauri-bridge/enums";
 import { tauriOn } from "@supportflow/shared/tauri-bridge/tauri-event";
 
 import type { WeworkConnectionStatus } from "../types/wework-conversation";
-import type { WeworkPageActions } from "@/wework-page";
+import type { WeworkPageActions } from "@/features/wework/accounts/wework-page";
 
 const CONNECTING_PHASES = new Set(["starting", "waiting_login", "logged_in", "syncing"]);
 

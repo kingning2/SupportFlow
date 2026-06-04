@@ -6,10 +6,10 @@ import { DesktopAppLayout } from "@supportflow/ui/app-shell";
 import "@supportflow/ui/design-system";
 import "@supportflow/ui/design-system/flavors/wework";
 
-import "@/console/styles/wework-console.css";
+import "@/features/wework/styles/wework-console.css";
 
-import { weworkShellAccent } from "@/shell-accent";
-import { WEWORK_SHELL_CONTENT_CLASS } from "@/wework-shell";
+import { weworkShellAccent } from "@/config/wework-shell-accent";
+import { WEWORK_SHELL_CONTENT_CLASS } from "@/config/wework-shell";
 
 export const metadata: Metadata = {
   title: "SupportFlow · 企微个人号",

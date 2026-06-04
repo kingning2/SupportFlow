@@ -11,6 +11,7 @@ import {
   type ChannelCatalogEntry,
   type ChannelFieldDrafts
 } from "@supportflow/shared";
+import { Input } from "antd";
 
 const WEWORK_DEFAULT_VERSION = "4.0.8.6027";
 const WEWORK_DEFAULT_INIT_WAIT_SECONDS = 60;
@@ -75,7 +76,7 @@ export function WeworkConnectPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-xs leading-relaxed text-slate-500">{t("wework_connect_note")}</p>
+      {/* <p className="text-xs leading-relaxed text-slate-500">{t("wework_connect_note")}</p> */}
 
       <div>
         <label
@@ -84,12 +85,11 @@ export function WeworkConnectPanel({
         >
           {pathLabel}
         </label>
-        <input
+        <Input
           id="wework-exe-path"
           type="text"
           value={pathValue}
           placeholder={pathPlaceholder}
-          className="w-full rounded-lg border border-[hsl(var(--border))] bg-white px-3 py-2 text-sm text-[#1A2B4A] outline-none focus:border-[var(--wework-blue,#2F7CF6)] focus:ring-1 focus:ring-[var(--wework-blue,#2F7CF6)]/30"
           onChange={(e) =>
             setDrafts((prev) => ({
               ...prev,
@@ -97,7 +97,6 @@ export function WeworkConnectPanel({
             }))
           }
         />
-        <p className="mt-1 text-[10px] text-slate-400">{t("wework_connect_path_hint")}</p>
       </div>
 
       <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
@@ -115,7 +114,7 @@ export function WeworkConnectPanel({
         {t("wework_connect_reuse_client")}
       </label>
 
-      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[hsl(var(--border))] pt-4">
+      <div className="border-border flex shrink-0 items-center justify-end gap-2 border-t pt-4">
         {onCancel ? (
           <Button type="button" variant="ghost" disabled={connecting} onClick={onCancel}>
             {t("wework_account_cancel_new")}
