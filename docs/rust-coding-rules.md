@@ -66,6 +66,13 @@ Rust 是本仓库的主业务层，负责桌面应用编排、状态、配置、
    - 参数
    - 返回值
 
+## Python 互操作（`src/python/`）
+
+1. 所有 Python 子进程与 `channel_agent/` 脚本调用集中在 `src/python/`（结构见 `rust-folder-structure.md` → `src/python/`）。
+2. `services/`、`context/` 禁止直接 `Command::new("python")`；通过 `crate::python::markitdown`、`crate::python::sidecar` 等公开 API 调用。
+3. MarkItDown 与渠道 sidecar 是**两套进程模型**，不得合并进同一 Python 入口。
+4. 新增 `python/*.rs` 时须在模块头用中文注释说明：对应哪份 Python 脚本、是否长驻、谁负责设置环境变量。
+
 ## IPC 规则
 
 1. Command 走统一 Tauri `invoke`。

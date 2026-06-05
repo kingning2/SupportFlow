@@ -1,8 +1,8 @@
 //! 通过独立 `license-verifier` 子进程完成订阅校验，避免在主程序源码中暴露验签逻辑。
 
-use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::path::PathBuf;
 
+use process_runtime::{run_sync, CommandSpec, ProcessSharedContext};
 use serde::Deserialize;
 
 /// 子进程校验结果（与 license-verifier stdout JSON 对齐）。
@@ -30,27 +30,15 @@ fn verifier_missing_message() -> String {
 ///
 /// 优先级：`LICENSE_VERIFIER_EXE` 环境变量 → `src-tauri/binaries/license-verifier-{target}.exe`
 pub fn resolve_verifier_exe() -> Result<PathBuf, String> {
-    if let Some(raw) = crate::utils::env::get("LICENSE_VERIFIER_EXE") {
-        let trimmed = raw.trim();
-        if !trimmed.is_empty() {
-            let path = PathBuf::from(trimmed);
-            if path.is_file() {
-                return Ok(path);
-            }
-            return Err(format!(
-                "LICENSE_VERIFIER_EXE points to missing file: {}",
-                path.display()
-            ));
-        }
+    if let Some(path) = process_runtime::resolve_exe_from_env("LICENSE_VERIFIER_EXE")? {
+        return Ok(path);
     }
 
-    let manifest = crate::utils::path::crate_path("");
-    let name = format!(
-        "license-verifier-{}{}",
+    let path = process_runtime::binary_in_dir(
+        &crate::utils::path::crate_path("binaries"),
+        "license-verifier",
         env!("BUILD_TARGET"),
-        std::env::consts::EXE_SUFFIX
     );
-    let path = manifest.join("binaries").join(name);
     if path.is_file() {
         return Ok(path);
     }
@@ -58,30 +46,23 @@ pub fn resolve_verifier_exe() -> Result<PathBuf, String> {
     Err(verifier_missing_message())
 }
 
-fn run_verifier<I, S>(exe: &Path, args: I) -> Result<(i32, String, String), String>
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<str>,
-{
-    let output = Command::new(exe)
-        .args(args.into_iter().map(|s| s.as_ref().to_string()))
-        .output()
-        .map_err(|e| format!("spawn license-verifier failed: {e}"))?;
+fn verifier_spec(exe: &PathBuf, args: Vec<&str>) -> CommandSpec {
+    CommandSpec::binary("license-verifier", exe.clone()).with_args(args)
+}
 
-    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-    let code = output.status.code().unwrap_or(2);
-    Ok((code, stdout, stderr))
+fn run_verifier(exe: &PathBuf, args: Vec<&str>) -> Result<(i32, String, String), String> {
+    let output = run_sync(&verifier_spec(exe, args), &ProcessSharedContext::default())?;
+    Ok((
+        output.code.unwrap_or(2),
+        output.stdout_lossy(),
+        output.stderr_lossy(),
+    ))
 }
 
 /// 调用子进程计算本机 machineCode。
-///
-/// # Returns
-///
-/// * `String` - 十六进制 machineCode
 pub fn machine_code_via_exe() -> Result<String, String> {
     let exe = resolve_verifier_exe()?;
-    let (code, stdout, stderr) = run_verifier(&exe, ["gen-machine-code"])?;
+    let (code, stdout, stderr) = run_verifier(&exe, vec!["gen-machine-code"])?;
     if code != 0 {
         return Err(if stderr.is_empty() {
             format!("license-verifier gen-machine-code failed (exit={code})")
@@ -97,14 +78,6 @@ pub fn machine_code_via_exe() -> Result<String, String> {
 }
 
 /// 调用子进程校验激活 token（含 RSA 验签、机器码、过期时间）。
-///
-/// # 参数
-///
-/// * `token` - base64url 编码的激活 token
-///
-/// # Returns
-///
-/// * `LicenseVerifierOutput` - 校验结果；`valid == false` 时 `reason` 说明原因
 pub fn verify_token_via_exe(token: &str) -> Result<LicenseVerifierOutput, String> {
     let token = token.trim();
     if token.is_empty() {
@@ -116,11 +89,11 @@ pub fn verify_token_via_exe(token: &str) -> Result<LicenseVerifierOutput, String
     }
 
     let exe = resolve_verifier_exe()?;
-    let (code, stdout, stderr) = run_verifier(&exe, ["verify", "--token", token])?;
+    let (code, stdout, stderr) = run_verifier(&exe, vec!["verify", "--token", token])?;
 
     if code == 2 {
         return Err(if stderr.is_empty() {
-            format!("license-verifier verify failed (exit=2)")
+            "license-verifier verify failed (exit=2)".to_string()
         } else {
             format!("license-verifier verify failed: {stderr}")
         });

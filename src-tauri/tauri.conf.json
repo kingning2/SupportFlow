@@ -30,6 +30,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "externalBin": ["binaries/channel-sidecar"],
     "resources": ["resources/languages/*", "resources/config*.json", "resources/public_key.pem", "../channel_agent/scripts/markitdown_convert.py"],
     "icon": [
       "icons/32x32.png",

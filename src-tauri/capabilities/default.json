@@ -15,6 +15,17 @@
     "core:window:allow-set-focus",
     "core:window:allow-center",
     "opener:default",
-    "dialog:default"
+    "dialog:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/channel-sidecar",
+          "sidecar": true
+        }
+      ]
+    },
+    "shell:allow-spawn",
+    "shell:allow-stdin-write"
   ]
 }

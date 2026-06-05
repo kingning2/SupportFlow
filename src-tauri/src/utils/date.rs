@@ -23,11 +23,6 @@ pub fn unix_timestamp_string() -> String {
     unix_timestamp_seconds().to_string()
 }
 
-/// 获取当前 Unix 秒级时间戳，兼容需要 i64 的许可证逻辑。
-pub fn unix_timestamp_seconds_i64() -> i64 {
-    unix_timestamp_seconds() as i64
-}
-
 /// 判断闰年
 fn is_leap_year(year: i32) -> bool {
     (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)

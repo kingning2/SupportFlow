@@ -4,8 +4,6 @@ use std::os::windows::process::CommandExt;
 use std::path::Path;
 use std::process::Command as StdCommand;
 
-use tokio::process::Command;
-
 fn channel_python_from_env() -> Option<String> {
     if let Some(exe) = crate::utils::env::get("CHANNEL_PYTHON_EXECUTABLE") {
         let trimmed = exe.trim();
@@ -41,20 +39,6 @@ fn python_executable_from_launcher(launcher: &str, args: &[&str]) -> Option<Stri
     }
 
     Some(exe)
-}
-
-/// Apply Windows background launch flags to one child command.
-///
-/// # Arguments
-///
-/// * `cmd` - Child command that will launch a sidecar process
-///
-/// # Returns
-///
-/// * `()` - Command updated in place
-pub fn apply_background_command_flags(cmd: &mut Command) {
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
-    cmd.creation_flags(CREATE_NO_WINDOW);
 }
 
 /// Resolve the preferred Python executable for Windows sidecar launch.

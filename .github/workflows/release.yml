@@ -87,7 +87,7 @@ jobs:
           }
 
       - name: Build & upload SupportFlow (full)
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -111,7 +111,7 @@ jobs:
           args: --config tauri.conf.json
 
       - name: Build & upload SupportFlow 企微 (wework)
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEV_CHANNEL: wework
@@ -124,7 +124,7 @@ jobs:
           args: --config tauri.wework.conf.json
 
       - name: Build & upload SupportFlow 微信 (wechat)
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEV_CHANNEL: wx
