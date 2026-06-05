@@ -32,7 +32,7 @@ pub fn resolve_workspace() -> Result<PathBuf> {
         }
     }
     let p = default_data_dir()?;
-    std::fs::create_dir_all(&p).with_context(|| format!("create workspace {}", p.display()))?;
+    fs_io::create_dir_all(&p).with_context(|| format!("create workspace {}", p.display()))?;
     Ok(p)
 }
 

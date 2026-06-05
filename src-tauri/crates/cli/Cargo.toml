@@ -10,8 +10,8 @@ name = "sf"
 path = "src/main.rs"
 
 [dependencies]
-agent = { path = "../agent" }
-bridge = { path = "../bridge" }
+tauri-app = { path = "../..", default-features = false }
+fs_io = { path = "../fs_io" }
 models = { path = "../models" }
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }

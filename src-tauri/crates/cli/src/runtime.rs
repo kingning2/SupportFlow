@@ -3,9 +3,9 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use agent::McpToolLoader;
 use anyhow::Result;
-use bridge::{load_dotenv_into_process, sync_config_to_dotenv, BridgeRuntime};
+use tauri_app_lib::bridge::{load_dotenv_into_process, sync_config_to_dotenv, BridgeRuntime};
+use tauri_app_lib::services::agent::McpToolLoader;
 use models::ModelsConfig;
 
 use crate::paths;
@@ -15,7 +15,6 @@ pub struct CliRuntime {
     pub config_path: std::path::PathBuf,
     pub config: Arc<ModelsConfig>,
     pub stack: Arc<BridgeRuntime>,
-    pub mcp_loader: Arc<McpToolLoader>,
 }
 
 impl CliRuntime {
@@ -36,7 +35,6 @@ impl CliRuntime {
             config_path,
             config,
             stack,
-            mcp_loader,
         })
     }
 }

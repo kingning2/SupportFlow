@@ -1,7 +1,6 @@
 //! `skills/skills_config.json` — parity with SupportFlow Agent Python CLI.
 
 use std::collections::HashMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
@@ -41,16 +40,16 @@ pub fn load(workspace: &Path) -> SkillsConfigMap {
     if !path.is_file() {
         return HashMap::new();
     }
-    let raw = fs::read_to_string(&path).unwrap_or_default();
+    let raw = fs_io::read_to_string(&path).unwrap_or_default();
     serde_json::from_str(&raw).unwrap_or_default()
 }
 
 pub fn save(workspace: &Path, config: &SkillsConfigMap) -> Result<()> {
     let dir = paths::skills_dir(workspace);
-    fs::create_dir_all(&dir)?;
+    fs_io::create_dir_all(&dir)?;
     let path = paths::skills_config_path(workspace);
     let json = serde_json::to_string_pretty(config).context("serialize skills_config")?;
-    fs::write(&path, json).with_context(|| format!("write {}", path.display()))
+    fs_io::write(&path, json).with_context(|| format!("write {}", path.display()))
 }
 
 pub fn set_enabled(workspace: &Path, name: &str, enabled: bool) -> Result<()> {
@@ -93,7 +92,7 @@ pub fn merge_disk_skills(workspace: &Path, config: &mut SkillsConfigMap) -> bool
         if !dir.is_dir() {
             continue;
         }
-        let Ok(entries) = fs::read_dir(&dir) else {
+        let Ok(entries) = fs_io::read_dir(&dir) else {
             continue;
         };
         for entry in entries.flatten() {
@@ -140,7 +139,7 @@ fn builtin_skills_dir() -> PathBuf {
 
 fn read_skill_description(skill_path: &Path) -> String {
     let skill_md = skill_path.join("SKILL.md");
-    let Ok(content) = fs::read_to_string(&skill_md) else {
+    let Ok(content) = fs_io::read_to_string(&skill_md) else {
         return String::new();
     };
     for line in content.lines() {

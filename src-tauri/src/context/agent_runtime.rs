@@ -5,12 +5,12 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use agent::SkillEntry;
-use agent::{
+use crate::agent::SkillEntry;
+use crate::agent::{
     get_cancel_registry, Agent, AgentEvent, AgentEventCallback, CancelHandle, McpToolLoader,
     RunStreamOptions,
 };
-use bridge::{context_from_reply_params, BridgeRuntime};
+use crate::bridge::{context_from_reply_params, BridgeRuntime};
 use models::catalog::provider_configured;
 use models::provider_catalog::{
     build_provider_details, find_provider_meta as find_provider_meta_detail,
@@ -23,7 +23,7 @@ use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::Mutex;
 
-use crate::context::channel_bridge::ChannelBridge;
+use crate::context::channel::ChannelBridge;
 use crate::context::workspace_console;
 use crate::events::channel_status_changed_all;
 use crate::events::names::{AGENT_LOG_STREAM, AGENT_RUN_FINISHED, AGENT_STREAM_CHUNK};
@@ -197,9 +197,7 @@ pub struct AgentRuntime {
     bridge_stack: tokio::sync::RwLock<Arc<BridgeRuntime>>,
     session_id: Mutex<String>,
     log_streaming: tokio::sync::RwLock<bool>,
-    channel_sidecar: tokio::sync::Mutex<
-        Option<Arc<crate::context::channel_python_sidecar::ChannelPythonSidecar>>,
-    >,
+    channel_sidecar: tokio::sync::Mutex<Option<Arc<crate::python::ChannelPythonSidecar>>>,
     channel_bridge: Arc<ChannelBridge>,
 }
 
@@ -293,9 +291,7 @@ impl AgentRuntime {
         if self.channel_sidecar.lock().await.is_some() {
             return;
         }
-        match crate::context::channel_python_sidecar::spawn_sidecar(&self.app, &self.config_path)
-            .await
-        {
+        match crate::python::spawn_sidecar(&self.app, &self.config_path).await {
             Ok(sidecar) => {
                 sidecar
                     .register_runtime(std::sync::Arc::downgrade(&self))
@@ -332,13 +328,11 @@ impl AgentRuntime {
 
     async fn ensure_sidecar(
         self: &Arc<Self>,
-    ) -> Result<Arc<crate::context::channel_python_sidecar::ChannelPythonSidecar>, String> {
+    ) -> Result<Arc<crate::python::ChannelPythonSidecar>, String> {
         if let Some(sidecar) = self.channel_sidecar.lock().await.clone() {
             return Ok(sidecar);
         }
-        let sidecar =
-            crate::context::channel_python_sidecar::spawn_sidecar(&self.app, &self.config_path)
-                .await?;
+        let sidecar = crate::python::spawn_sidecar(&self.app, &self.config_path).await?;
         sidecar
             .register_runtime(std::sync::Arc::downgrade(self))
             .await;
@@ -353,7 +347,7 @@ impl AgentRuntime {
     /// * `Arc<ChannelPythonSidecar>` - Shared sidecar handle ready for runtime RPCs
     pub async fn ensure_channel_sidecar(
         self: &Arc<Self>,
-    ) -> Result<Arc<crate::context::channel_python_sidecar::ChannelPythonSidecar>, String> {
+    ) -> Result<Arc<crate::python::ChannelPythonSidecar>, String> {
         self.ensure_sidecar().await
     }
 
@@ -701,10 +695,10 @@ impl AgentRuntime {
         &self,
         files: Vec<(String, Vec<u8>)>,
         category: Option<&str>,
-    ) -> Result<agent::IngestBatchResult, String> {
+    ) -> Result<crate::agent::IngestBatchResult, String> {
         let config = self.config.read().await.clone();
         let enabled = config.knowledge.unwrap_or(true);
-        let svc = agent::knowledge::KnowledgeService::new(&self.workspace);
+        let svc = crate::agent::knowledge::KnowledgeService::new(&self.workspace);
         svc.ingest_upload(files, category.unwrap_or("uploads"), true, enabled, &config)
             .await
     }
@@ -723,18 +717,18 @@ impl AgentRuntime {
         &self,
         app: &AppHandle,
         category: Option<&str>,
-    ) -> Result<agent::IngestBatchResult, String> {
+    ) -> Result<crate::agent::IngestBatchResult, String> {
         let maybe_files =
             crate::utils::knowledge_pick::pick_and_read_supported_knowledge_files(app)?;
 
         let Some(files) = maybe_files else {
-            return Ok(agent::IngestBatchResult::default());
+            return Ok(crate::agent::IngestBatchResult::default());
         };
 
         if files.is_empty() {
-            return Ok(agent::IngestBatchResult {
+            return Ok(crate::agent::IngestBatchResult {
                 results: Vec::new(),
-                errors: vec![agent::knowledge::IngestError {
+                errors: vec![crate::agent::knowledge::IngestError {
                     file: "selection".into(),
                     message: "no files could be read from the chosen paths".into(),
                 }],
@@ -755,7 +749,7 @@ impl AgentRuntime {
     pub async fn channel_python_channels_get(
         self: &Arc<Self>,
     ) -> Result<serde_json::Value, String> {
-        crate::context::channel_catalog::build_catalog(&self.app, &self.config_path)
+        crate::context::channel::build_catalog(&self.app, &self.config_path)
     }
 
     /// Push channel lifecycle updates from Python sidecar to the Rust status store and all Webviews.
@@ -808,7 +802,7 @@ impl AgentRuntime {
         };
         if let Some(store) = self
             .app
-            .try_state::<crate::context::channel_status::ChannelStatusStore>()
+            .try_state::<crate::context::channel::ChannelStatusStore>()
         {
             let _ = store.apply(&payload);
         }
@@ -829,7 +823,7 @@ impl AgentRuntime {
     #[cfg(feature = "channel-wework")]
     pub fn wework_contacts_synced(&self, wework_user_id: &str) -> Result<bool, String> {
         self.app
-            .state::<crate::context::wework_accounts::WeworkAccountsStore>()
+            .state::<crate::context::channel::wework_accounts::WeworkAccountsStore>()
             .contacts_synced(wework_user_id)
     }
 
@@ -855,7 +849,7 @@ impl AgentRuntime {
         synced_at: i64,
     ) -> Result<(), String> {
         self.app
-            .state::<crate::context::wework_accounts::WeworkAccountsStore>()
+            .state::<crate::context::channel::wework_accounts::WeworkAccountsStore>()
             .mark_contacts_synced(wework_user_id, synced_at)
     }
 
@@ -875,7 +869,7 @@ impl AgentRuntime {
         method: &str,
         body: serde_json::Value,
     ) -> Result<serde_json::Value, String> {
-        crate::context::channel_console_api::dispatch(&self.app, self, path, method, &body).await
+        crate::context::channel::dispatch(&self.app, self, path, method, &body).await
     }
 
     /// Accept one manual WeCom contacts sync request and run it in the background.
@@ -933,7 +927,7 @@ impl AgentRuntime {
         let sidecar = self.ensure_sidecar().await?;
         let result = match action.as_str() {
             "save" => {
-                let applied = crate::context::channel_runtime::persist_channel_config(
+                let applied = crate::context::channel::persist_channel_config(
                     &self.config_path,
                     &channel,
                     &config,
@@ -942,40 +936,34 @@ impl AgentRuntime {
                 self.channel_bridge
                     .sync_from_config_file(&self.config_path)?;
 
-                let restarted =
-                    crate::context::channel_runtime::should_restart_channel(&channel, &applied);
+                let restarted = crate::context::channel::should_restart_channel(&channel, &applied);
                 if restarted {
                     let _ = sidecar.channel_restart(&channel).await?;
                 }
 
-                crate::context::channel_runtime::action_response(
+                crate::context::channel::action_response(
                     self.channel_bridge.active_channels().join(","),
                     restarted,
                     applied,
                 )
             }
             "connect" => {
-                let (channel_type, applied) = crate::context::channel_runtime::connect_channel(
-                    &self.config_path,
-                    &channel,
-                    &config,
-                )?;
+                let (channel_type, applied) =
+                    crate::context::channel::connect_channel(&self.config_path, &channel, &config)?;
                 self.reload_config_from_disk().await?;
                 self.channel_bridge
                     .sync_from_config_file(&self.config_path)?;
                 let _ = sidecar.channel_start(&channel).await?;
-                crate::context::channel_runtime::action_response(channel_type, true, applied)
+                crate::context::channel::action_response(channel_type, true, applied)
             }
             "disconnect" => {
-                let channel_type = crate::context::channel_runtime::disconnect_channel(
-                    &self.config_path,
-                    &channel,
-                )?;
+                let channel_type =
+                    crate::context::channel::disconnect_channel(&self.config_path, &channel)?;
                 self.reload_config_from_disk().await?;
                 self.channel_bridge
                     .sync_from_config_file(&self.config_path)?;
                 let _ = sidecar.channel_stop(&channel).await?;
-                crate::context::channel_runtime::action_response(channel_type, true, Vec::new())
+                crate::context::channel::action_response(channel_type, true, Vec::new())
             }
             _ => {
                 return Err(format!("unknown channel action: {action}"));
@@ -1248,7 +1236,7 @@ impl AgentRuntime {
             .conversation_persistence
             .unwrap_or(true)
         {
-            let store = agent::conversation_store_for_workspace(&self.workspace)?;
+            let store = crate::agent::conversation_store_for_workspace(&self.workspace)?;
             store.clear_context(&session_id)?;
         }
         Ok(())

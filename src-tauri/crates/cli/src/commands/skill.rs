@@ -2,7 +2,7 @@ use std::fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
-use agent::SkillManager;
+use tauri_app_lib::services::agent::SkillManager;
 use anyhow::{bail, Context, Result};
 use regex::Regex;
 use reqwest::blocking::Client;
@@ -267,7 +267,7 @@ fn install_local_path(path: &Path) -> Result<()> {
     }
     let ws = paths::resolve_workspace()?;
     let dest_root = paths::skills_dir(&ws);
-    fs::create_dir_all(&dest_root)?;
+    fs_io::create_dir_all(&dest_root)?;
 
     if path.join("SKILL.md").is_file() {
         let name = path
@@ -281,7 +281,7 @@ fn install_local_path(path: &Path) -> Result<()> {
     }
 
     let mut count = 0;
-    for entry in fs::read_dir(&path)? {
+    for entry in fs_io::read_dir(&path)? {
         let entry = entry?;
         let p = entry.path();
         if p.is_dir() && p.join("SKILL.md").is_file() {
@@ -305,7 +305,7 @@ fn extract_zip_skills(bytes: &[u8], fallback_name: &str) -> Result<()> {
     if temp.exists() {
         fs::remove_dir_all(&temp).ok();
     }
-    fs::create_dir_all(&temp)?;
+    fs_io::create_dir_all(&temp)?;
     archive.extract(&temp).context("extract zip")?;
 
     let mut skill_dirs = Vec::new();
@@ -317,7 +317,7 @@ fn extract_zip_skills(bytes: &[u8], fallback_name: &str) -> Result<()> {
 
     let ws = paths::resolve_workspace()?;
     let dest_root = paths::skills_dir(&ws);
-    fs::create_dir_all(&dest_root)?;
+    fs_io::create_dir_all(&dest_root)?;
 
     if skill_dirs.len() == 1 && skill_dirs[0].1 == fallback_name {
         copy_skill_dir(&skill_dirs[0].0, &dest_root.join(fallback_name))?;
@@ -341,7 +341,7 @@ fn find_skill_dirs(root: &Path, out: &mut Vec<(PathBuf, String)>) {
         out.push((root.to_path_buf(), name));
         return;
     }
-    let Ok(entries) = fs::read_dir(root) else {
+    let Ok(entries) = fs_io::read_dir(root) else {
         return;
     };
     for entry in entries.flatten() {
@@ -361,8 +361,8 @@ fn copy_skill_dir(src: &Path, dest: &Path) -> Result<()> {
 }
 
 fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<()> {
-    fs::create_dir_all(dest)?;
-    for entry in fs::read_dir(src)? {
+    fs_io::create_dir_all(dest)?;
+    for entry in fs_io::read_dir(src)? {
         let entry = entry?;
         let ty = entry.file_type()?;
         let from = entry.path();
@@ -370,7 +370,7 @@ fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<()> {
         if ty.is_dir() {
             copy_dir_recursive(&from, &to)?;
         } else {
-            fs::copy(&from, &to)?;
+            fs_io::copy(&from, &to)?;
         }
     }
     Ok(())

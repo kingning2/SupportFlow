@@ -11,6 +11,7 @@ pub mod catalog;
 pub mod channel_reply;
 pub mod config;
 pub mod const_;
+pub mod fs;
 pub mod http_proxy;
 pub mod message_utils;
 pub mod openai_compatible;

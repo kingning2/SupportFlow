@@ -1,16 +1,29 @@
+pub mod services;
+
+pub mod python;
+
+#[cfg(feature = "desktop")]
 mod cmd;
+#[cfg(feature = "desktop")]
 mod context;
+#[cfg(feature = "desktop")]
 pub mod contracts;
+#[cfg(feature = "desktop")]
 mod events;
+#[cfg(feature = "desktop")]
 mod utils;
 
+/// LLM Provider 协议层（`crates/models`）。
+pub use models;
+/// Agent 工具引擎（`src/services/agent`）。
+pub use services::agent;
+/// Bot / AgentBridge 业务（`src/services/bridge`）。
+pub use services::bridge;
+
+#[cfg(feature = "desktop")]
 use tauri::Manager;
 
-/// Agent runtime (Python `agent/` package, incremental port).
-pub use agent;
-/// LLM `models/` layer (Python `models/` package).
-pub use models;
-
+#[cfg(feature = "desktop")]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     if let Err(e) = utils::log::init_log() {
@@ -21,7 +34,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(context::session::SessionStore::load_from_disk())
-        .manage(context::channel_status::ChannelStatusStore::default())
+        .manage(context::channel::ChannelStatusStore::default())
         .setup(|app| {
             let runtime = std::sync::Arc::new(context::agent_runtime::AgentRuntime::initialize(
                 app.handle(),
@@ -35,10 +48,9 @@ pub fn run() {
             });
             app.manage(runtime);
             app.manage(license_store);
+            app.manage(context::channel::ChannelInboxStore::open(app.handle())?);
             #[cfg(feature = "channel-wework")]
-            app.manage(context::wework_accounts::WeworkAccountsStore::open(
-                app.handle(),
-            )?);
+            app.manage(context::channel::WeworkAccountsStore::open(app.handle())?);
             events::setup(app.handle());
             Ok(())
         })
@@ -56,33 +68,34 @@ pub fn run() {
             cmd::window::close_modal_window,
             cmd::window::modal_window_ready,
             cmd::window::preload_modal_window,
-            cmd::agent::agent_get_console_state,
-            cmd::agent::agent_send_message,
-            cmd::agent::agent_cancel,
-            cmd::agent::agent_clear_context,
-            cmd::agent::agent_new_session,
-            cmd::agent::agent_refresh_skills,
-            cmd::agent::agent_update_provider,
-            cmd::agent::agent_clear_provider,
-            cmd::agent::agent_set_chat_model,
-            cmd::agent::agent_list_sessions,
-            cmd::agent::agent_list_memory,
-            cmd::agent::agent_read_memory,
-            cmd::agent::agent_list_knowledge,
-            cmd::agent::agent_read_knowledge,
-            cmd::agent::agent_get_knowledge_graph,
-            cmd::agent::agent_upload_knowledge,
-            cmd::agent::agent_pick_and_upload_knowledge,
-            cmd::agent::agent_remove_knowledge_file,
-            cmd::agent::agent_list_channels,
-            cmd::agent::agent_get_channel_catalog,
-            cmd::agent::agent_channel_action,
-            cmd::agent::agent_channel_console_api,
-            cmd::agent::agent_list_tasks,
-            cmd::agent::agent_get_logs_status,
-            cmd::agent::agent_read_logs,
-            cmd::agent::agent_start_log_stream,
-            cmd::agent::agent_stop_log_stream,
+            cmd::agent_ipc::agent_get_console_state,
+            cmd::agent_ipc::agent_send_message,
+            cmd::agent_ipc::agent_cancel,
+            cmd::agent_ipc::agent_clear_context,
+            cmd::agent_ipc::agent_new_session,
+            cmd::agent_ipc::agent_refresh_skills,
+            cmd::agent_ipc::agent_update_provider,
+            cmd::agent_ipc::agent_clear_provider,
+            cmd::agent_ipc::agent_set_chat_model,
+            cmd::agent_ipc::agent_list_sessions,
+            cmd::agent_ipc::agent_list_memory,
+            cmd::agent_ipc::agent_read_memory,
+            cmd::agent_ipc::agent_list_knowledge,
+            cmd::agent_ipc::agent_read_knowledge,
+            cmd::agent_ipc::agent_get_knowledge_graph,
+            cmd::agent_ipc::agent_upload_knowledge,
+            cmd::agent_ipc::agent_pick_and_upload_knowledge,
+            cmd::agent_ipc::agent_remove_knowledge_file,
+            cmd::agent_ipc::agent_list_channels,
+            cmd::agent_ipc::agent_get_channel_catalog,
+            cmd::agent_ipc::agent_channel_action,
+            cmd::agent_ipc::agent_channel_console_api,
+            cmd::agent_ipc::agent_list_tasks,
+            cmd::agent_ipc::agent_get_logs_status,
+            cmd::agent_ipc::agent_read_logs,
+            cmd::agent_ipc::agent_start_log_stream,
+            cmd::agent_ipc::agent_stop_log_stream,
+            cmd::channel_inbox::channel_get_inbox,
             #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_list_accounts,
             #[cfg(feature = "channel-wework")]

@@ -112,7 +112,7 @@ impl ModelsConfig {
     /// Load from a SupportFlow-style `config.json` file.
     pub fn from_json_file(path: impl AsRef<Path>) -> Result<Self, String> {
         let text =
-            std::fs::read_to_string(path.as_ref()).map_err(|e| format!("read config: {e}"))?;
+            crate::fs::read_to_string(path.as_ref()).map_err(|e| format!("read config: {e}"))?;
         serde_json::from_str(&text).map_err(|e| format!("parse config: {e}"))
     }
 

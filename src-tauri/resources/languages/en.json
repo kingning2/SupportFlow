@@ -91,7 +91,7 @@
     "wework_inbox_select_conversation": "Select a conversation",
     "wework_inbox_no_messages": "No messages yet",
     "wework_inbox_composer_placeholder": "Operator reply (coming soon)",
-    "wework_inbox_composer_hint": "Demo data; sending will work after IPC is wired",
+    "wework_inbox_composer_hint": "Messages sync from channels in real time",
     "wework_kind_group": "Group",
     "wework_kind_direct": "Direct",
     "wework_detail_title": "Details",

@@ -20,8 +20,12 @@ pub fn pick_and_read_supported_knowledge_files(
     app: &AppHandle,
 ) -> Result<Option<Vec<(String, Vec<u8>)>>, String> {
     // Collect supported extensions (strip the leading dot for dialog filter API).
-    let raw_exts = agent::knowledge::document_parser::all_doc_suffixes();
-    let exts: Vec<&str> = raw_exts.iter().map(|s| s.trim_start_matches('.')).collect();
+    let raw_exts = crate::agent::knowledge::document_parser::all_doc_suffixes();
+    let exts: Vec<&str> = raw_exts
+        .iter()
+        .copied()
+        .map(|s| s.trim_start_matches('.'))
+        .collect();
 
     let selected = app
         .dialog()
@@ -58,7 +62,7 @@ pub fn pick_and_read_supported_knowledge_files(
                 .map(|n| n.to_string_lossy().into_owned())
                 .unwrap_or_else(|| "unknown-file".into());
 
-            match std::fs::read(&path) {
+            match crate::utils::fs::read(&path) {
                 Ok(data) => Some((filename, data)),
                 Err(e) => {
                     crate::log_warn!("[KnowledgePick] failed to read {:?}: {}", path, e);

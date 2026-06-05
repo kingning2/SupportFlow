@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use agent::conversation_store_for_workspace;
+use tauri_app_lib::services::agent::conversation_store_for_workspace;
 
 use crate::paths;
 use crate::runtime::CliRuntime;

@@ -86,9 +86,9 @@ async fn chat_once(
     ctx.kwargs.insert("channel_type".into(), "cli".to_string());
 
     let on_event = if verbose {
-        Some(std::sync::Arc::new(move |ev: agent::AgentEvent| {
+        Some(std::sync::Arc::new(move |ev: tauri_app_lib::services::agent::AgentEvent| {
             eprintln!("[agent] {ev:?}");
-        }) as agent::AgentEventCallback)
+        }) as tauri_app_lib::services::agent::AgentEventCallback)
     } else {
         None
     };

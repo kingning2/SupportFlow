@@ -33,8 +33,22 @@ Rust 是本仓库的主业务层，负责桌面应用编排、状态、配置、
 
 ### `crates/*`
 
-1. 独立业务能力优先拆到 crate。
-2. crate 间接口保持清晰，避免互相泄漏桌面层细节。
+1. **仅**放基础设施、协议适配、可被 CLI 与桌面共享的库（如 `fs_io`、`channel_runtime`）。
+2. **不要**在 crate 内写 Tauri Store、sidecar 编排、渠道收件箱等业务；这些放在 `src/context`。
+3. **禁止**在多个 crate 复制同一工具模块；文件 IO 统一 `fs_io`。
+4. crate 间接口保持清晰，避免互相泄漏 `AppHandle` 等桌面细节。
+
+## 测试
+
+1. **禁止**在业务源码中使用 `#[cfg(test)] mod tests { ... }`。
+2. 单元/集成测试统一放在 crate 根目录 `tests/*.rs`（`models` 等子 crate 同理使用各自 `crates/<name>/tests/`）。
+3. 测试只通过 `pub` API 访问；仅供测试的辅助函数用 `#[doc(hidden)] pub fn` 标注，勿为测试放宽正常 API 可见性。
+
+## 文件体量
+
+1. **单文件不超过 500 行**（不含空行与注释亦可酌情，以 `wc -l` / IDE 行数为准）。超过时必须按职责拆成子模块（`foo/mod.rs` + `foo/bar.rs`），禁止继续堆在同一文件。
+2. 拆分原则：`cmd/` 按 IPC 领域；`context/` 按运行时职责；`python/` 按进程/RPC；`services/agent` 按工具或协议子域。
+3. 多个 `impl Struct` 块若分布在子模块，跨模块调用的方法须标 `pub(crate)`。
 
 ## 代码规范
 

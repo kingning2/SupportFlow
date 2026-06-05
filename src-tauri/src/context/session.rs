@@ -1,6 +1,5 @@
 //! 跨 Webview 会话：各 Webview 为独立 JS 运行时；状态存于 Rust，经 IPC 广播。
 
-use std::fs;
 use std::sync::Mutex;
 
 use directories::ProjectDirs;
@@ -18,7 +17,7 @@ fn lang_store_path() -> Result<std::path::PathBuf, String> {
 
 pub fn read_stored_lang() -> String {
     match lang_store_path() {
-        Ok(path) => match fs::read_to_string(&path) {
+        Ok(path) => match crate::utils::fs::read_to_string(&path) {
             Ok(s) => {
                 let s = s.trim();
                 if matches!(s, "cn" | "en") {

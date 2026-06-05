@@ -1,7 +1,6 @@
-use std::fs;
 use std::path::{Path, PathBuf};
 
-use agent::knowledge::KnowledgeService;
+use tauri_app_lib::services::agent::knowledge::KnowledgeService;
 use anyhow::{Context, Result};
 
 use crate::paths;
@@ -45,7 +44,7 @@ fn stats() -> Result<String> {
     let mut cat_count: std::collections::BTreeMap<String, usize> =
         std::collections::BTreeMap::new();
     fn count_nodes(
-        nodes: &[agent::knowledge::KnowledgeTreeNode],
+        nodes: &[tauri_app_lib::services::agent::knowledge::KnowledgeTreeNode],
         out: &mut std::collections::BTreeMap<String, usize>,
     ) {
         for n in nodes {
@@ -89,7 +88,7 @@ fn tree() -> Result<String> {
 }
 
 fn append_tree(root: &Path, current: &Path, indent: &str, lines: &mut Vec<String>) -> Result<()> {
-    let mut entries: Vec<_> = fs::read_dir(current)?
+    let mut entries: Vec<_> = fs_io::read_dir(current)?
         .filter_map(|e| e.ok())
         .filter(|e| {
             let n = e.file_name();
@@ -126,12 +125,13 @@ fn upload(paths: &[PathBuf], category: &str) -> Result<()> {
             .and_then(|n| n.to_str())
             .map(str::to_string)
             .context("upload path has no filename")?;
-        let data = fs::read(src).with_context(|| format!("read {}", src.display()))?;
+        let data = fs_io::read(src).with_context(|| format!("read {}", src.display()))?;
         files.push((name, data));
     }
     let result = tokio::runtime::Runtime::new()
         .context("tokio runtime")?
-        .block_on(svc.ingest_upload(files, category, true, enabled, rt.config.as_ref()))?;
+        .block_on(svc.ingest_upload(files, category, true, enabled, rt.config.as_ref()))
+        .map_err(|e| anyhow::anyhow!(e))?;
 
     for item in &result.results {
         println!("  + {}", item.path);

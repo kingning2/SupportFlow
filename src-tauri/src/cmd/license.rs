@@ -8,7 +8,7 @@ use crate::context::license_store::{LicenseStatusDto, LicenseStore};
 /// Snapshot computed at startup (machine code + license validity).
 #[tauri::command]
 pub fn license_get_status(store: State<'_, LicenseStore>) -> Result<LicenseStatusDto, String> {
-    store.snapshot()
+    crate::log_cmd_result!("cmd.license.get_status", store.snapshot())
 }
 
 /// Apply pasted activation token: verify, save to app data, unlock if valid.
@@ -17,12 +17,14 @@ pub async fn license_apply_activation(
     app: AppHandle,
     token: String,
 ) -> Result<LicenseStatusDto, String> {
-    tokio::task::spawn_blocking(move || {
+    let result = tokio::task::spawn_blocking(move || {
         let store = app.state::<LicenseStore>();
         store.apply_activation_token(&app, &token)
     })
     .await
-    .map_err(|e| format!("activation task failed: {e}"))?
+    .map_err(|e| format!("activation task failed: {e}"))?;
+
+    crate::log_cmd_result!("cmd.license.apply_activation", result)
 }
 
 /// Pick a binary activation key file from native dialog, decode and apply.
@@ -37,7 +39,9 @@ pub async fn license_pick_and_apply_activation_key(
         .blocking_pick_file();
 
     let Some(file_path) = selected else {
-        return Err("activation key file not selected".to_string());
+        let err = "activation key file not selected".to_string();
+        crate::log_cmd_err!("cmd.license.pick_and_apply_activation_key", &err);
+        return Err(err);
     };
 
     let path = match file_path {
@@ -47,13 +51,21 @@ pub async fn license_pick_and_apply_activation_key(
             .map_err(|_| "selected key file path is not a local file".to_string())?,
     };
 
-    let key_bytes = std::fs::read(&path).map_err(|e| format!("read key file failed: {e}"))?;
+    let key_bytes =
+        crate::utils::fs::read(&path).map_err(|e| format!("read key file failed: {e}"))?;
     let token = crate::utils::license_key::decode_token_from_key_bytes(&key_bytes)?;
 
-    tokio::task::spawn_blocking(move || {
+    let result = tokio::task::spawn_blocking(move || {
         let store = app.state::<LicenseStore>();
         store.apply_activation_token(&app, &token)
     })
     .await
-    .map_err(|e| format!("activation task failed: {e}"))?
+    .map_err(|e| format!("activation task failed: {e}"))?;
+
+    crate::log_cmd_result!(
+        "cmd.license.pick_and_apply_activation_key",
+        result,
+        "path={}",
+        path.display()
+    )
 }

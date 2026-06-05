@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Args;
 
 use crate::runtime::CliRuntime;
-use agent::tools::browser::{resolve_chrome_executable, BrowserSettings};
+use tauri_app_lib::services::agent::tools::browser::{resolve_chrome_executable, BrowserSettings};
 
 #[derive(Args)]
 pub struct InstallBrowserArgs {}

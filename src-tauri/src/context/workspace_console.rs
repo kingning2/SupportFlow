@@ -1,6 +1,5 @@
 //! Workspace-backed console helpers (sessions index, knowledge, channel config).
 
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -69,7 +68,7 @@ fn load_session_index(workspace: &Path) -> SessionIndexFile {
     if !path.is_file() {
         return SessionIndexFile::default();
     }
-    let raw = fs::read_to_string(&path).unwrap_or_default();
+    let raw = crate::utils::fs::read_to_string(&path).unwrap_or_default();
     serde_json::from_str(&raw).unwrap_or_default()
 }
 
@@ -161,7 +160,7 @@ fn resolve_under_workspace(workspace: &Path, rel: &str) -> Result<PathBuf, Strin
 
 /// Flat list of markdown files under `workspace/knowledge/`.
 pub fn list_knowledge_files(workspace: &Path) -> Result<Vec<KnowledgeFileRow>, String> {
-    let svc = agent::knowledge::KnowledgeService::new(workspace);
+    let svc = crate::agent::knowledge::KnowledgeService::new(workspace);
     if !svc.knowledge_dir().is_dir() {
         crate::utils::fs::create_dir_all(svc.knowledge_dir())?;
         return Ok(Vec::new());
@@ -175,13 +174,13 @@ pub fn list_knowledge_files(workspace: &Path) -> Result<Vec<KnowledgeFileRow>, S
 
 /// Read one knowledge markdown file by path relative to `knowledge/`.
 pub fn read_knowledge_file(workspace: &Path, rel_path: &str) -> Result<String, String> {
-    let svc = agent::knowledge::KnowledgeService::new(workspace);
+    let svc = crate::agent::knowledge::KnowledgeService::new(workspace);
     Ok(svc.read_file(rel_path)?.content)
 }
 
 /// Build a minimal knowledge graph from markdown cross-links.
 pub fn build_knowledge_graph(workspace: &Path) -> Result<KnowledgeGraphData, String> {
-    let graph = agent::knowledge::KnowledgeService::new(workspace).build_graph();
+    let graph = crate::agent::knowledge::KnowledgeService::new(workspace).build_graph();
     Ok(KnowledgeGraphData {
         nodes: graph
             .nodes
@@ -205,15 +204,16 @@ pub fn build_knowledge_graph(workspace: &Path) -> Result<KnowledgeGraphData, Str
 
 /// Remove one knowledge file by relative path and clean up the memory index.
 pub fn remove_knowledge_file(workspace: &Path, rel_path: &str) -> Result<(), String> {
-    let svc = agent::knowledge::KnowledgeService::new(workspace);
+    let svc = crate::agent::knowledge::KnowledgeService::new(workspace);
     svc.remove_file(rel_path)?;
 
     // Remove chunks from SQLite memory index.
     let db_path = workspace.join("memory/long-term/index.db");
     if db_path.is_file() {
-        match agent::memory::MemoryStorage::open(&db_path) {
+        match crate::agent::memory::MemoryStorage::open(&db_path) {
             Ok(storage) => {
-                let _ = storage.delete_by_path(&format!("knowledge/{rel_path}"));
+                let _: Result<(), String> =
+                    storage.delete_by_path(&format!("knowledge/{rel_path}"));
             }
             Err(e) => {
                 crate::log_warn!("clean up memory index after remove: {e}");

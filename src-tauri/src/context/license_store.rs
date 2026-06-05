@@ -3,7 +3,6 @@
 //! Machine code is computed once at startup. Activation token is read from
 //! app data (writable) with fallback to bundled resources.
 
-use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
@@ -66,9 +65,7 @@ fn read_optional_resource_text(app: &AppHandle, filename: &str) -> Result<Option
     if !path.is_file() {
         return Ok(None);
     }
-    fs::read_to_string(path)
-        .map_err(|e| e.to_string())
-        .map(Some)
+    crate::utils::fs::read_to_string(path).map(Some)
 }
 
 fn read_optional_resource_bytes(
@@ -82,7 +79,7 @@ fn read_optional_resource_bytes(
     if !path.is_file() {
         return Ok(None);
     }
-    std::fs::read(path).map_err(|e| e.to_string()).map(Some)
+    crate::utils::fs::read(path).map(Some)
 }
 
 /// 获取激活 key 文件路径（固定一个位置，简单可靠）
@@ -109,7 +106,7 @@ fn read_license_key_file(path: &PathBuf) -> Result<Option<String>, String> {
     if !path.is_file() {
         return Ok(None);
     }
-    let bytes = std::fs::read(path).map_err(|e| e.to_string())?;
+    let bytes = crate::utils::fs::read(path)?;
     decode_token_from_key_bytes(&bytes).map(Some)
 }
 

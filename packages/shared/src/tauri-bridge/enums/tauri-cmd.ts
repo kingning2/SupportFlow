@@ -40,6 +40,7 @@ export enum TauriCmd {
   AgentReadLogs = "agent_read_logs",
   AgentStartLogStream = "agent_start_log_stream",
   AgentStopLogStream = "agent_stop_log_stream",
+  ChannelGetInbox = "channel_get_inbox",
   WeworkListAccounts = "wework_list_accounts",
   WeworkUpsertAccount = "wework_upsert_account",
   WeworkDeleteAccount = "wework_delete_account",

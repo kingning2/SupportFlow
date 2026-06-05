@@ -91,7 +91,7 @@
     "wework_inbox_select_conversation": "选择一个会话开始查看",
     "wework_inbox_no_messages": "暂无消息",
     "wework_inbox_composer_placeholder": "人工回复（即将支持）",
-    "wework_inbox_composer_hint": "演示数据；接入 IPC 后可发送",
+    "wework_inbox_composer_hint": "消息已从渠道实时同步",
     "wework_kind_group": "群聊",
     "wework_kind_direct": "单聊",
     "wework_detail_title": "会话详情",

@@ -9,5 +9,6 @@ export enum TauriEvent {
   AgentStreamChunk = "agent/stream-chunk",
   AgentRunFinished = "agent/run-finished",
   AgentLogStream = "agent/log-stream",
-  ChannelStatusChanged = "channel/status-changed"
+  ChannelStatusChanged = "channel/status-changed",
+  ChannelInboxMessage = "channel/inbox-message"
 }

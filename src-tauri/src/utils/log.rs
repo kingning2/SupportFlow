@@ -20,6 +20,61 @@ macro_rules! log_info  { ($($arg:tt)+) => { $crate::utils::log::log("INFO",  &fo
 #[macro_export]
 macro_rules! log_debug { ($($arg:tt)+) => { $crate::utils::log::log("DEBUG", &format!($($arg)+)) }; }
 
+#[macro_export]
+macro_rules! log_cmd_ok {
+    ($ctx:expr) => {
+        $crate::log_info!("{} ok at {}:{}", $ctx, file!(), line!())
+    };
+    ($ctx:expr, $($arg:tt)+) => {
+        $crate::log_info!("{} ok {} at {}:{}", $ctx, format!($($arg)+), file!(), line!())
+    };
+}
+
+#[macro_export]
+macro_rules! log_cmd_err {
+    ($ctx:expr, $err:expr) => {
+        $crate::log_error!("{} err={} at {}:{}", $ctx, $err, file!(), line!())
+    };
+    ($ctx:expr, $err:expr, $($arg:tt)+) => {
+        $crate::log_error!(
+            "{} err={} {} at {}:{}",
+            $ctx,
+            $err,
+            format!($($arg)+),
+            file!(),
+            line!()
+        )
+    };
+}
+
+#[macro_export]
+macro_rules! log_cmd_result {
+    ($ctx:expr, $result:expr) => {{
+        match $result {
+            Ok(value) => {
+                $crate::log_cmd_ok!($ctx);
+                Ok(value)
+            }
+            Err(err) => {
+                $crate::log_cmd_err!($ctx, err);
+                Err(err)
+            }
+        }
+    }};
+    ($ctx:expr, $result:expr, $($arg:tt)+) => {{
+        match $result {
+            Ok(value) => {
+                $crate::log_cmd_ok!($ctx, $($arg)+);
+                Ok(value)
+            }
+            Err(err) => {
+                $crate::log_cmd_err!($ctx, err, $($arg)+);
+                Err(err)
+            }
+        }
+    }};
+}
+
 static LOG_TX: OnceLock<Sender<String>> = OnceLock::new();
 
 fn start_log_writer(log_path: &PathBuf) -> Result<(), String> {
@@ -83,37 +138,20 @@ pub fn init_log() -> Result<(), String> {
     let log_root = dirs.data_local_dir().join("logs");
     let log_path = log_root.join("tauri-app");
 
-    trace_result("utils.log", "init_log", start_log_writer(&log_path))
-}
-
-/// 记录 `Result` 的成功或失败后原样返回，供各模块在出口统一包一层日志。
-#[inline]
-pub fn trace_result<T>(scope: &str, op: &str, result: Result<T, String>) -> Result<T, String> {
-    match &result {
-        Ok(_) => log("INFO", &format!("{scope}.{op} ok")),
-        Err(err) => log("ERROR", &format!("{scope}.{op} err={err}")),
+    match start_log_writer(&log_path) {
+        Ok(()) => {
+            log(
+                "INFO",
+                &format!("utils.log.init_log ok at {}:{}", file!(), line!()),
+            );
+            Ok(())
+        }
+        Err(err) => {
+            log(
+                "ERROR",
+                &format!("utils.log.init_log err={err} at {}:{}", file!(), line!()),
+            );
+            Err(err)
+        }
     }
-    result
-}
-
-/// 同步闭包返回的 `Result` 经 [`trace_result`] 记录后返回。
-#[inline]
-pub fn trace_result_fn<T>(
-    scope: &str,
-    op: &str,
-    f: impl FnOnce() -> Result<T, String>,
-) -> Result<T, String> {
-    trace_result(scope, op, f())
-}
-
-/// 异步 Future 产出的 `Result` 经 [`trace_result`] 记录后返回。
-#[allow(dead_code)]
-#[inline]
-pub async fn trace_result_async<T>(
-    scope: &str,
-    op: &str,
-    fut: impl std::future::Future<Output = Result<T, String>>,
-) -> Result<T, String> {
-    let result = fut.await;
-    trace_result(scope, op, result)
 }

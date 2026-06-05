@@ -1,4 +1,3 @@
-use std::fs;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -47,7 +46,7 @@ pub fn cmd_start(args: StartArgs) -> Result<()> {
     }
 
     println!("Starting SupportFlow...");
-    let log = fs::OpenOptions::new()
+    let log = std::fs::OpenOptions::new()
         .create(true)
         .append(true)
         .open(&log_file)?;
@@ -154,24 +153,24 @@ fn read_pid(workspace: &std::path::Path) -> Result<Option<u32>> {
     if !path.is_file() {
         return Ok(None);
     }
-    let raw = fs::read_to_string(&path).context("read pid file")?;
+    let raw = fs_io::read_to_string(&path).context("read pid file")?;
     let pid: u32 = raw.trim().parse().context("parse pid")?;
     if is_pid_alive(pid) {
         return Ok(Some(pid));
     }
-    let _ = fs::remove_file(&path);
+    let _ = fs_io::remove_file(&path);
     Ok(None)
 }
 
 fn write_pid(workspace: &std::path::Path, pid: u32) -> Result<()> {
-    fs::write(pid_file(workspace), pid.to_string())?;
+    fs_io::write(pid_file(workspace), pid.to_string())?;
     Ok(())
 }
 
 fn remove_pid(workspace: &std::path::Path) -> Result<()> {
     let path = pid_file(workspace);
     if path.is_file() {
-        fs::remove_file(path)?;
+        fs_io::remove_file(path)?;
     }
     Ok(())
 }
@@ -222,9 +221,9 @@ fn kill_pid(pid: u32) -> Result<()> {
 }
 
 fn tail_log(path: &std::path::Path, max_lines: usize) -> Result<()> {
-    let mut file = fs::File::open(path)?;
+    let mut file = std::fs::File::open(path)?;
     if max_lines > 0 {
-        let content = fs::read_to_string(path)?;
+        let content = fs_io::read_to_string(path)?;
         let lines: Vec<_> = content.lines().collect();
         let start = lines.len().saturating_sub(max_lines);
         for line in &lines[start..] {
