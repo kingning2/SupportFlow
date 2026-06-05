@@ -23,7 +23,9 @@ fn main() {
     }
     println!(
         "cargo:rerun-if-changed={}",
-        manifest.join("channel_agent/channel/__main__.py").display()
+        manifest
+            .join("../channel_agent/channel/__main__.py")
+            .display()
     );
 
     /* ===== env ===== */
@@ -68,7 +70,9 @@ fn main() {
 
     ensure_channel_sidecar_exe(manifest);
 
-    tauri_build::build()
+    if std::env::var("CARGO_FEATURE_DESKTOP").is_ok() {
+        tauri_build::build();
+    }
 }
 
 /// PyInstaller sidecar must exist before `tauri_build` validates `externalBin`.

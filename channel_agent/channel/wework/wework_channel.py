@@ -204,7 +204,7 @@ class WeworkChannel(ChatChannel):
                 "ntwork is not installed (requires Python 3.10 on Windows, not on PyPI). "
                 "From repo root: pnpm run bootstrap:sidecar-wheels && pnpm run setup:channel-sidecar-dev, "
                 "set CHANNEL_PYTHON_EXECUTABLE to py -3.10, then restart tauri dev. "
-                "See src-tauri/channel_agent/README.md."
+                "See channel_agent/README.md."
             )
             logger.error(f"[Wework] {err}")
             self.report_startup_error(err)

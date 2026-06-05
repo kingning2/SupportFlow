@@ -2,7 +2,7 @@
 
 ## 适用范围
 
-- `src-tauri/channel_agent/**/*.py`
+- `channel_agent/**/*.py`
 
 ## 角色定位
 

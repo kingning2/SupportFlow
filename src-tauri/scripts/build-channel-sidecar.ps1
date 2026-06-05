@@ -6,7 +6,7 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$ChannelAgent = Join-Path $Root "src-tauri\channel_agent"
+$ChannelAgent = Join-Path $Root "channel_agent"
 $BinDir = Join-Path $Root "src-tauri\binaries"
 $WheelDir = Join-Path $ChannelAgent "_wheels\sidecar-pip"
 $Target = if ($env:CARGO_BUILD_TARGET) { $env:CARGO_BUILD_TARGET } else { "x86_64-pc-windows-msvc" }

@@ -20,7 +20,7 @@ pnpm run tauri:dev:wechat
 Manual run:
 
 ```bash
-cd src-tauri/channel_agent
+cd channel_agent
 set CHANNEL_CONFIG_PATH=..\resources\config.json
 py -3.10 -m channel
 ```

@@ -2,7 +2,7 @@
 # ntwork is not on PyPI; we fetch the cp310 wheel from ntwork-bin-backup on GitHub.
 $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$WheelDir = Join-Path $Root "src-tauri\channel_agent\_wheels\sidecar-pip"
+$WheelDir = Join-Path $Root "channel_agent\_wheels\sidecar-pip"
 $BootstrapPy = if ($env:CHANNEL_BOOTSTRAP_PYTHON) { $env:CHANNEL_BOOTSTRAP_PYTHON } else { (Get-Command python -ErrorAction Stop).Source }
 
 New-Item -ItemType Directory -Force -Path $WheelDir | Out-Null
@@ -16,7 +16,7 @@ $onlyBin = @("--python-version", $pyVer, "--platform", $plat, "--only-binary=:al
 Write-Host "Downloading PyInstaller + deps..."
 & $BootstrapPy -m pip download pyinstaller importlib-metadata zipp -d $WheelDir @onlyBin
 
-$sidecarReq = Join-Path $Root "src-tauri\channel_agent\requirements-sidecar.txt"
+$sidecarReq = Join-Path $Root "channel_agent\requirements-sidecar.txt"
 if (Test-Path $sidecarReq) {
     Write-Host "Downloading channel sidecar runtime deps..."
     & $BootstrapPy -m pip download -r $sidecarReq -d $WheelDir `

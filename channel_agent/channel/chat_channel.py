@@ -1,5 +1,7 @@
+import json
 import os
 import time
+import uuid
 from enum import Enum
 
 from bridge.context import Context, ContextType
@@ -133,7 +135,18 @@ class ChatChannel:
         clear_history: bool = False,
     ) -> Reply:
         """通过 Rust AgentRuntime 生成回复内容。"""
-        result = call_rust("agent.reply", _context_params(query, context, clear_history))
+        params = _context_params(query, context, clear_history)
+        logger.info(
+            "[chat_channel] agent.reply request query=%r params=%s",
+            query,
+            json.dumps(params, ensure_ascii=False, default=str)[:2000],
+        )
+        result = call_rust("agent.reply", params)
+        logger.info(
+            "[chat_channel] agent.reply response reply_type=%s content_len=%s",
+            result.get("reply_type"),
+            len(result.get("content") or ""),
+        )
         return _reply_from_rust_result(result)
 
     def _build_voice_to_text(self, voice_file) -> Reply:
@@ -190,11 +203,121 @@ class ChatChannel:
             },
             "config": cfg,
         }
+        logger.info(
+            "[chat_channel] channel.process request=%s",
+            json.dumps(payload, ensure_ascii=False, default=str)[:2000],
+        )
         try:
-            return call_rust("channel.process", payload)
+            result = call_rust("channel.process", payload)
+            logger.info(
+                "[chat_channel] channel.process response should_handle=%s normalized=%r",
+                result.get("should_handle"),
+                (result.get("normalized_content") or "")[:200],
+            )
+            return result
         except Exception as e:
-            logger.debug("[chat_channel] channel.process fallback to python: %s", e)
+            logger.warning("[chat_channel] channel.process failed: %s", e)
             return None
+
+    def _created_at_ms(self, cmsg) -> int:
+        if cmsg is None or not getattr(cmsg, "create_time", None):
+            return int(time.time() * 1000)
+        ts = cmsg.create_time
+        if ts > 1_000_000_000_000:
+            return int(ts)
+        return int(ts * 1000)
+
+    def _message_display_content(self, context: Context, content_override: str | None = None) -> str:
+        if content_override is not None:
+            return content_override
+        content = (context.content or "").strip()
+        if content:
+            return content
+        ctype = context.type
+        if ctype == ContextType.IMAGE:
+            return "[图片]"
+        if ctype == ContextType.VOICE:
+            return "[语音]"
+        if ctype == ContextType.FILE:
+            return "[文件]"
+        if ctype is not None:
+            return f"[{ctype}]"
+        return ""
+
+    def _build_channel_message_payload(
+        self,
+        context: Context,
+        *,
+        direction: str,
+        content: str | None = None,
+        role: str | None = None,
+        message_id: str | None = None,
+    ) -> dict:
+        cmsg = context.get("msg")
+        conversation_id = context.get("receiver") or getattr(cmsg, "other_user_id", None)
+        if not conversation_id:
+            raise ValueError("missing conversation_id")
+        is_group = bool(context.get("isgroup", False))
+        title = getattr(cmsg, "other_user_nickname", None) or conversation_id
+        if is_group:
+            kind = "group"
+        else:
+            kind = "direct"
+            title = getattr(cmsg, "actual_user_nickname", None) or title
+        display_content = self._message_display_content(context, content)
+        if not display_content.strip():
+            raise ValueError("empty message content")
+        if role is None:
+            role = "customer" if direction == "inbound" else "assistant"
+        msg_id = message_id or getattr(cmsg, "msg_id", None) or str(uuid.uuid4())
+        channel = self.channel_type or context.get("channel_type", "")
+        session_id = context.get("session_id") or f"{channel}:{conversation_id}"
+        return {
+            "channel": channel,
+            "direction": direction,
+            "message_id": str(msg_id),
+            "conversation_id": str(conversation_id),
+            "session_id": str(session_id),
+            "title": str(title),
+            "kind": kind,
+            "is_group": is_group,
+            "role": role,
+            "sender_name": getattr(cmsg, "actual_user_nickname", None),
+            "content": display_content,
+            "msg_type": _json_safe(getattr(cmsg, "ctype", context.type)),
+            "created_at": self._created_at_ms(cmsg),
+            "is_at": bool(getattr(cmsg, "is_at", False)),
+            "channel_user_id": str(self.user_id) if self.user_id else None,
+        }
+
+    def notify_channel_message(
+        self,
+        context: Context,
+        *,
+        direction: str = "inbound",
+        content: str | None = None,
+        role: str | None = None,
+        message_id: str | None = None,
+    ) -> None:
+        """通知 Rust 入库并广播到前端 Inbox。"""
+        if not self.channel_type:
+            return
+        try:
+            payload = self._build_channel_message_payload(
+                context,
+                direction=direction,
+                content=content,
+                role=role,
+                message_id=message_id,
+            )
+            logger.info(
+                "[chat_channel] channel.message notify direction=%s payload=%s",
+                direction,
+                json.dumps(payload, ensure_ascii=False, default=str)[:2000],
+            )
+            notify_rust("channel.message", payload)
+        except Exception as e:
+            logger.warning("[chat_channel] channel.message notify failed: %s", e)
 
     def _rust_decorate_text(self, text: str, meta: dict):
         """调用 Rust 对回复文本做装饰。"""
@@ -227,6 +350,10 @@ class ChatChannel:
             return
         rust_processed = self._rust_process_context(context)
         if rust_processed is None or not rust_processed.get("should_handle", False):
+            logger.info(
+                "[chat_channel] skip agent reply should_handle=%s",
+                None if rust_processed is None else rust_processed.get("should_handle"),
+            )
             return
         context.content = rust_processed.get("normalized_content", context.content)
         context["_reply_prefix"] = rust_processed.get("reply_prefix", "")
@@ -327,6 +454,16 @@ class ChatChannel:
         """执行发送并在可重试错误场景下进行有限重试。"""
         try:
             self.send(reply, context)
+            if reply.type in (ReplyType.TEXT, ReplyType.TEXT_, ReplyType.INFO):
+                outbound = reply.content or reply.text_content
+                if outbound:
+                    self.notify_channel_message(
+                        context,
+                        direction="outbound",
+                        content=outbound,
+                        role="assistant",
+                        message_id=str(uuid.uuid4()),
+                    )
         except Exception as e:
             logger.error("[chat_channel] sendMsg error: {}".format(str(e)))
             if isinstance(e, NotImplementedError):
@@ -338,4 +475,5 @@ class ChatChannel:
 
     def produce(self, context: Context):
         """对外暴露统一消息处理入口。"""
+        self.notify_channel_message(context, direction="inbound")
         self._handle(context)
