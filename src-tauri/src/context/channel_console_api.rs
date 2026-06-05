@@ -94,7 +94,7 @@ fn wx_qrlogin(app: &AppHandle) -> Result<Value, String> {
 ///
 /// # Returns
 ///
-/// * `Value` - Existing manual sync response shape expected by frontend
+/// * `Value` - Immediate accepted response while sync runs in background
 async fn wework_contacts_sync(runtime: &Arc<AgentRuntime>, body: &Value) -> Result<Value, String> {
     let action = body
         .get("action")
@@ -104,8 +104,7 @@ async fn wework_contacts_sync(runtime: &Arc<AgentRuntime>, body: &Value) -> Resu
         return Err(format!("unknown action: {action}"));
     }
 
-    let sidecar = runtime.ensure_channel_sidecar().await?;
-    sidecar.wework_sync_contacts().await
+    runtime.request_wework_contacts_sync().await
 }
 
 /// Map raw runtime phase into the frontend login status vocabulary.

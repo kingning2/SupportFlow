@@ -9,4 +9,5 @@ pub mod license;
 pub mod license_key;
 pub mod log;
 pub mod path;
+pub mod platform;
 pub mod window;

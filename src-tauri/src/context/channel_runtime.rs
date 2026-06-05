@@ -14,7 +14,12 @@ const WEWORK_RESTART_KEYS: &[&str] = &[
 fn channel_field_defs(channel: &str) -> Option<&'static [(&'static str, &'static str)]> {
     match channel {
         "wx" => Some(&[("hot_reload", "bool")]),
-        "wework" => Some(&[("wework_exe_path", "text")]),
+        "wework" => Some(&[
+            ("wework_exe_path", "text"),
+            ("wework_version", "text"),
+            ("wework_smart", "bool"),
+            ("wework_init_wait_seconds", "number"),
+        ]),
         _ => None,
     }
 }

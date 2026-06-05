@@ -9,9 +9,6 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 
-#[cfg(windows)]
-use std::os::windows::process::CommandExt;
-
 use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -71,11 +68,7 @@ impl ChannelPythonSidecar {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
-        #[cfg(windows)]
-        {
-            const CREATE_NO_WINDOW: u32 = 0x08000000;
-            cmd.creation_flags(CREATE_NO_WINDOW);
-        }
+        crate::utils::platform::python::apply_background_command_flags(cmd);
     }
 
     pub async fn ensure_running(self: &Arc<Self>) -> Result<(), String> {
@@ -105,7 +98,7 @@ impl ChannelPythonSidecar {
                 )
             })?
         } else if let Some(src) = &self.dev_source_dir {
-            let python = resolve_python_executable();
+            let python = crate::utils::platform::python::resolve_python_executable();
             let mut cmd = Command::new(&python);
             cmd.current_dir(src).arg("-m").arg("channel");
             self.apply_sidecar_env(&mut cmd);
@@ -254,7 +247,7 @@ impl ChannelPythonSidecar {
             },
             "channel.notify" => {
                 if let Ok(rt) = self.runtime_handle().await {
-                    rt.emit_channel_status_changed(&params);
+                    rt.handle_channel_notification(&params);
                 }
                 json!({
                     "id": id,
@@ -270,11 +263,7 @@ impl ChannelPythonSidecar {
                     if wework_user_id.is_empty() {
                         json!({ "id": id, "error": "wework_user_id required" })
                     } else {
-                        match rt
-                            .app_handle()
-                            .state::<crate::context::wework_accounts::WeworkAccountsStore>()
-                            .contacts_synced(wework_user_id)
-                        {
+                        match rt.wework_contacts_synced(wework_user_id) {
                             Ok(value) => json!({ "id": id, "result": { "value": value } }),
                             Err(e) => json!({ "id": id, "error": e }),
                         }
@@ -295,11 +284,7 @@ impl ChannelPythonSidecar {
                     if wework_user_id.is_empty() || synced_at <= 0 {
                         json!({ "id": id, "error": "wework_user_id and synced_at required" })
                     } else {
-                        match rt
-                            .app_handle()
-                            .state::<crate::context::wework_accounts::WeworkAccountsStore>()
-                            .mark_contacts_synced(wework_user_id, synced_at)
-                        {
+                        match rt.wework_mark_contacts_synced(wework_user_id, synced_at) {
                             Ok(()) => json!({ "id": id, "result": { "status": "success" } }),
                             Err(e) => json!({ "id": id, "error": e }),
                         }
@@ -410,65 +395,6 @@ fn sidecar_missing_message() -> String {
         env!("BUILD_TARGET"),
         std::env::consts::EXE_SUFFIX
     )
-}
-
-pub fn resolve_python_executable() -> String {
-    if let Some(exe) = channel_python_from_env() {
-        return exe;
-    }
-    if cfg!(windows) {
-        if let Some(exe) = python_executable_from_launcher("py", &["-3.10"]) {
-            return exe;
-        }
-        // If `py -3.10` isn't available, fall back to default `python`.
-        "python".to_string()
-    } else {
-        "python3".to_string()
-    }
-}
-
-/// Runtime env, then compile-time value from project root `.env` (via build.rs).
-fn channel_python_from_env() -> Option<String> {
-    if let Some(exe) = crate::utils::env::get("CHANNEL_PYTHON_EXECUTABLE") {
-        let trimmed = exe.trim();
-        if !trimmed.is_empty() {
-            return Some(trimmed.to_string());
-        }
-    }
-    option_env!("CHANNEL_PYTHON_EXECUTABLE").and_then(|exe| {
-        let trimmed = exe.trim();
-        if trimmed.is_empty() {
-            None
-        } else {
-            Some(trimmed.to_string())
-        }
-    })
-}
-
-#[cfg(windows)]
-fn python_executable_from_launcher(launcher: &str, args: &[&str]) -> Option<String> {
-    use std::path::Path;
-    use std::process::Command;
-
-    let mut cmd = Command::new(launcher);
-    cmd.args(args)
-        .args(["-c", "import sys; print(sys.executable)"]);
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
-    cmd.creation_flags(CREATE_NO_WINDOW);
-    let output = cmd.output().ok()?;
-    if !output.status.success() {
-        return None;
-    }
-    let exe = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if exe.is_empty() || !Path::new(&exe).is_file() {
-        return None;
-    }
-    Some(exe)
-}
-
-#[cfg(not(windows))]
-fn python_executable_from_launcher(_launcher: &str, _args: &[&str]) -> Option<String> {
-    None
 }
 
 #[cfg(channel_sidecar_embedded)]

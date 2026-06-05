@@ -758,8 +758,16 @@ impl AgentRuntime {
         crate::context::channel_catalog::build_catalog(&self.app, &self.config_path)
     }
 
-    /// Push channel lifecycle updates from Python sidecar to all Webviews.
-    pub fn emit_channel_status_changed(&self, params: &serde_json::Value) {
+    /// Push channel lifecycle updates from Python sidecar to the Rust status store and all Webviews.
+    ///
+    /// # Arguments
+    ///
+    /// * `params` - Raw sidecar notification payload
+    ///
+    /// # Returns
+    ///
+    /// * `()` - Store and event bus updated when payload is valid
+    pub fn handle_channel_notification(&self, params: &serde_json::Value) {
         let channel = params
             .get("channel")
             .and_then(|v| v.as_str())
@@ -809,6 +817,57 @@ impl AgentRuntime {
         }
     }
 
+    /// Query whether the given WeCom account has already completed contact sync.
+    ///
+    /// # Arguments
+    ///
+    /// * `wework_user_id` - WeCom user id reported by sidecar SDK callbacks
+    ///
+    /// # Returns
+    ///
+    /// * `bool` - True when Rust persistence already contains the sync marker
+    #[cfg(feature = "channel-wework")]
+    pub fn wework_contacts_synced(&self, wework_user_id: &str) -> Result<bool, String> {
+        self.app
+            .state::<crate::context::wework_accounts::WeworkAccountsStore>()
+            .contacts_synced(wework_user_id)
+    }
+
+    #[cfg(not(feature = "channel-wework"))]
+    pub fn wework_contacts_synced(&self, _wework_user_id: &str) -> Result<bool, String> {
+        Err("wework channel is not enabled in this build".to_string())
+    }
+
+    /// Persist the completed WeCom contacts sync marker from a sidecar callback.
+    ///
+    /// # Arguments
+    ///
+    /// * `wework_user_id` - WeCom user id reported by sidecar SDK callbacks
+    /// * `synced_at` - Unix timestamp in milliseconds
+    ///
+    /// # Returns
+    ///
+    /// * `()` - Sync marker persisted to Rust-owned store
+    #[cfg(feature = "channel-wework")]
+    pub fn wework_mark_contacts_synced(
+        &self,
+        wework_user_id: &str,
+        synced_at: i64,
+    ) -> Result<(), String> {
+        self.app
+            .state::<crate::context::wework_accounts::WeworkAccountsStore>()
+            .mark_contacts_synced(wework_user_id, synced_at)
+    }
+
+    #[cfg(not(feature = "channel-wework"))]
+    pub fn wework_mark_contacts_synced(
+        &self,
+        _wework_user_id: &str,
+        _synced_at: i64,
+    ) -> Result<(), String> {
+        Err("wework channel is not enabled in this build".to_string())
+    }
+
     /// Channel console APIs handled in Rust using status store plus narrow runtime RPCs.
     pub async fn channel_console_api(
         self: &Arc<Self>,
@@ -819,6 +878,36 @@ impl AgentRuntime {
         crate::context::channel_console_api::dispatch(&self.app, self, path, method, &body).await
     }
 
+    /// Accept one manual WeCom contacts sync request and run it in the background.
+    ///
+    /// # Returns
+    ///
+    /// * `Value` - Immediate accepted payload for the frontend
+    pub async fn request_wework_contacts_sync(
+        self: &Arc<Self>,
+    ) -> Result<serde_json::Value, String> {
+        let sidecar = self.ensure_sidecar().await?;
+        let sidecar_task = sidecar.clone();
+        tokio::spawn(async move {
+            if let Err(e) = sidecar_task.wework_sync_contacts().await {
+                crate::log_warn!("wework contacts sync failed: {e}");
+            }
+        });
+        Ok(serde_json::json!({
+            "status": "success",
+            "accepted": true,
+        }))
+    }
+
+    /// Persist channel config changes in Rust and coordinate required runtime actions.
+    ///
+    /// # Arguments
+    ///
+    /// * `payload` - Frontend action payload with `action`, `channel`, and `config`
+    ///
+    /// # Returns
+    ///
+    /// * `Value` - JSON response matching the existing frontend contract
     pub async fn channel_python_channels_post(
         self: &Arc<Self>,
         payload: serde_json::Value,

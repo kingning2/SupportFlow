@@ -4,6 +4,7 @@ use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
 
 use crate::context::channel_status::ChannelStatusStore;
+#[cfg(feature = "channel-wework")]
 use crate::context::wework_accounts::WeworkAccountsStore;
 
 struct ChannelFieldDef {
@@ -37,6 +38,7 @@ const WX_FIELDS: &[ChannelFieldDef] = &[ChannelFieldDef {
     placeholder_en: None,
 }];
 
+#[cfg(feature = "channel-wework")]
 const WEWORK_FIELDS: &[ChannelFieldDef] = &[ChannelFieldDef {
     key: "wework_exe_path",
     label_zh: "企微程序路径",
@@ -58,6 +60,7 @@ const CHANNEL_DEFS: &[ChannelDef] = &[
         hint_en: "itchat web protocol; account risk; test use only. Supports DM and groups.",
         fields: WX_FIELDS,
     },
+    #[cfg(feature = "channel-wework")]
     ChannelDef {
         name: "wework",
         label_zh: "企微个人号",
@@ -115,6 +118,7 @@ fn phase_to_active(phase: &str) -> bool {
 pub fn build_catalog(app: &AppHandle, config_path: &std::path::Path) -> Result<Value, String> {
     let active = active_channel_names(config_path)?;
     let status_store = app.state::<ChannelStatusStore>();
+    #[cfg(feature = "channel-wework")]
     let wework_accounts = app.state::<WeworkAccountsStore>();
 
     let channels = CHANNEL_DEFS
@@ -171,6 +175,7 @@ pub fn build_catalog(app: &AppHandle, config_path: &std::path::Path) -> Result<V
                 row["loginStatus"] = Value::String(login_status);
             }
 
+            #[cfg(feature = "channel-wework")]
             if def.name == "wework" {
                 if let Some(status) = runtime.as_ref() {
                     if let Some(user_id) = status.user_id.as_deref() {

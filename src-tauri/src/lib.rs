@@ -26,8 +26,6 @@ pub fn run() {
             let runtime = std::sync::Arc::new(context::agent_runtime::AgentRuntime::initialize(
                 app.handle(),
             )?);
-            let wework_accounts =
-                context::wework_accounts::WeworkAccountsStore::open(app.handle())?;
             let runtime_bg = runtime.clone();
             let license_store = tauri::async_runtime::block_on(
                 context::license_store::LicenseStore::initialize_async(app.handle()),
@@ -37,7 +35,10 @@ pub fn run() {
             });
             app.manage(runtime);
             app.manage(license_store);
-            app.manage(wework_accounts);
+            #[cfg(feature = "channel-wework")]
+            app.manage(context::wework_accounts::WeworkAccountsStore::open(
+                app.handle(),
+            )?);
             events::setup(app.handle());
             Ok(())
         })
@@ -82,12 +83,19 @@ pub fn run() {
             cmd::agent::agent_read_logs,
             cmd::agent::agent_start_log_stream,
             cmd::agent::agent_stop_log_stream,
+            #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_list_accounts,
+            #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_upsert_account,
+            #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_delete_account,
+            #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_get_active_account_id,
+            #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_set_active_account_id,
+            #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_mark_contacts_synced,
+            #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_contacts_synced,
         ])
         .run(tauri::generate_context!())

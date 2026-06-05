@@ -9,5 +9,6 @@ pub mod channel_runtime;
 pub mod channel_status;
 pub mod license_store;
 pub mod session;
+#[cfg(feature = "channel-wework")]
 pub mod wework_accounts;
 pub mod workspace_console;

@@ -11,8 +11,9 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 
-use crate::utils::license::{compute_machine_code_windows, verify_license_token};
+use crate::utils::license::verify_license_token;
 use crate::utils::license_key::{decode_token_from_key_bytes, encode_token_to_key_bytes};
+use crate::utils::platform::machine_code::compute_machine_code;
 
 pub struct LicenseStore(pub Mutex<LicenseStatus>);
 
@@ -237,7 +238,7 @@ impl LicenseStore {
         match Self::try_initialize(app) {
             Ok(store) => store,
             Err(e) => {
-                let machine_code = compute_machine_code_windows().unwrap_or_default();
+                let machine_code = compute_machine_code().unwrap_or_default();
                 Self(Mutex::new(LicenseStatus {
                     valid: false,
                     reason: Some(format!("license init failed: {e}")),
@@ -248,7 +249,7 @@ impl LicenseStore {
     }
 
     fn try_initialize(app: &AppHandle) -> Result<Self, String> {
-        let machine_code = compute_machine_code_windows()?;
+        let machine_code = compute_machine_code()?;
         let public_key_pem = read_public_key_pem(app)?;
         let token = read_stored_activation_token(app)?;
         Ok(Self(Mutex::new(Self::build_status(
