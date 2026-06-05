@@ -1,7 +1,7 @@
 //! Shared subscription license status across all Webviews.
 //!
-//! Machine code is computed once at startup. Activation token is read from
-//! app data (writable) with fallback to bundled resources.
+//! Machine code and token verification are delegated to the external
+//! `license-verifier` executable so verification logic stays out of the main binary.
 
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -10,9 +10,8 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 
-use crate::utils::license::verify_license_token;
 use crate::utils::license_key::{decode_token_from_key_bytes, encode_token_to_key_bytes};
-use crate::utils::platform::machine_code::compute_machine_code;
+use crate::utils::license_verifier_exe::{machine_code_via_exe, verify_token_via_exe};
 
 pub struct LicenseStore(pub Mutex<LicenseStatus>);
 
@@ -31,10 +30,6 @@ pub struct LicenseStatus {
     pub valid: bool,
     pub reason: Option<String>,
     pub machine_code: String,
-}
-
-fn now_unix_seconds() -> i64 {
-    crate::utils::date::unix_timestamp_seconds_i64()
 }
 
 fn is_dev_license_bypass_enabled() -> bool {
@@ -137,21 +132,6 @@ fn extract_token_from_license_json(raw: &str) -> Result<String, String> {
     }
 }
 
-fn read_public_key_pem(app: &AppHandle) -> Result<String, String> {
-    if let Some(pem) = read_optional_resource_text(app, "public_key.pem")? {
-        return Ok(pem);
-    }
-
-    // Dev fallback: Tauri dev may not bundle non-whitelisted resources into `BaseDirectory::Resource`.
-    // Use the repo file relative to the `src-tauri` crate dir (stable even if CWD differs).
-    let dev_path = crate::utils::path::crate_path("resources/public_key.pem");
-    if dev_path.is_file() {
-        return crate::utils::fs::read_to_string(dev_path);
-    }
-
-    Err("missing resources/public_key.pem".to_string())
-}
-
 fn read_stored_activation_token(app: &AppHandle) -> Result<Option<String>, String> {
     // 1) 先读本地可写目录的二进制 key 文件
     let path = license_file_path(app)?;
@@ -190,21 +170,12 @@ fn read_stored_activation_token(app: &AppHandle) -> Result<Option<String>, Strin
 }
 
 impl LicenseStore {
-    fn evaluate(
-        machine_code: &str,
-        public_key_pem: &str,
-        token: Option<&str>,
-    ) -> (bool, Option<String>) {
+    fn evaluate(token: Option<&str>) -> (bool, Option<String>) {
         match token {
-            Some(t) if !t.trim().is_empty() => {
-                let vr = verify_license_token(
-                    t.trim(),
-                    now_unix_seconds(),
-                    machine_code,
-                    public_key_pem,
-                );
-                (vr.valid, vr.reason)
-            }
+            Some(t) if !t.trim().is_empty() => match verify_token_via_exe(t.trim()) {
+                Ok(vr) => (vr.valid, vr.reason),
+                Err(e) => (false, Some(e)),
+            },
             _ => {
                 if is_dev_license_bypass_enabled() {
                     return (
@@ -217,12 +188,8 @@ impl LicenseStore {
         }
     }
 
-    fn build_status(
-        machine_code: String,
-        public_key_pem: &str,
-        token: Option<String>,
-    ) -> LicenseStatus {
-        let (valid, reason) = Self::evaluate(&machine_code, public_key_pem, token.as_deref());
+    fn build_status(machine_code: String, token: Option<String>) -> LicenseStatus {
+        let (valid, reason) = Self::evaluate(token.as_deref());
         LicenseStatus {
             valid,
             reason,
@@ -235,7 +202,7 @@ impl LicenseStore {
         match Self::try_initialize(app) {
             Ok(store) => store,
             Err(e) => {
-                let machine_code = compute_machine_code().unwrap_or_default();
+                let machine_code = machine_code_via_exe().unwrap_or_default();
                 Self(Mutex::new(LicenseStatus {
                     valid: false,
                     reason: Some(format!("license init failed: {e}")),
@@ -246,14 +213,9 @@ impl LicenseStore {
     }
 
     fn try_initialize(app: &AppHandle) -> Result<Self, String> {
-        let machine_code = compute_machine_code()?;
-        let public_key_pem = read_public_key_pem(app)?;
+        let machine_code = machine_code_via_exe()?;
         let token = read_stored_activation_token(app)?;
-        Ok(Self(Mutex::new(Self::build_status(
-            machine_code,
-            &public_key_pem,
-            token,
-        ))))
+        Ok(Self(Mutex::new(Self::build_status(machine_code, token))))
     }
 
     pub async fn initialize_async(app: &AppHandle) -> Self {
@@ -288,7 +250,6 @@ impl LicenseStore {
             return Err("activation token is empty".to_string());
         }
 
-        let public_key_pem = read_public_key_pem(app)?;
         let machine_code = {
             let guard = crate::utils::err::lock_mutex(&self.0)?;
             guard.machine_code.clone()
@@ -298,7 +259,7 @@ impl LicenseStore {
             return Err("machine code not ready".to_string());
         }
 
-        let vr = verify_license_token(token, now_unix_seconds(), &machine_code, &public_key_pem);
+        let vr = verify_token_via_exe(token)?;
         if !vr.valid {
             return Err(vr
                 .reason
@@ -307,7 +268,7 @@ impl LicenseStore {
 
         write_license_token(app, token)?;
 
-        let next = Self::build_status(machine_code, &public_key_pem, Some(token.to_string()));
+        let next = Self::build_status(machine_code, Some(token.to_string()));
         let dto = LicenseStatusDto {
             machine_code: next.machine_code.clone(),
             valid: next.valid,

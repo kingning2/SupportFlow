@@ -35,6 +35,7 @@ graphify.*
 config.json
 src-tauri/resources/config.json
 src-tauri/binaries/channel-sidecar-*
+src-tauri/binaries/license-verifier-*
 channel_agent/**/__pycache__/
 channel_agent/**/*.pyc
 channel_agent/build/
