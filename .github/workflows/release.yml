@@ -1,0 +1,137 @@
+# 推送 v* tag 时构建 Windows 安装包并上传到 GitHub Release（草稿，需手动 Publish）。
+#
+# 用法：
+#   1. 更新 src-tauri/tauri.conf.json 与 package.json 中的 version
+#   2. git commit && git push
+#   3. git tag v0.1.0 && git push origin v0.1.0
+#
+# 可选 Secrets（Settings → Actions → Secrets）：
+#   SUBSCRIPTION_ACTIVATION_GENERATOR_PAT — 拉取私有 subscription-activation-generator 并构建 license-verifier
+#
+# 仓库 Settings → Actions → General → Workflow permissions 需为 Read and write。
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag，需与 tauri.conf.json 版本对应（如 v0.1.0）"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  CARGO_BUILD_TARGET: x86_64-pc-windows-msvc
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+
+jobs:
+  release-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Bootstrap sidecar wheels
+        run: pnpm run bootstrap:sidecar-wheels
+        continue-on-error: true
+
+      - name: Build channel sidecar
+        run: pnpm run build:channel-sidecar
+
+      - name: Prepare license-verifier (optional)
+        shell: pwsh
+        env:
+          PAT: ${{ secrets.SUBSCRIPTION_ACTIVATION_GENERATOR_PAT }}
+        run: |
+          if ($env:PAT) {
+            git clone --depth 1 `
+              "https://x-access-token:$env:PAT@github.com/kingning2/subscription-activation-generator.git" `
+              subscription-activation-generator
+            pnpm run build:license-verifier
+          } else {
+            Write-Host "::warning::SUBSCRIPTION_ACTIVATION_GENERATOR_PAT not set; license-verifier will be skipped."
+            "SKIP_LICENSE_VERIFIER_BUILD=1" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+
+      - name: Build & upload SupportFlow (full)
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: src-tauri
+          tauriScript: pnpm run tauri
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseName: SupportFlow ${{ env.RELEASE_TAG }}
+          releaseBody: |
+            Windows 安装包（自动构建）。
+
+            | Flavor | 说明 |
+            | --- | --- |
+            | full | SupportFlow 完整控制台 |
+            | wework | SupportFlow 企微 |
+            | wechat | SupportFlow 微信 |
+
+            本 Release 为草稿，确认产物无误后在 GitHub 页面 Publish。
+          releaseDraft: true
+          prerelease: false
+          generateReleaseNotes: true
+          args: --config tauri.conf.json
+
+      - name: Build & upload SupportFlow 企微 (wework)
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEV_CHANNEL: wework
+          NEXT_PUBLIC_DEV_CHANNEL: wework
+        with:
+          projectPath: src-tauri
+          tauriScript: pnpm run tauri
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseDraft: true
+          args: --config tauri.wework.conf.json
+
+      - name: Build & upload SupportFlow 微信 (wechat)
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEV_CHANNEL: wx
+          NEXT_PUBLIC_DEV_CHANNEL: wx
+        with:
+          projectPath: src-tauri
+          tauriScript: pnpm run tauri
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseDraft: true
+          args: --config tauri.wechat.conf.json

@@ -52,9 +52,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread", "fs", "io-util
 uuid = { version = "1", features = ["v4"] }
 rusqlite = { version = "0.32", features = ["bundled"] }
 base64 = "0.22"
-rsa = "0.9"
 sha2 = "0.10"
-signature = "2"
 # --- agent / bridge (src/services/agent) ---
 async-trait = "0.1"
 chrono = { version = "0.4", features = ["clock", "std"] }

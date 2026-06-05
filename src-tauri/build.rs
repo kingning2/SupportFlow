@@ -69,6 +69,7 @@ fn main() {
     println!("cargo:rustc-env=APP_LAST_UPDATE={}", last_update);
 
     ensure_channel_sidecar_exe(manifest);
+    ensure_license_verifier_exe(manifest);
 
     if std::env::var("CARGO_FEATURE_DESKTOP").is_ok() {
         tauri_build::build();
@@ -120,6 +121,53 @@ fn ensure_channel_sidecar_exe(manifest: &Path) {
         }
         Err(e) => {
             println!("cargo:warning=failed to run build-channel-sidecar.ps1: {e}");
+        }
+    }
+}
+
+fn ensure_license_verifier_exe(manifest: &Path) {
+    let target = std::env::var("TARGET").unwrap_or_else(|_| "unknown".into());
+    let verifier = manifest.join(format!(
+        "binaries/license-verifier-{target}{}",
+        std::env::consts::EXE_SUFFIX
+    ));
+
+    if verifier.is_file() {
+        println!("cargo:rerun-if-changed={}", verifier.display());
+        return;
+    }
+
+    if std::env::var("SKIP_LICENSE_VERIFIER_BUILD").is_ok() {
+        println!(
+            "cargo:warning=license-verifier missing at {}; set SKIP_LICENSE_VERIFIER_BUILD to skip auto-build",
+            verifier.display()
+        );
+        return;
+    }
+
+    println!("cargo:warning=license-verifier not found, running build-license-verifier.ps1 ...");
+
+    let script = manifest.join("scripts/build-license-verifier.ps1");
+    let status = std::process::Command::new("powershell")
+        .arg("-ExecutionPolicy")
+        .arg("Bypass")
+        .arg("-File")
+        .arg(&script)
+        .current_dir(manifest)
+        .status();
+
+    match status {
+        Ok(s) if s.success() && verifier.is_file() => {
+            println!("cargo:rerun-if-changed={}", verifier.display());
+        }
+        Ok(s) => {
+            println!(
+                "cargo:warning=build-license-verifier.ps1 exit {:?}; license checks need the verifier exe",
+                s.code()
+            );
+        }
+        Err(e) => {
+            println!("cargo:warning=failed to run build-license-verifier.ps1: {e}");
         }
     }
 }

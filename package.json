@@ -28,6 +28,7 @@
     "bootstrap:sidecar-wheels": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/bootstrap-sidecar-wheels.ps1",
     "setup:channel-sidecar-dev": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/build-channel-sidecar.ps1 -DepsOnly",
     "build:channel-sidecar": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/build-channel-sidecar.ps1",
+    "build:license-verifier": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/build-license-verifier.ps1",
     "finalize:channel-sidecar": "powershell -ExecutionPolicy Bypass -File src-tauri/scripts/finalize-channel-sidecar.ps1",
     "generate:contracts": "node scripts/generate-contracts.mjs",
     "check:contracts": "pnpm run generate:contracts && git diff --quiet -- packages/shared/src/contracts/contracts.ts",
