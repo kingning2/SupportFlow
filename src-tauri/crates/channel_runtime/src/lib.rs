@@ -44,7 +44,10 @@ impl Default for ChannelRuntimeResult {
     }
 }
 
-pub fn process_message(ctx: &ChannelRuntimeContext, cfg: &ChannelRuntimeConfig) -> ChannelRuntimeResult {
+pub fn process_message(
+    ctx: &ChannelRuntimeContext,
+    cfg: &ChannelRuntimeConfig,
+) -> ChannelRuntimeResult {
     let mut out = ChannelRuntimeResult::default();
     let mut content = ctx.content.trim().to_string();
     if content.is_empty() {
@@ -100,10 +103,13 @@ pub fn extract_media_urls(text: &str, limit: usize) -> Vec<(String, String)> {
     static MD_IMAGE_RE: OnceLock<Regex> = OnceLock::new();
     static IMG_TAG_RE: OnceLock<Regex> = OnceLock::new();
 
-    let image_re = IMAGE_RE.get_or_init(|| Regex::new(r#"https?://[^\s]+\.(?:jpg|jpeg|png|gif|webp)"#).unwrap());
-    let video_re = VIDEO_RE.get_or_init(|| Regex::new(r#"https?://[^\s]+\.(?:mp4|avi|mov|wmv|flv)"#).unwrap());
+    let image_re = IMAGE_RE
+        .get_or_init(|| Regex::new(r#"https?://[^\s]+\.(?:jpg|jpeg|png|gif|webp)"#).unwrap());
+    let video_re =
+        VIDEO_RE.get_or_init(|| Regex::new(r#"https?://[^\s]+\.(?:mp4|avi|mov|wmv|flv)"#).unwrap());
     let md_image_re = MD_IMAGE_RE.get_or_init(|| Regex::new(r#"!\[.*?\]\(([^)]+)\)"#).unwrap());
-    let img_tag_re = IMG_TAG_RE.get_or_init(|| Regex::new(r#"<img[^>]+src=["']([^"']+)["']"#).unwrap());
+    let img_tag_re =
+        IMG_TAG_RE.get_or_init(|| Regex::new(r#"<img[^>]+src=["']([^"']+)["']"#).unwrap());
 
     let mut out: Vec<(String, String)> = Vec::new();
     for m in image_re.find_iter(text) {

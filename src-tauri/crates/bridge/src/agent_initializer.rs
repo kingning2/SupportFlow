@@ -74,11 +74,7 @@ impl AgentInitializer {
         let full_prompt = build_agent_system_prompt(
             &opts.workspace,
             &agent.tools,
-            agent
-                .skill_manager
-                .lock()
-                .expect("skill_manager")
-                .as_ref(),
+            agent.skill_manager.lock().expect("skill_manager").as_ref(),
             None,
             true,
             enable_knowledge,

@@ -209,7 +209,8 @@ fn extract_finish_reason(chunk: &Value) -> Option<String> {
 }
 
 /// Map one raw SSE JSON object to zero or more agent chunks.
-fn transform_raw_sse_chunk(chunk: &Value) -> Vec<Value> {
+#[doc(hidden)]
+pub fn transform_raw_sse_chunk(chunk: &Value) -> Vec<Value> {
     let mut out = Vec::new();
 
     if chunk.get("choices").is_none() {
@@ -263,48 +264,4 @@ fn transform_raw_sse_chunk(chunk: &Value) -> Vec<Value> {
     }
 
     out
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn transform_reasoning_and_content_deltas() {
-        let raw = json!({
-            "choices": [{
-                "delta": {
-                    "reasoning_content": "think",
-                    "content": "hi",
-                }
-            }]
-        });
-        let chunks = transform_raw_sse_chunk(&raw);
-        assert_eq!(chunks.len(), 2);
-        assert!(chunks[0]["choices"][0]["delta"]["reasoning_content"].is_string());
-        assert_eq!(chunks[1]["choices"][0]["delta"]["content"], "hi");
-    }
-
-    #[test]
-    fn transform_sync_tool_use_stop_reason() {
-        let raw = json!({
-            "choices": [{
-                "finish_reason": "tool_calls",
-                "message": {
-                    "reasoning_content": "r",
-                    "content": null,
-                    "tool_calls": [{
-                        "id": "call_1",
-                        "function": { "name": "search", "arguments": "{\"q\":1}" }
-                    }]
-                }
-            }]
-        });
-        let out = transform_sync_response(&raw);
-        assert_eq!(out["stop_reason"], "tool_use");
-        let blocks = out["content"].as_array().unwrap();
-        assert_eq!(blocks[0]["type"], "thinking");
-        assert_eq!(blocks[1]["type"], "tool_use");
-        assert_eq!(blocks[1]["input"]["q"], 1);
-    }
 }

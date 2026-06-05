@@ -33,8 +33,6 @@ import {
   type ConsoleTheme
 } from "../lib/agent-console/theme-sync";
 
-import "../styles/console.css";
-
 const DEFAULT_OPEN_GROUPS: Record<SidebarGroupId, boolean> = {
   [SidebarGroupId.Chat]: true,
   [SidebarGroupId.Manage]: true,
@@ -157,7 +155,7 @@ export function AgentConsoleApp() {
 
   return (
     <TooltipProvider>
-      <div className="agent-console flex h-full min-h-0 flex-1 overflow-hidden bg-gray-50 font-sans text-slate-800 dark:bg-[#111111] dark:text-slate-200">
+      <div className="agent-console relative flex h-full min-h-0 flex-1 overflow-hidden bg-gray-50 font-sans text-slate-800 dark:bg-[#111111] dark:text-slate-200">
         <ConsoleSidebar
           navGroups={sidebarNavGroups}
           activeView={activeView}

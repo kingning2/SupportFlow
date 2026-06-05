@@ -191,18 +191,13 @@ impl ConversationStore {
                     continue;
                 }
             }
-            let content: Value =
-                serde_json::from_str(&raw).unwrap_or(Value::String(raw));
+            let content: Value = serde_json::from_str(&raw).unwrap_or(Value::String(raw));
             let content = if role == "assistant" {
                 if let Value::Array(blocks) = content {
                     Value::Array(
                         blocks
                             .into_iter()
-                            .filter(|b| {
-                                b.get("type")
-                                    .and_then(|t| t.as_str())
-                                    != Some("thinking")
-                            })
+                            .filter(|b| b.get("type").and_then(|t| t.as_str()) != Some("thinking"))
                             .collect(),
                     )
                 } else {
@@ -253,8 +248,9 @@ impl ConversationStore {
 
         for msg in messages {
             let role = msg.get("role").and_then(|v| v.as_str()).unwrap_or("");
-            let content = serde_json::to_string(&msg.get("content").cloned().unwrap_or(Value::Null))
-                .map_err(|e| e.to_string())?;
+            let content =
+                serde_json::to_string(&msg.get("content").cloned().unwrap_or(Value::Null))
+                    .map_err(|e| e.to_string())?;
             let extras = msg
                 .get("extras")
                 .map(|e| serde_json::to_string(e).unwrap_or_default())
@@ -350,15 +346,14 @@ pub fn conversation_store_for_path(db_path: &Path) -> Result<Arc<ConversationSto
         return Ok(s.clone());
     }
     let store = Arc::new(ConversationStore::open(db_path)?);
-    debug!(
-        "[ConversationStore] opened {}",
-        db_path.display()
-    );
+    debug!("[ConversationStore] opened {}", db_path.display());
     guard.insert(db_path.to_path_buf(), store.clone());
     Ok(store)
 }
 
-pub fn conversation_store_for_workspace(workspace: &Path) -> Result<Arc<ConversationStore>, String> {
+pub fn conversation_store_for_workspace(
+    workspace: &Path,
+) -> Result<Arc<ConversationStore>, String> {
     ConversationStore::for_workspace(workspace)
 }
 

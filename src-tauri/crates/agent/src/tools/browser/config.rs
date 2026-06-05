@@ -19,10 +19,7 @@ pub struct BrowserSettings {
 
 impl BrowserSettings {
     pub fn from_models(config: &ModelsConfig) -> Self {
-        let bc = config
-            .tools
-            .as_ref()
-            .and_then(|t| t.browser.as_ref());
+        let bc = config.tools.as_ref().and_then(|t| t.browser.as_ref());
 
         let cdp = bc
             .and_then(|b| b.cdp_endpoint.clone())
@@ -42,9 +39,7 @@ impl BrowserSettings {
 
         let headless = bc.and_then(|b| b.headless).unwrap_or(true);
 
-        let snapshot_max_chars = bc
-            .and_then(|b| b.snapshot_max_chars)
-            .unwrap_or(30_000);
+        let snapshot_max_chars = bc.and_then(|b| b.snapshot_max_chars).unwrap_or(30_000);
 
         Self {
             cdp_endpoint: cdp,

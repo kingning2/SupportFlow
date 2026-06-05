@@ -16,10 +16,8 @@ import {
   draftsFromChannel,
   type ChannelFieldDrafts
 } from "./channel-fields";
-import { FeishuPanel } from "./feishu-panel";
-import { WecomPanel } from "./wecom-panel";
-import { WeixinQrPanel } from "./weixin-qr-panel";
 import { WeworkConnectPanel } from "./wework-connect-panel";
+import { Button } from "@supportflow/ui/button";
 
 interface ChannelAddPanelProps {
   catalog: ChannelCatalogEntry[];
@@ -59,7 +57,7 @@ export function ChannelAddPanel({
     (name: string) => {
       setSelected(name);
       setOpen(false);
-      if (!name || name === "weixin") return;
+      if (!name) return;
       const next = catalog.find((c) => c.name === name);
       if (next) setDrafts(draftsFromChannel(next));
     },
@@ -78,15 +76,16 @@ export function ChannelAddPanel({
 
   if (available.length === 0) {
     return (
-      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-6 text-center dark:border-white/10 dark:bg-[#1A1A1A]">
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("channels_all_connected")}</p>
-        <button
+      <div className="bg-card border-border mt-4 rounded-xl border p-6 text-center">
+        <p className="text-muted-foreground text-sm">{t("channels_all_connected")}</p>
+        <Button
           type="button"
-          className="mt-3 cursor-pointer text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+          variant="ghost"
+          className="text-muted-foreground mt-3 text-xs"
           onClick={onClose}
         >
           {t("channels_cancel")}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -111,12 +110,7 @@ export function ChannelAddPanel({
     }
   };
 
-  const showActions =
-    ch &&
-    selectedChannel !== "weixin" &&
-    selectedChannel !== "wecom_bot" &&
-    selectedChannel !== "feishu" &&
-    selectedChannel !== "wework";
+  const showActions = ch && selectedChannel === "wx";
 
   const selectLabel =
     selectedChannel && ch
@@ -124,12 +118,12 @@ export function ChannelAddPanel({
       : t("channels_select_placeholder");
 
   return (
-    <div className="mt-4 rounded-xl border border-[#35A85B]/30 bg-white p-6 dark:border-[#35A85B]/40 dark:bg-[#1A1A1A]">
+    <div className="border-primary/30 bg-card mt-4 rounded-xl border p-6">
       <div className="mb-5 flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-[#35A85B]/10 dark:bg-[#35A85B]/20">
-          <Plus className="size-4 text-[#35A85B]" />
+        <div className="bg-primary/10 flex size-9 items-center justify-center rounded-lg">
+          <Plus className="text-primary size-4" />
         </div>
-        <h3 className="font-semibold text-slate-800 dark:text-slate-100">{t("channels_add")}</h3>
+        <h3 className="text-foreground font-semibold">{t("channels_add")}</h3>
       </div>
 
       {fixedChannel ? null : (
@@ -152,7 +146,7 @@ export function ChannelAddPanel({
               tabIndex={0}
             >
               <span className="truncate text-sm">{selectLabel}</span>
-              <ChevronDown className="cfg-dropdown-arrow size-3 text-slate-400" />
+              <ChevronDown className="cfg-dropdown-arrow text-muted-foreground size-3" />
             </div>
             <div className="cfg-dropdown-menu">
               <div
@@ -181,9 +175,6 @@ export function ChannelAddPanel({
       )}
 
       <div className="space-y-4">
-        {selectedChannel === "weixin" && ch ? (
-          <WeixinQrPanel mode="add" onConnected={onConnected} />
-        ) : null}
         {selectedChannel === "wx" && ch ? (
           <>
             {ch.hint ? <ChannelHint hint={ch.hint} lang={lang} /> : null}
@@ -195,19 +186,6 @@ export function ChannelAddPanel({
               onChange={setDrafts}
             />
           </>
-        ) : null}
-        {selectedChannel === "wecom_bot" && ch ? (
-          <WecomPanel
-            channel={ch}
-            lang={lang}
-            variant="add"
-            onConnected={onConnected}
-            showManualActions
-            onManualConnect={onConnected}
-          />
-        ) : null}
-        {selectedChannel === "feishu" && ch ? (
-          <FeishuPanel channel={ch} lang={lang} onConnected={onConnected} showConnectButton />
         ) : null}
         {selectedChannel === "wework" && ch ? (
           <WeworkConnectPanel
@@ -228,35 +206,17 @@ export function ChannelAddPanel({
             }}
           />
         ) : null}
-        {ch &&
-        selectedChannel &&
-        !["weixin", "wx", "wecom_bot", "feishu", "wework"].includes(selectedChannel) ? (
-          <>
-            {ch.hint ? <ChannelHint hint={ch.hint} lang={lang} /> : null}
-            <ChannelFields
-              channelName={ch.name}
-              fields={ch.fields}
-              lang={lang}
-              drafts={drafts}
-              onChange={setDrafts}
-            />
-          </>
-        ) : null}
       </div>
 
       {showActions ? (
         <div className="mt-4 flex items-center justify-end gap-3 pt-4">
-          <button
-            type="button"
-            className="cursor-pointer rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5"
-            onClick={onClose}
-          >
+          <Button type="button" variant="outline" onClick={onClose}>
             {t("channels_cancel")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             disabled={connecting}
-            className="flex cursor-pointer items-center rounded-lg bg-[#35A85B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#228547] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center"
             onClick={() => void submitConnect()}
           >
             {connecting ? (
@@ -267,17 +227,7 @@ export function ChannelAddPanel({
             ) : (
               t("channels_connect_btn")
             )}
-          </button>
-        </div>
-      ) : selectedChannel === "weixin" || selectedChannel === "feishu" ? (
-        <div className="mt-4 flex justify-end">
-          <button
-            type="button"
-            className="cursor-pointer rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 dark:border-white/10 dark:text-slate-300"
-            onClick={onClose}
-          >
-            {t("channels_cancel")}
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>

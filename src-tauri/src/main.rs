@@ -2,5 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    tauri_app_lib::run()
+    #[cfg(feature = "desktop")]
+    tauri_app_lib::run();
+    #[cfg(not(feature = "desktop"))]
+    compile_error!("tauri-app binary requires the `desktop` feature");
 }

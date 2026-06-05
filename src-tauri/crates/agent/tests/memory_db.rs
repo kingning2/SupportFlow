@@ -66,12 +66,14 @@ async fn factory_memory_manager_indexes_workspace() {
     let workspace = dir.path().to_path_buf();
     std::fs::write(workspace.join("MEMORY.md"), "dark mode preference\n").unwrap();
 
-    let memory =
-        create_memory_manager(workspace, &ModelsConfig::default(), false).expect("memory");
+    let memory = create_memory_manager(workspace, &ModelsConfig::default(), false).expect("memory");
     memory.sync().await.expect("initial sync");
     let search = MemorySearchTool::new(memory, None, false);
     let result = search.execute(json!({ "query": "dark mode" })).await;
     assert_eq!(result.status, "success");
     let text = result.result.as_str().unwrap_or("");
-    assert!(text.contains("Found"), "factory manager should index: {text}");
+    assert!(
+        text.contains("Found"),
+        "factory manager should index: {text}"
+    );
 }

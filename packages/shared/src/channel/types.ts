@@ -10,6 +10,11 @@ export interface ChannelField {
   placeholder?: ChannelLocalized;
 }
 
+export interface ChannelLoginProfile {
+  user_id: string;
+  display_name: string;
+}
+
 export interface ChannelCatalogEntry {
   name: string;
   label: ChannelLocalized;
@@ -20,6 +25,8 @@ export interface ChannelCatalogEntry {
   color?: string;
   login_status?: string;
   loginStatus?: string;
+  /** 桌面企微/微信登录后的用户信息 */
+  login_profile?: ChannelLoginProfile;
 }
 
 export interface ChannelFieldDrafts {

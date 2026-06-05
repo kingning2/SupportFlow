@@ -58,7 +58,7 @@ export function ChatComposer({
           <PromptInputSubmit
             status={isStreaming ? "streaming" : undefined}
             onStop={onCancel}
-            className="bg-[#35A85B] text-white hover:bg-[#228547]"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
           />
         </PromptInputFooter>
       </PromptInput>

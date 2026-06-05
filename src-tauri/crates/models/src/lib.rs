@@ -10,8 +10,9 @@ pub mod bridge;
 pub mod catalog;
 pub mod channel_reply;
 pub mod config;
-pub mod http_proxy;
 pub mod const_;
+pub mod fs;
+pub mod http_proxy;
 pub mod message_utils;
 pub mod openai_compatible;
 pub mod provider;
@@ -42,9 +43,9 @@ pub use bridge::{Context, ContextType, Reply, ReplyType};
 pub use catalog::{list_providers, provider_configured, ModelProviderDescriptor};
 pub use channel_reply::{reply_from_text_result, try_admin_commands, ReplyTextResult};
 pub use config::{BrowserConfig, ModelsConfig, ToolsConfig, VisionConfig, WebSearchConfig};
-pub use http_proxy::{build_reqwest_client, log_http_proxy_settings, HttpProxySettings};
 pub use const_::BotType;
 pub use deepseek::DeepSeekBot;
+pub use http_proxy::{build_reqwest_client, log_http_proxy_settings, HttpProxySettings};
 pub use openai_compatible::{
     ApiConfig, CallWithToolsRequest, LlmResult, OpenAICompatibleBot, OpenAICompatibleBotExt,
 };

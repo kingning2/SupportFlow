@@ -10,6 +10,11 @@ export { AppRoute } from "./app-route";
 export { AgentStreamChunkType, isAgentStreamChunkType } from "./agent-stream-chunk-type";
 export { ConsoleView, isConsoleView } from "./console-view";
 export {
+  WeworkConsoleRoute,
+  isWeworkConsoleRoute,
+  WEWORK_CONSOLE_ROUTE_VALUES
+} from "./wework-console-route";
+export {
   CHANNEL_IDS,
   DEV_CHANNEL_ALIASES,
   channelLabelKey,

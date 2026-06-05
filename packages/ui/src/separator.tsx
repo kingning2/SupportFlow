@@ -1,26 +1,21 @@
 "use client";
 
+import { Divider } from "antd";
 import * as React from "react";
-import * as SeparatorPrimitive from "@radix-ui/react-separator";
 
 import { cn } from "@supportflow/shared";
 
 const Separator = React.forwardRef<
-  React.ElementRef<typeof SeparatorPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root>
->(({ className, orientation = "horizontal", decorative = true, ...props }, ref) => (
-  <SeparatorPrimitive.Root
-    ref={ref}
-    decorative={decorative}
-    orientation={orientation}
-    className={cn(
-      "bg-border shrink-0",
-      orientation === "horizontal" ? "h-[1px] w-full" : "h-full w-[1px]",
-      className
-    )}
-    {...props}
-  />
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    orientation?: "horizontal" | "vertical";
+    decorative?: boolean;
+  }
+>(({ className, orientation = "horizontal", decorative: _decorative, ...props }, ref) => (
+  <div ref={ref} className={cn(className)} {...props}>
+    <Divider type={orientation === "vertical" ? "vertical" : "horizontal"} />
+  </div>
 ));
-Separator.displayName = SeparatorPrimitive.Root.displayName;
+Separator.displayName = "Separator";
 
 export { Separator };

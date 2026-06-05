@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
-import { ChannelAppRoot, ChannelShellLayout } from "@supportflow/ui/app-shell";
-import "@supportflow/ui/app-shell/styles.css";
+import { DesktopAppLayout } from "@supportflow/ui/app-shell";
+import "@supportflow/ui/design-system";
+import "@supportflow/ui/design-system/flavors/wechat";
 
 import { wechatShellAccent } from "@/shell-accent";
 
@@ -12,11 +13,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-Hans">
-      <body className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <ChannelAppRoot>
-          <ChannelShellLayout accent={wechatShellAccent}>{children}</ChannelShellLayout>
-        </ChannelAppRoot>
+    <html lang="zh-Hans" className="light">
+      <body data-flavor="wechat" className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <DesktopAppLayout accent={wechatShellAccent}>{children}</DesktopAppLayout>
       </body>
     </html>
   );

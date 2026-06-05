@@ -49,6 +49,27 @@ pub struct SkillItem {
     pub source: String,
 }
 
+/// Channel lifecycle push from Python sidecar (`channel/status-changed`).
+#[typeshare]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ChannelStatusChangedPayload {
+    pub channel: String,
+    pub phase: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub user_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub wait_seconds: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub qr_code_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub qr_image: Option<String>,
+}
+
 #[typeshare]
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]

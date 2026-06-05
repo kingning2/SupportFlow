@@ -1,6 +1,5 @@
 //! 跨 Webview 会话：各 Webview 为独立 JS 运行时；状态存于 Rust，经 IPC 广播。
 
-use std::fs;
 use std::sync::Mutex;
 
 use directories::ProjectDirs;
@@ -18,7 +17,7 @@ fn lang_store_path() -> Result<std::path::PathBuf, String> {
 
 pub fn read_stored_lang() -> String {
     match lang_store_path() {
-        Ok(path) => match fs::read_to_string(&path) {
+        Ok(path) => match crate::utils::fs::read_to_string(&path) {
             Ok(s) => {
                 let s = s.trim();
                 if matches!(s, "cn" | "en") {
@@ -39,9 +38,9 @@ pub fn write_stored_lang(lang: &str) -> Result<(), String> {
     }
     let path = lang_store_path()?;
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        crate::utils::fs::create_dir_all(parent)?;
     }
-    fs::write(&path, lang).map_err(|e| e.to_string())
+    crate::utils::fs::write(&path, lang)
 }
 
 impl SessionStore {
@@ -53,7 +52,7 @@ impl SessionStore {
 
 pub fn get_session(app: &AppHandle) -> Result<AppSession, String> {
     let store = app.state::<SessionStore>();
-    let guard = store.0.lock().map_err(|e| e.to_string())?;
+    let guard = crate::utils::err::lock_mutex(&store.0)?;
     Ok(guard.clone())
 }
 
@@ -65,7 +64,7 @@ pub fn set_current_language(app: &AppHandle, language: String) -> Result<(), Str
 
     let session = {
         let store = app.state::<SessionStore>();
-        let mut guard = store.0.lock().map_err(|e| e.to_string())?;
+        let mut guard = crate::utils::err::lock_mutex(&store.0)?;
         guard.current_language = language;
         guard.clone()
     };

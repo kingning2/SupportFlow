@@ -14,3 +14,13 @@ export type FeLogPayload = {
   level: FeLogLevel;
   msg: string;
 };
+
+/** Python sidecar → Tauri (`channel/status-changed`). */
+export type ChannelStatusChangedPayload = {
+  channel: string;
+  phase: string;
+  message?: string;
+  userId?: string;
+  displayName?: string;
+  waitSeconds?: number;
+};

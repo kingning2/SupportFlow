@@ -159,6 +159,12 @@ export function readAgentKnowledge(path: string) {
   });
 }
 
+export function removeAgentKnowledge(path: string) {
+  return invokeWrapper<void>(TauriCmd.AgentRemoveKnowledgeFile, {
+    path
+  });
+}
+
 export function getAgentKnowledgeGraph() {
   return invokeWrapper<{ nodes: AgentKnowledgeGraphNode[]; links: AgentKnowledgeGraphLink[] }>(
     TauriCmd.AgentGetKnowledgeGraph
@@ -189,6 +195,13 @@ export interface AgentKnowledgeUploadResult {
 export function uploadAgentKnowledge(files: AgentKnowledgeUploadFile[], category?: string) {
   return invokeWrapper<AgentKnowledgeUploadResult>(TauriCmd.AgentUploadKnowledge, {
     body: { files, category }
+  });
+}
+
+/** Trigger native file picker in Rust (via tauri dialog), Rust reads files directly from disk and ingests (markitdown first). */
+export function pickAndUploadKnowledge(category?: string) {
+  return invokeWrapper<AgentKnowledgeUploadResult>(TauriCmd.AgentPickAndUploadKnowledge, {
+    body: { category }
   });
 }
 

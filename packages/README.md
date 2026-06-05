@@ -22,7 +22,17 @@ import { cn, fetchChannels } from "@supportflow/shared";
 import { invokeWrapper } from "@supportflow/shared/tauri-bridge/cmd/invoke";
 import StoreProvider from "@supportflow/shared/desktop-shell/providers/store";
 import { AgentConsoleApp } from "@supportflow/ui/agent-console";
-import { ChannelAppRoot } from "@supportflow/ui/app-shell";
+import { DesktopAppLayout, AppShellLayout } from "@supportflow/ui/app-shell";
+```
+
+渠道根布局（`apps/wework/src/app/layout.tsx`）：
+
+```tsx
+import { DesktopAppLayout } from "@supportflow/ui/app-shell";
+import "@supportflow/ui/design-system";
+import { weworkShellAccent } from "@/shell-accent";
+
+<DesktopAppLayout accent={weworkShellAccent}>{children}</DesktopAppLayout>;
 ```
 
 渠道页示例（在 `apps/wework/src/`）：

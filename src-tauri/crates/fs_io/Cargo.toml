@@ -1,0 +1,8 @@
+[package]
+name = "fs_io"
+version = "0.1.0"
+edition = "2021"
+description = "Audited std::fs wrappers with structured logging (shared infrastructure)"
+
+[dependencies]
+tracing = "0.1"

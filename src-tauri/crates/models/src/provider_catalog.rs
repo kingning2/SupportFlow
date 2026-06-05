@@ -204,16 +204,16 @@ pub fn read_config_root(path: &Path) -> Result<Value, String> {
     if !path.is_file() {
         return Ok(Value::Object(Map::new()));
     }
-    let text = std::fs::read_to_string(path).map_err(|e| format!("read config: {e}"))?;
+    let text = crate::fs::read_to_string(path).map_err(|e| format!("read config: {e}"))?;
     serde_json::from_str(&text).map_err(|e| format!("parse config: {e}"))
 }
 
 pub fn write_config_root(path: &Path, root: &Value) -> Result<(), String> {
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| format!("create config dir: {e}"))?;
+        crate::fs::create_dir_all(parent).map_err(|e| format!("create config dir: {e}"))?;
     }
     let text = serde_json::to_string_pretty(root).map_err(|e| format!("serialize config: {e}"))?;
-    std::fs::write(path, text).map_err(|e| format!("write config: {e}"))
+    crate::fs::write(path, text).map_err(|e| format!("write config: {e}"))
 }
 
 pub fn patch_config_file(path: &Path, fields: &HashMap<String, Value>) -> Result<(), String> {

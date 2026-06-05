@@ -10,6 +10,9 @@ export enum TauriCmd {
   CloseModalWindow = "close_modal_window",
   ModalWindowReady = "modal_window_ready",
   PreloadModalWindow = "preload_modal_window",
+  LicenseGetStatus = "license_get_status",
+  LicenseApplyActivation = "license_apply_activation",
+  LicensePickAndApplyActivationKey = "license_pick_and_apply_activation_key",
   AgentGetConsoleState = "agent_get_console_state",
   AgentSendMessage = "agent_send_message",
   AgentCancel = "agent_cancel",
@@ -26,6 +29,8 @@ export enum TauriCmd {
   AgentReadKnowledge = "agent_read_knowledge",
   AgentGetKnowledgeGraph = "agent_get_knowledge_graph",
   AgentUploadKnowledge = "agent_upload_knowledge",
+  AgentPickAndUploadKnowledge = "agent_pick_and_upload_knowledge",
+  AgentRemoveKnowledgeFile = "agent_remove_knowledge_file",
   AgentListChannels = "agent_list_channels",
   AgentGetChannelCatalog = "agent_get_channel_catalog",
   AgentChannelAction = "agent_channel_action",
@@ -34,5 +39,13 @@ export enum TauriCmd {
   AgentGetLogsStatus = "agent_get_logs_status",
   AgentReadLogs = "agent_read_logs",
   AgentStartLogStream = "agent_start_log_stream",
-  AgentStopLogStream = "agent_stop_log_stream"
+  AgentStopLogStream = "agent_stop_log_stream",
+  ChannelGetInbox = "channel_get_inbox",
+  WeworkListAccounts = "wework_list_accounts",
+  WeworkUpsertAccount = "wework_upsert_account",
+  WeworkDeleteAccount = "wework_delete_account",
+  WeworkGetActiveAccountId = "wework_get_active_account_id",
+  WeworkSetActiveAccountId = "wework_set_active_account_id",
+  WeworkMarkContactsSynced = "wework_mark_contacts_synced",
+  WeworkContactsSynced = "wework_contacts_synced"
 }

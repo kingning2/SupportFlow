@@ -18,16 +18,8 @@ import {
   type ChannelFieldDrafts
 } from "./channel-fields";
 import { CHANNEL_ICON_MAP, channelColorClasses } from "./channel-theme";
-import { FeishuPanel } from "./feishu-panel";
-import { WecomPanel } from "./wecom-panel";
-import { WeixinQrPanel } from "./weixin-qr-panel";
 import { WxQrPanel } from "./wx-qr-panel";
-
-function wecomHasCreds(ch: ChannelCatalogEntry) {
-  const id = ch.fields.find((f) => f.key === "wecom_bot_id");
-  const secret = ch.fields.find((f) => f.key === "wecom_bot_secret");
-  return !!(id?.value && secret?.value);
-}
+import { Button } from "@supportflow/ui/button";
 
 interface ActiveChannelCardProps {
   channel: ChannelCatalogEntry;
@@ -53,28 +45,22 @@ export function ActiveChannelCard({
   const Icon = CHANNEL_ICON_MAP[channel.icon ?? ""] ?? MessageCircle;
   const label = localizeChannelText(channel.label, lang);
 
-  const weixinWaiting = channel.name === "weixin" && loginStatus && loginStatus !== "logged_in";
   const wxWaiting = channel.name === "wx" && loginStatus && loginStatus !== "logged_in";
-  const wecomNeedsCreds = channel.name === "wecom_bot" && !wecomHasCreds(channel);
-  const isFeishu = channel.name === "feishu";
   const hasFields = channel.fields.length > 0;
 
-  let statusDot = "bg-[#4ABE6E]";
-  let statusLabel = <span className="text-xs text-[#35A85B]">{t("channels_connected")}</span>;
-  if (weixinWaiting || wxWaiting) {
+  let statusDot = "bg-success";
+  let statusLabel = <span className="text-success text-xs">{t("channels_connected")}</span>;
+  if (wxWaiting) {
     statusDot = "animate-pulse bg-amber-400";
     statusLabel =
       loginStatus === "scanned" ? (
-        <span className="text-xs text-[#35A85B]">{t("weixin_scan_scanned")}</span>
+        <span className="text-success text-xs">{t("weixin_scan_scanned")}</span>
       ) : (
         <span className="text-xs text-amber-500">{t("weixin_scan_waiting")}</span>
       );
-  } else if (wecomNeedsCreds) {
-    statusDot = "animate-pulse bg-amber-400";
-    statusLabel = <span className="text-xs text-amber-500">{t("channels_connecting")}</span>;
   }
 
-  const showSaveBlock = hasFields && !weixinWaiting && !wxWaiting && !wecomNeedsCreds && !isFeishu;
+  const showSaveBlock = hasFields && !wxWaiting;
 
   const handleSave = async () => {
     setSaving(true);
@@ -98,13 +84,12 @@ export function ActiveChannelCard({
     }
   };
 
-  const headerMb =
-    hasFields || weixinWaiting || wxWaiting || wecomNeedsCreds || isFeishu ? "mb-5" : "";
+  const headerMb = hasFields || wxWaiting ? "mb-5" : "";
 
   return (
     <div
       id={`channel-card-${channel.name}`}
-      className="rounded-xl border border-slate-200 bg-white p-6 dark:border-white/10 dark:bg-[#1A1A1A]"
+      className="bg-card border-border rounded-xl border p-6"
     >
       <div className={`flex items-center gap-4${headerMb ? ` ${headerMb}` : ""}`}>
         <div
@@ -114,41 +99,23 @@ export function ActiveChannelCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-800 dark:text-slate-100">{label}</span>
+            <span className="text-foreground font-semibold">{label}</span>
             <span className={`size-2 rounded-full ${statusDot}`} />
             {statusLabel}
           </div>
-          <p className="mt-0.5 font-mono text-xs text-slate-500 dark:text-slate-400">
-            {channel.name}
-          </p>
+          <p className="text-muted-foreground mt-0.5 font-mono text-xs">{channel.name}</p>
         </div>
-        <button
+        <Button
           type="button"
-          className="shrink-0 cursor-pointer rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+          variant="destructive"
+          className="h-auto px-3 py-1.5 text-xs"
           onClick={() => onDisconnect(channel.name)}
         >
           {t("channels_disconnect")}
-        </button>
+        </Button>
       </div>
 
-      {weixinWaiting ? <WeixinQrPanel mode="active" onConnected={onRefresh} /> : null}
       {wxWaiting ? <WxQrPanel onLoggedIn={onRefresh} /> : null}
-      {wecomNeedsCreds ? (
-        <WecomPanel channel={channel} lang={lang} variant="active" onConnected={onRefresh} />
-      ) : null}
-      {isFeishu ? (
-        <FeishuPanel
-          channel={channel}
-          lang={lang}
-          isActive
-          onConnected={onRefresh}
-          onSaveStatus={(key, err) => {
-            setStatusMsg(t(key));
-            setStatusError(err);
-            setTimeout(() => setStatusMsg(null), 2500);
-          }}
-        />
-      ) : null}
       {showSaveBlock ? (
         <div className="space-y-4">
           {channel.hint ? <ChannelHint hint={channel.hint} lang={lang} /> : null}
@@ -163,18 +130,13 @@ export function ActiveChannelCard({
             <span
               className={`text-xs transition-opacity duration-300 ${
                 statusMsg ? "opacity-100" : "opacity-0"
-              } ${statusError ? "text-red-500" : "text-[#35A85B]"}`}
+              } ${statusError ? "text-destructive" : "text-success"}`}
             >
               {statusMsg}
             </span>
-            <button
-              type="button"
-              disabled={saving}
-              className="cursor-pointer rounded-lg bg-[#35A85B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#228547] disabled:cursor-not-allowed disabled:opacity-50"
-              onClick={() => void handleSave()}
-            >
+            <Button type="button" disabled={saving} onClick={() => void handleSave()}>
               {saving ? t("channels_saving") : t("channels_save")}
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}

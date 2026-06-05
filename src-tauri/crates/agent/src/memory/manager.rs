@@ -47,7 +47,10 @@ impl DbMemoryManager {
     }
 
     fn generate_chunk_id(path: &str, start_line: u32, end_line: u32) -> String {
-        format!("{:x}", md5::compute(format!("{path}:{start_line}:{end_line}")))
+        format!(
+            "{:x}",
+            md5::compute(format!("{path}:{start_line}:{end_line}"))
+        )
     }
 
     fn scopes_for_search(&self, user_id: Option<&str>) -> Vec<String> {
@@ -103,8 +106,12 @@ impl DbMemoryManager {
     }
 
     fn rel_path_from_workspace(workspace: &Path, file_path: &Path) -> String {
-        let workspace = workspace.canonicalize().unwrap_or_else(|_| workspace.to_path_buf());
-        let file_path = file_path.canonicalize().unwrap_or_else(|_| file_path.to_path_buf());
+        let workspace = workspace
+            .canonicalize()
+            .unwrap_or_else(|_| workspace.to_path_buf());
+        let file_path = file_path
+            .canonicalize()
+            .unwrap_or_else(|_| file_path.to_path_buf());
         file_path
             .strip_prefix(&workspace)
             .map(|p| p.to_string_lossy().replace('\\', "/"))
@@ -250,7 +257,11 @@ impl DbMemoryManager {
         Ok(())
     }
 
-    async fn cached_embed_query(&self, query: &str, provider: &Arc<dyn EmbeddingProvider>) -> Result<Vec<f32>, String> {
+    async fn cached_embed_query(
+        &self,
+        query: &str,
+        provider: &Arc<dyn EmbeddingProvider>,
+    ) -> Result<Vec<f32>, String> {
         let cache_key = format!(
             "{}:{}:{}",
             provider.provider_name(),
@@ -351,7 +362,10 @@ mod tests {
             .search("dark mode", None, 10, 0.1)
             .await
             .expect("manager search");
-        assert!(!mgr_hits.is_empty(), "manager hybrid search should return hits");
+        assert!(
+            !mgr_hits.is_empty(),
+            "manager hybrid search should return hits"
+        );
     }
 }
 
@@ -408,12 +422,9 @@ impl MemoryManager for DbMemoryManager {
         let mut vector_results = Vec::new();
         if let Some(provider) = &self.embedding {
             if let Ok(query_embedding) = self.cached_embed_query(query, provider).await {
-                vector_results = self.storage.search_vector(
-                    &query_embedding,
-                    user_id,
-                    &scope_refs,
-                    limit,
-                )?;
+                vector_results =
+                    self.storage
+                        .search_vector(&query_embedding, user_id, &scope_refs, limit)?;
             }
         }
 

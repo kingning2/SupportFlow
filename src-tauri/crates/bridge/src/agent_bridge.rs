@@ -68,11 +68,7 @@ impl AgentBridge {
             .ok_or_else(|| format!("agent for session {sid} missing"))
     }
 
-    fn init_agent(
-        &self,
-        session_id: Option<String>,
-        channel_type: &str,
-    ) -> Result<Agent, String> {
+    fn init_agent(&self, session_id: Option<String>, channel_type: &str) -> Result<Agent, String> {
         AgentInitializer::initialize(AgentInitOptions {
             workspace: self.workspace.clone(),
             config: self.config.clone(),
@@ -164,7 +160,11 @@ impl AgentBridge {
         };
 
         if let Some(ref sid) = session_id {
-            let new_messages = agent.last_run_new_messages.lock().expect("last_run").clone();
+            let new_messages = agent
+                .last_run_new_messages
+                .lock()
+                .expect("last_run")
+                .clone();
             persist_agent_run(
                 &self.workspace,
                 &self.config,
@@ -227,10 +227,7 @@ fn file_reply(file_info: Value, text_response: String) -> Reply {
         .get("file_type")
         .and_then(|v| v.as_str())
         .unwrap_or("file");
-    let file_path = file_info
-        .get("path")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let file_path = file_info.get("path").and_then(|v| v.as_str()).unwrap_or("");
     let file_name = file_info
         .get("file_name")
         .and_then(|v| v.as_str())

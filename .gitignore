@@ -35,8 +35,12 @@ graphify.*
 config.json
 src-tauri/resources/config.json
 src-tauri/binaries/channel-sidecar-*
-src-tauri/channel_agent/**/__pycache__/
-src-tauri/channel_agent/**/*.pyc
-src-tauri/channel_agent/build/
-src-tauri/channel_agent/dist/
-src-tauri/channel_agent/*.spec
+channel_agent/**/__pycache__/
+channel_agent/**/*.pyc
+channel_agent/build/
+channel_agent/dist/
+channel_agent/*.spec
+
+subscription-activation-generator
+
+.codegraph

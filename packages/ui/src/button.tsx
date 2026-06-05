@@ -1,50 +1,107 @@
+"use client";
+
+import { Button as AntdButton, type ButtonProps as AntdButtonProps } from "antd";
 import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@supportflow/shared";
 
-const buttonVariants = cva(
-  "focus-visible:ring-ring inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
-        outline:
-          "border-input bg-background hover:bg-accent hover:text-accent-foreground border shadow-sm",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline"
-      },
-      size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
-        "icon-sm": "h-8 w-8"
-      }
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default"
-    }
-  }
-);
+type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+type ButtonSize = "default" | "sm" | "lg" | "icon" | "icon-sm";
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+export interface ButtonProps extends Omit<
+  AntdButtonProps,
+  "type" | "size" | "variant" | "htmlType"
+> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   asChild?: boolean;
+  /** HTML button type attribute */
+  type?: "button" | "submit" | "reset";
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+function mapVariant(variant: ButtonVariant = "default"): Pick<AntdButtonProps, "type" | "danger"> {
+  switch (variant) {
+    case "destructive":
+      return { type: "primary", danger: true };
+    case "outline":
+    case "secondary":
+      return { type: "default" };
+    case "ghost":
+      return { type: "text" };
+    case "link":
+      return { type: "link" };
+    default:
+      return { type: "primary" };
+  }
+}
+
+function mapSize(size: ButtonSize = "default"): AntdButtonProps["size"] {
+  switch (size) {
+    case "sm":
+    case "icon-sm":
+      return "small";
+    case "lg":
+      return "large";
+    default:
+      return "middle";
+  }
+}
+
+const iconSizeClass: Record<ButtonSize, string | undefined> = {
+  default: undefined,
+  sm: undefined,
+  lg: undefined,
+  icon: "!size-9 min-w-9 p-0",
+  "icon-sm": "!size-8 min-w-8 p-0"
+};
+
+const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
+  (
+    {
+      className,
+      variant = "default",
+      size = "default",
+      asChild = false,
+      type = "button",
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    const mapped = mapVariant(variant);
+    const antdSize = mapSize(size);
+
+    if (asChild && React.isValidElement(children)) {
+      return React.cloneElement(
+        children as React.ReactElement<{ className?: string; ref?: unknown }>,
+        {
+          className: cn(
+            (children as React.ReactElement<{ className?: string }>).props.className,
+            iconSizeClass[size],
+            className
+          ),
+          ref
+        }
+      );
+    }
+
     return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+      <AntdButton
+        ref={ref}
+        htmlType={type}
+        size={antdSize}
+        className={cn(iconSizeClass[size], className)}
+        {...mapped}
+        {...props}
+      >
+        {children}
+      </AntdButton>
     );
   }
 );
 Button.displayName = "Button";
+
+/** @deprecated shadcn cva helper — kept for import compatibility. */
+const buttonVariants = () => "";
 
 export { Button, buttonVariants };

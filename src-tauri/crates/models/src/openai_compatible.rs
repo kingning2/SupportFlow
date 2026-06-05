@@ -252,12 +252,7 @@ pub async fn call_vision_impl<B: OpenAICompatibleBot + ?Sized>(
     };
 
     match client
-        .chat_completions(
-            payload,
-            api_key,
-            api_base,
-            Some(60),
-        )
+        .chat_completions(payload, api_key, api_base, Some(60))
         .await
     {
         Ok(body) => {

@@ -24,16 +24,16 @@ export const CHANNEL_ICON_MAP: Record<string, LucideIcon> = {
 
 const COLOR_MAP: Record<string, { iconBox: string; icon: string }> = {
   emerald: {
-    iconBox: "bg-emerald-50 dark:bg-emerald-900/20",
-    icon: "text-emerald-500"
+    iconBox: "bg-channel/10 dark:bg-channel/20",
+    icon: "text-channel"
   },
   green: {
-    iconBox: "bg-green-50 dark:bg-green-900/20",
-    icon: "text-green-500"
+    iconBox: "bg-success/10 dark:bg-success/20",
+    icon: "text-success"
   },
   blue: {
-    iconBox: "bg-blue-50 dark:bg-blue-900/20",
-    icon: "text-blue-500"
+    iconBox: "bg-info/10 dark:bg-info/20",
+    icon: "text-info"
   }
 };
 

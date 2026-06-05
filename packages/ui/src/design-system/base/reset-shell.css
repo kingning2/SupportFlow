@@ -1,0 +1,67 @@
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    height: 100%;
+    background: transparent;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply text-foreground cursor-default antialiased;
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #App input,
+  #App textarea,
+  #App [contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  img,
+  svg {
+    -webkit-user-drag: none;
+  }
+}
+
+#App {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  height: 100vh;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--app-bg);
+  clip-path: inset(0 round var(--window-radius));
+}
+
+#App > .main-window {
+  flex: 1;
+  min-height: 0;
+}
+
+.main-window {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--main-window-bg);
+}
+
+#App.modal-window-root,
+.modal-window {
+  background: var(--modal-surface);
+}
+
+.cfg-key-masked {
+  -webkit-text-security: disc;
+}

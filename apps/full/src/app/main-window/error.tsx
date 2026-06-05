@@ -1,8 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
-import AppErrorView from "@/components/error/app-error-view";
+import { FullMainWindowErrorView } from "@/features/full/main-window/main-window-error-view";
 
 type ErrorProps = {
   error: Error & { digest?: string };
@@ -10,14 +8,5 @@ type ErrorProps = {
 };
 
 export default function Error({ error, reset }: ErrorProps) {
-  const router = useRouter();
-
-  return (
-    <AppErrorView
-      error={error}
-      reset={reset}
-      logPrefix="main-window err capture"
-      onBack={() => router.replace("/main-window")}
-    />
-  );
+  return <FullMainWindowErrorView error={error} reset={reset} />;
 }

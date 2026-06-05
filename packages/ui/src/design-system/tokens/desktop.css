@@ -1,0 +1,15 @@
+/**
+ * Tauri 桌面壳：透明窗体、圆角裁切、主窗底色
+ */
+:root {
+  --window-radius: 12px;
+  --app-bg: #f4f4f5;
+  --main-window-bg: #fafafa;
+  --modal-surface: #ffffff;
+}
+
+.dark {
+  --app-bg: #18181b;
+  --main-window-bg: #09090b;
+  --modal-surface: hsl(var(--card));
+}

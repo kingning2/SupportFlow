@@ -40,7 +40,7 @@ export function ConsoleHeader({
   };
 
   return (
-    <header className="z-10 flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 dark:border-white/10 dark:bg-[#1A1A1A]">
+    <header className="bg-background border-border z-10 flex h-14 shrink-0 items-center gap-3 border-b px-4">
       <Button
         type="button"
         variant="ghost"
@@ -52,15 +52,13 @@ export function ConsoleHeader({
       </Button>
 
       <Button type="button" variant="ghost" size="icon-sm" onClick={onToggleSessionPanel}>
-        <History className="size-4 text-slate-500 dark:text-slate-400" />
+        <History className="text-muted-foreground size-4" />
       </Button>
 
       <div className="hidden min-w-0 items-center gap-2 text-sm lg:flex">
-        <span className="truncate text-slate-400 dark:text-slate-500">{t(groupKey)}</span>
-        <ChevronRight className="size-2.5 text-slate-300 dark:text-slate-600" />
-        <span className="truncate font-medium text-slate-700 dark:text-slate-200">
-          {t(pageKey)}
-        </span>
+        <span className="text-muted-foreground truncate">{t(groupKey)}</span>
+        <ChevronRight className="text-muted-foreground/60 size-2.5" />
+        <span className="text-foreground truncate font-medium">{t(pageKey)}</span>
       </div>
 
       <div className="flex-1" />
@@ -69,7 +67,7 @@ export function ConsoleHeader({
         type="button"
         variant="ghost"
         size="sm"
-        className="gap-1.5 text-slate-500 dark:text-slate-400"
+        className="text-muted-foreground gap-1.5"
         onClick={toggleLanguage}
       >
         <Globe className="size-3.5" />
@@ -78,15 +76,15 @@ export function ConsoleHeader({
 
       <Button type="button" variant="ghost" size="icon-sm" onClick={onToggleTheme}>
         {theme === "dark" ? (
-          <Sun className="size-4 text-slate-500" />
+          <Sun className="text-muted-foreground size-4" />
         ) : (
-          <Moon className="size-4 text-slate-500" />
+          <Moon className="text-muted-foreground size-4" />
         )}
       </Button>
 
       <Button type="button" variant="ghost" size="icon-sm" asChild>
         <a href={CONSOLE_BRAND.githubUrl} target="_blank" rel="noopener noreferrer">
-          <ExternalLink className="size-4 text-slate-500" />
+          <ExternalLink className="text-muted-foreground size-4" />
         </a>
       </Button>
     </header>

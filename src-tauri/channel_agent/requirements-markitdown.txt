@@ -1,3 +1,0 @@
-# Knowledge upload: convert files → Markdown before memory chunking (Rust agent subprocess).
-# Requires Python 3.10+. Install into the interpreter used by CHANNEL_MARKITDOWN_PYTHON / CHANNEL_PYTHON_EXECUTABLE.
-markitdown[all]

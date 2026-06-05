@@ -30,10 +30,7 @@ export function ChannelFields({ channelName, fields, lang, drafts, onChange }: C
           const checked = drafts.bools[field.key] ?? rawVal === "true";
           return (
             <div key={field.key}>
-              <label
-                htmlFor={inputId}
-                className="mb-1.5 block text-sm font-medium text-slate-600 dark:text-slate-400"
-              >
+              <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-slate-700">
                 {fieldLabel}
               </label>
               <label className="relative inline-flex cursor-pointer items-center">
@@ -53,7 +50,7 @@ export function ChannelFields({ channelName, fields, lang, drafts, onChange }: C
                   className={cn(
                     "h-5 w-9 rounded-full bg-slate-200 after:absolute after:top-[2px] after:left-[2px]",
                     "after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all",
-                    "peer-checked:bg-[#4ABE6E] peer-checked:after:translate-x-full dark:bg-slate-700"
+                    "peer-checked:bg-[var(--channel-primary,#35A85B)] peer-checked:after:translate-x-full"
                   )}
                 />
               </label>
@@ -66,10 +63,7 @@ export function ChannelFields({ channelName, fields, lang, drafts, onChange }: C
 
         return (
           <div key={field.key}>
-            <label
-              htmlFor={inputId}
-              className="mb-1.5 block text-sm font-medium text-slate-600 dark:text-slate-400"
-            >
+            <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-slate-700">
               {fieldLabel}
             </label>
             <input
@@ -78,9 +72,8 @@ export function ChannelFields({ channelName, fields, lang, drafts, onChange }: C
               value={value}
               placeholder={fieldLabel}
               className={cn(
-                "w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm",
-                "text-slate-800 transition-colors focus:border-[#35A85B] focus:outline-none",
-                "dark:border-slate-600 dark:bg-white/5 dark:text-slate-100",
+                "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-sm",
+                "text-slate-800 transition-colors focus:border-[var(--channel-primary,#35A85B)] focus:ring-1 focus:ring-[var(--channel-primary,#35A85B)]/25 focus:outline-none",
                 isMasked && "cfg-key-masked"
               )}
               onFocus={() => {

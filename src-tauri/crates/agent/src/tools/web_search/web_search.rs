@@ -25,11 +25,7 @@ impl WebSearchTool {
         let proxy = HttpProxySettings::from_models(&config);
         Self {
             settings,
-            client: build_reqwest_client(
-                &proxy,
-                Duration::from_secs(default_timeout_secs()),
-                None,
-            ),
+            client: build_reqwest_client(&proxy, Duration::from_secs(default_timeout_secs()), None),
         }
     }
 
@@ -110,7 +106,10 @@ impl WebSearchTool {
             return Err("Error: Invalid bocha API key.".into());
         }
         if status == 403 {
-            return Err("Error: bocha API — insufficient balance. Top up at https://open.bochaai.com".into());
+            return Err(
+                "Error: bocha API — insufficient balance. Top up at https://open.bochaai.com"
+                    .into(),
+            );
         }
         if status == 429 {
             return Err("Error: bocha API rate limit reached.".into());
@@ -235,10 +234,7 @@ impl WebSearchTool {
         if let Some(err) = data.get("error") {
             if err.is_object() {
                 let code = err.get("code").map(|c| c.to_string()).unwrap_or_default();
-                let message = err
-                    .get("message")
-                    .and_then(|m| m.as_str())
-                    .unwrap_or("");
+                let message = err.get("message").and_then(|m| m.as_str()).unwrap_or("");
                 return Err(format!("Error: Zhipu returned {code}: {message}"));
             }
         }
@@ -318,10 +314,7 @@ impl WebSearchTool {
         let data: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
         if let Some(code) = data.get("code") {
             if !code.is_null() && code.as_i64().unwrap_or(0) != 0 {
-                let message = data
-                    .get("message")
-                    .and_then(|m| m.as_str())
-                    .unwrap_or("");
+                let message = data.get("message").and_then(|m| m.as_str()).unwrap_or("");
                 return Err(format!("Error: Qianfan returned {code}: {message}"));
             }
         }
@@ -405,10 +398,7 @@ impl WebSearchTool {
             other => other,
         };
 
-        if let Some(pages) = parsed
-            .pointer("/webPages/value")
-            .and_then(|v| v.as_array())
-        {
+        if let Some(pages) = parsed.pointer("/webPages/value").and_then(|v| v.as_array()) {
             let results: Vec<Value> = pages
                 .iter()
                 .map(|p| {
@@ -460,7 +450,9 @@ fn qianfan_freshness_filter(freshness: &str) -> Option<Value> {
         _ => return None,
     };
     let now = Local::now();
-    let end_date = (now + ChronoDuration::days(1)).format("%Y-%m-%d").to_string();
+    let end_date = (now + ChronoDuration::days(1))
+        .format("%Y-%m-%d")
+        .to_string();
     let start_date = (now - ChronoDuration::days(delta_days))
         .format("%Y-%m-%d")
         .to_string();

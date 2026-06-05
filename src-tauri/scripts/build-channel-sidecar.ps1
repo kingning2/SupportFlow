@@ -6,7 +6,7 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$ChannelAgent = Join-Path $Root "src-tauri\channel_agent"
+$ChannelAgent = Join-Path $Root "channel_agent"
 $BinDir = Join-Path $Root "src-tauri\binaries"
 $WheelDir = Join-Path $ChannelAgent "_wheels\sidecar-pip"
 $Target = if ($env:CARGO_BUILD_TARGET) { $env:CARGO_BUILD_TARGET } else { "x86_64-pc-windows-msvc" }
@@ -122,7 +122,7 @@ function Test-SidecarDepsInstalled {
     param([string]$PythonExe)
     $code = 1
     try {
-        $code = & cmd /c "`"$PythonExe`" -c `"import requests, PIL, wechatpy`" 2>nul"
+        $code = & cmd /c "`"$PythonExe`" -c `"import requests, PIL`" 2>nul"
         if ($null -eq $code) { $code = $LASTEXITCODE }
     } catch { }
     return ($code -eq 0)
@@ -171,7 +171,7 @@ function Install-SidecarDeps {
     }
 
     if (-not (Test-SidecarDepsInstalled -PythonExe $PythonExe)) {
-        throw "Sidecar deps incomplete after install (requests/Pillow/wechatpy)"
+        throw "Sidecar deps incomplete after install (requests/Pillow)"
     }
 }
 
@@ -323,12 +323,9 @@ $hidden = @(
     "qrcode",
     "yaml",
     "dotenv",
-    "wechatpy",
     "web",
     "websocket",
     "Crypto",
-    "dingtalk_stream",
-    "lark_oapi"
 )
 if ($hasNtwork) {
     $hidden += @("ntwork", "ntwork.core", "ntwork.wc", "ntwork.conf", "ntwork.const", "pyee")

@@ -1,33 +1,36 @@
 # Frontend Monorepo
 
-```
+```text
 apps/
-  full/      完整控制台
-  wework/    企微独立应用（含 wework-page.tsx 等私有代码）
-  wechat/    微信独立应用（含 wechat-page.tsx 等私有代码）
+  full/      Full desktop console
+  wework/    Personal WeCom desktop app
+  wechat/    Personal WeChat desktop app
 
 packages/
-  shared/    公用逻辑
-  ui/        公用 UI
+  shared/    Shared logic and Tauri bridge
+  ui/        Shared UI components
 ```
 
-## 原则
+## Rules
 
-- **`packages/`** 只有 `shared` + `ui`，不放任何渠道包
-- **渠道私有页面、accent、路由** 放在对应 `apps/<channel>/src/`
+- `packages/` only keeps `shared` and `ui`.
+- Channel-specific pages, config, and feature code stay under `apps/wework` and `apps/wechat`.
+- `apps/full` remains the shared desktop console shell.
 
-## 开发
+## Development
 
 ```bash
 pnpm install
 pnpm run dev
 pnpm run typecheck
 pnpm run tauri:dev:wework
+pnpm run tauri:dev:wechat
 ```
 
-## 构建
+## Build
 
-| 命令                           | 产物               |
+| Command                        | Output             |
 | ------------------------------ | ------------------ |
 | `pnpm run build`               | `apps/full/out/`   |
 | `pnpm run build:flavor:wework` | `apps/wework/out/` |
+| `pnpm run build:flavor:wechat` | `apps/wechat/out/` |

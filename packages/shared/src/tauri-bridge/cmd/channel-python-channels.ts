@@ -62,7 +62,7 @@ export async function channelAction(body: ChannelActionRequest) {
   return data;
 }
 
-/** Proxy `/api/*` channel console endpoints (QR login, Feishu register). */
+/** Proxy `/api/*` channel console endpoints (WX QR login, WeWork contact sync). */
 export async function fetchChannelConsoleApi(
   path: string,
   method: ChannelConsoleApiMethod,

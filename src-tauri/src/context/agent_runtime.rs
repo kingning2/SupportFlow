@@ -5,12 +5,12 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use agent::SkillEntry;
-use agent::{
+use crate::agent::SkillEntry;
+use crate::agent::{
     get_cancel_registry, Agent, AgentEvent, AgentEventCallback, CancelHandle, McpToolLoader,
     RunStreamOptions,
 };
-use bridge::{context_from_reply_params, BridgeRuntime};
+use crate::bridge::{context_from_reply_params, BridgeRuntime};
 use models::catalog::provider_configured;
 use models::provider_catalog::{
     build_provider_details, find_provider_meta as find_provider_meta_detail,
@@ -23,12 +23,13 @@ use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::Mutex;
 
-use crate::context::channel_bridge::ChannelBridge;
+use crate::context::channel::ChannelBridge;
 use crate::context::workspace_console;
+use crate::events::channel_status_changed_all;
 use crate::events::names::{AGENT_LOG_STREAM, AGENT_RUN_FINISHED, AGENT_STREAM_CHUNK};
 use crate::events::payloads::{
     AgentConsoleState, AgentLogStreamPayload, AgentRunFinished, AgentStreamChunk,
-    ModelProviderDetail, ModelProviderItem, SkillItem, ToolItem,
+    ChannelStatusChangedPayload, ModelProviderDetail, ModelProviderItem, SkillItem, ToolItem,
 };
 
 fn skill_to_item(e: &SkillEntry) -> SkillItem {
@@ -40,13 +41,39 @@ fn skill_to_item(e: &SkillEntry) -> SkillItem {
     }
 }
 
+/// Standalone wework / wechat apps connect only from the account UI.
+fn should_skip_deferred_channel_autostart() -> bool {
+    crate::utils::env::get("DEV_CHANNEL")
+        .map(|v| v.trim() == "wework" || v.trim() == "wx")
+        .unwrap_or(false)
+}
+
+fn deferred_autostart_channels(config_path: &Path) -> Result<Vec<String>, String> {
+    let raw = crate::utils::fs::read_to_string(config_path)?;
+    let root: serde_json::Value = crate::utils::json::from_str(&raw)?;
+    let configured = crate::utils::channel::parse_desktop_channel_types(root.get("channel_type"));
+    if let Some(dev_channel) = crate::utils::env::get("DEV_CHANNEL") {
+        let trimmed = dev_channel.trim().to_string();
+        if trimmed == "wework" || trimmed == "wx" {
+            return Ok(Vec::new());
+        }
+        if !trimmed.is_empty() {
+            return Ok(configured
+                .into_iter()
+                .filter(|name| name == &trimmed)
+                .collect());
+        }
+    }
+    Ok(configured)
+}
+
 /// Bundled agent config (`src-tauri/resources/config.json` or template). Single source of truth.
 fn resolve_bundled_config(app: &AppHandle) -> Result<PathBuf, String> {
     // Dev: `src-tauri/resources/config.json` is gitignored and often not copied to
     // `target/debug/resources/` — read the source tree directly so edits take effect.
     #[cfg(debug_assertions)]
     {
-        let source_config = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources/config.json");
+        let source_config = crate::utils::path::crate_path("resources/config.json");
         if source_config.is_file() {
             crate::log_info!(
                 "agent config: dev source resources/config.json -> {}",
@@ -76,16 +103,8 @@ fn resolve_bundled_config(app: &AppHandle) -> Result<PathBuf, String> {
 fn resolve_workspace_dir(app: &AppHandle) -> Result<PathBuf, String> {
     const ENV_KEY: &str = "SUPPORT_FLOW_WORKSPACE";
 
-    if let Ok(raw) = std::env::var(ENV_KEY) {
-        let trimmed = raw.trim();
-        if !trimmed.is_empty() {
-            let path = PathBuf::from(trimmed);
-            if path.is_dir() {
-                crate::log_info!("agent workspace from {ENV_KEY}: {}", path.display());
-                return Ok(path);
-            }
-            crate::log_warn!("{ENV_KEY} is not a directory: {}", path.display());
-        }
+    if let Some(path) = crate::utils::env::dir_from_env(ENV_KEY) {
+        return Ok(path);
     }
 
     app.path()
@@ -98,7 +117,7 @@ fn resolve_workspace_dir(app: &AppHandle) -> Result<PathBuf, String> {
 fn resolve_agent_dirs(app: &AppHandle) -> Result<(PathBuf, PathBuf), String> {
     let config_path = resolve_bundled_config(app)?;
     let workspace = resolve_workspace_dir(app)?;
-    fs::create_dir_all(&workspace).map_err(|e| e.to_string())?;
+    crate::utils::fs::create_dir_all(&workspace)?;
 
     // Mirror into workspace for tools that read ./config.json; source remains resources.
     let mirror = workspace.join("config.json");
@@ -110,6 +129,28 @@ fn resolve_agent_dirs(app: &AppHandle) -> Result<(PathBuf, PathBuf), String> {
         config_path.display()
     );
     Ok((workspace, config_path))
+}
+
+/// Resolve the markitdown_convert.py helper (for Rust knowledge ingest to call out to Python MarkItDown).
+/// Prefers bundled resource (listed in tauri.conf), falls back to dev source tree.
+fn resolve_markitdown_convert_script(app: &AppHandle) -> Result<PathBuf, String> {
+    // Resource (prod bundle + dev if copied to target/.../resources)
+    if let Ok(p) = app.path().resolve(
+        "channel_agent/scripts/markitdown_convert.py",
+        BaseDirectory::Resource,
+    ) {
+        if p.is_file() {
+            return Ok(p);
+        }
+    }
+
+    // Dev source tree (relative to tauri crate root)
+    let dev = crate::utils::path::crate_path("channel_agent/scripts/markitdown_convert.py");
+    if dev.is_file() {
+        return Ok(dev);
+    }
+
+    Err("markitdown_convert.py not located in resources or dev tree".into())
 }
 
 fn load_models_config_from_path(path: &Path) -> ModelsConfig {
@@ -156,9 +197,7 @@ pub struct AgentRuntime {
     bridge_stack: tokio::sync::RwLock<Arc<BridgeRuntime>>,
     session_id: Mutex<String>,
     log_streaming: tokio::sync::RwLock<bool>,
-    channel_sidecar: tokio::sync::Mutex<
-        Option<Arc<crate::context::channel_python_sidecar::ChannelPythonSidecar>>,
-    >,
+    channel_sidecar: tokio::sync::Mutex<Option<Arc<crate::python::ChannelPythonSidecar>>>,
     channel_bridge: Arc<ChannelBridge>,
 }
 
@@ -200,10 +239,30 @@ fn collect_markdown_files(root: &Path, out: &mut Vec<PathBuf>) -> Result<(), Str
 }
 
 impl AgentRuntime {
+    /// Return the owning Tauri app handle for cross-context helpers.
+    ///
+    /// # Returns
+    ///
+    /// * `AppHandle` - Cloned app handle
+    pub fn app_handle(&self) -> AppHandle {
+        self.app.clone()
+    }
+
     /// Initialize runtime with writable workspace, bundled config, and lazy agent state.
     pub fn initialize(app: &AppHandle) -> Result<Self, String> {
         let (workspace, config_path) = resolve_agent_dirs(app)?;
         let config = load_models_config_from_path(&config_path);
+
+        // Wire markitdown script location into env for the parser (upload ingest path).
+        // This connects the bundled script (or dev tree) so MarkItDown Python conversion is used
+        // before fallbacks, for both Tauri IPC uploads and CLI.
+        if let Ok(script_path) = resolve_markitdown_convert_script(app) {
+            std::env::set_var("MARKITDOWN_SCRIPT", script_path.to_string_lossy().as_ref());
+            crate::log_info!("markitdown script resolved: {}", script_path.display());
+        } else {
+            crate::log_info!("markitdown script not resolvable via resource (will use dev CARGO fallback if present)");
+        }
+
         let mcp_loader = McpToolLoader::new(workspace.clone());
         mcp_loader.ensure_background_load();
         let session_id = format!("session_{}", uuid::Uuid::new_v4());
@@ -232,33 +291,33 @@ impl AgentRuntime {
         if self.channel_sidecar.lock().await.is_some() {
             return;
         }
-        match crate::context::channel_python_sidecar::spawn_sidecar(&self.app, &self.config_path)
-            .await
-        {
+        match crate::python::spawn_sidecar(&self.app, &self.config_path).await {
             Ok(sidecar) => {
                 sidecar
                     .register_runtime(std::sync::Arc::downgrade(&self))
                     .await;
                 *self.channel_sidecar.lock().await = Some(sidecar.clone());
                 crate::log_info!("Channel sidecar ready (deferred start)");
-                if let Err(e) = sidecar.channels_autostart().await {
-                    crate::log_warn!("Channel autostart RPC failed: {e}");
-                } else if let Ok(status) = sidecar.channels_status().await {
-                    let running = status
-                        .get("running")
-                        .and_then(|v| v.as_array())
-                        .map(|a| {
-                            a.iter()
-                                .filter_map(|v| v.as_str())
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        })
-                        .unwrap_or_default();
-                    if running.is_empty() {
-                        crate::log_info!("Channel sidecar: no external channels running");
+                let channels = deferred_autostart_channels(&self.config_path).unwrap_or_default();
+                if channels.is_empty() {
+                    if should_skip_deferred_channel_autostart() {
+                        crate::log_info!(
+                            "Channel autostart skipped (DEV_CHANNEL manual-connect preset)"
+                        );
                     } else {
-                        crate::log_info!("Channel sidecar running: {running}");
+                        crate::log_info!("Channel sidecar: no external channels configured");
                     }
+                } else {
+                    for channel in &channels {
+                        if let Err(e) = sidecar.channel_start(channel).await {
+                            crate::log_warn!(
+                                "Channel autostart start failed for {}: {}",
+                                channel,
+                                e
+                            );
+                        }
+                    }
+                    crate::log_info!("Channel sidecar running: {}", channels.join(", "));
                 }
             }
             Err(e) => {
@@ -269,18 +328,27 @@ impl AgentRuntime {
 
     async fn ensure_sidecar(
         self: &Arc<Self>,
-    ) -> Result<Arc<crate::context::channel_python_sidecar::ChannelPythonSidecar>, String> {
+    ) -> Result<Arc<crate::python::ChannelPythonSidecar>, String> {
         if let Some(sidecar) = self.channel_sidecar.lock().await.clone() {
             return Ok(sidecar);
         }
-        let sidecar =
-            crate::context::channel_python_sidecar::spawn_sidecar(&self.app, &self.config_path)
-                .await?;
+        let sidecar = crate::python::spawn_sidecar(&self.app, &self.config_path).await?;
         sidecar
             .register_runtime(std::sync::Arc::downgrade(self))
             .await;
         *self.channel_sidecar.lock().await = Some(sidecar.clone());
         Ok(sidecar)
+    }
+
+    /// Return a running channel sidecar instance, starting it on demand.
+    ///
+    /// # Returns
+    ///
+    /// * `Arc<ChannelPythonSidecar>` - Shared sidecar handle ready for runtime RPCs
+    pub async fn ensure_channel_sidecar(
+        self: &Arc<Self>,
+    ) -> Result<Arc<crate::python::ChannelPythonSidecar>, String> {
+        self.ensure_sidecar().await
     }
 
     /// LLM reply for external channels (Python sidecar calls via `agent.reply` RPC).
@@ -616,17 +684,60 @@ impl AgentRuntime {
         workspace_console::build_knowledge_graph(&self.workspace)
     }
 
+    /// Remove one knowledge file by relative path.
+    pub async fn remove_knowledge_file(&self, path: &str) -> Result<(), String> {
+        workspace_console::remove_knowledge_file(&self.workspace, path)?;
+        Ok(())
+    }
+
     /// Ingest uploads into `knowledge/` (aligned with Python `KnowledgeService.ingest_upload`).
     pub async fn upload_knowledge_files(
         &self,
         files: Vec<(String, Vec<u8>)>,
         category: Option<&str>,
-    ) -> Result<agent::IngestBatchResult, String> {
+    ) -> Result<crate::agent::IngestBatchResult, String> {
         let config = self.config.read().await.clone();
         let enabled = config.knowledge.unwrap_or(true);
-        let svc = agent::knowledge::KnowledgeService::new(&self.workspace);
+        let svc = crate::agent::knowledge::KnowledgeService::new(&self.workspace);
         svc.ingest_upload(files, category.unwrap_or("uploads"), true, enabled, &config)
             .await
+    }
+
+    /// Open the native file picker, read selected files on disk, then ingest into `knowledge/`.
+    ///
+    /// # Arguments
+    ///
+    /// * `app` - Tauri app handle (used to open the dialog)
+    /// * `category` - optional target category folder under `knowledge/`
+    ///
+    /// # Returns
+    ///
+    /// * `IngestBatchResult` - empty success when the user cancels the dialog
+    pub async fn pick_and_upload_knowledge(
+        &self,
+        app: &AppHandle,
+        category: Option<&str>,
+    ) -> Result<crate::agent::IngestBatchResult, String> {
+        let maybe_files =
+            crate::utils::knowledge_pick::pick_and_read_supported_knowledge_files(app)?;
+
+        let Some(files) = maybe_files else {
+            return Ok(crate::agent::IngestBatchResult::default());
+        };
+
+        if files.is_empty() {
+            return Ok(crate::agent::IngestBatchResult {
+                results: Vec::new(),
+                errors: vec![crate::agent::knowledge::IngestError {
+                    file: "selection".into(),
+                    message: "no files could be read from the chosen paths".into(),
+                }],
+                count: 0,
+                memory_synced: false,
+            });
+        }
+
+        self.upload_knowledge_files(files, category).await
     }
 
     /// List configured channels from bundled config.
@@ -634,34 +745,163 @@ impl AgentRuntime {
         workspace_console::list_channels_from_config(&self.config_path)
     }
 
-    /// Channel catalog via SupportFlow Agent Python stdio RPC.
+    /// Channel catalog aggregated in Rust using static definitions and runtime status.
     pub async fn channel_python_channels_get(
         self: &Arc<Self>,
     ) -> Result<serde_json::Value, String> {
-        let sidecar = self.ensure_sidecar().await?;
-        sidecar.channels_get().await
+        crate::context::channel::build_catalog(&self.app, &self.config_path)
     }
 
-    /// Sidecar channel health (configured vs running threads).
-    #[allow(dead_code)]
-    pub async fn channel_python_channels_status(
-        self: &Arc<Self>,
-    ) -> Result<serde_json::Value, String> {
-        let sidecar = self.ensure_sidecar().await?;
-        sidecar.channels_status().await
+    /// Push channel lifecycle updates from Python sidecar to the Rust status store and all Webviews.
+    ///
+    /// # Arguments
+    ///
+    /// * `params` - Raw sidecar notification payload
+    ///
+    /// # Returns
+    ///
+    /// * `()` - Store and event bus updated when payload is valid
+    pub fn handle_channel_notification(&self, params: &serde_json::Value) {
+        let channel = params
+            .get("channel")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let phase = params
+            .get("phase")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        if channel.is_empty() || phase.is_empty() {
+            return;
+        }
+        let payload = ChannelStatusChangedPayload {
+            channel,
+            phase,
+            message: params
+                .get("message")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            user_id: params
+                .get("user_id")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            display_name: params
+                .get("display_name")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            wait_seconds: params.get("wait_seconds").and_then(|v| v.as_i64()),
+            qr_code_url: params
+                .get("qr_code_url")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            qr_image: params
+                .get("qr_image")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+        };
+        if let Some(store) = self
+            .app
+            .try_state::<crate::context::channel::ChannelStatusStore>()
+        {
+            let _ = store.apply(&payload);
+        }
+        if let Err(e) = channel_status_changed_all(&self.app, &payload) {
+            crate::log_warn!("channel status emit failed: {e}");
+        }
     }
 
-    /// Channel connect/disconnect/save via SupportFlow Agent Python stdio RPC.
+    /// Query whether the given WeCom account has already completed contact sync.
+    ///
+    /// # Arguments
+    ///
+    /// * `wework_user_id` - WeCom user id reported by sidecar SDK callbacks
+    ///
+    /// # Returns
+    ///
+    /// * `bool` - True when Rust persistence already contains the sync marker
+    #[cfg(feature = "channel-wework")]
+    pub fn wework_contacts_synced(&self, wework_user_id: &str) -> Result<bool, String> {
+        self.app
+            .state::<crate::context::channel::wework_accounts::WeworkAccountsStore>()
+            .contacts_synced(wework_user_id)
+    }
+
+    #[cfg(not(feature = "channel-wework"))]
+    pub fn wework_contacts_synced(&self, _wework_user_id: &str) -> Result<bool, String> {
+        Err("wework channel is not enabled in this build".to_string())
+    }
+
+    /// Persist the completed WeCom contacts sync marker from a sidecar callback.
+    ///
+    /// # Arguments
+    ///
+    /// * `wework_user_id` - WeCom user id reported by sidecar SDK callbacks
+    /// * `synced_at` - Unix timestamp in milliseconds
+    ///
+    /// # Returns
+    ///
+    /// * `()` - Sync marker persisted to Rust-owned store
+    #[cfg(feature = "channel-wework")]
+    pub fn wework_mark_contacts_synced(
+        &self,
+        wework_user_id: &str,
+        synced_at: i64,
+    ) -> Result<(), String> {
+        self.app
+            .state::<crate::context::channel::wework_accounts::WeworkAccountsStore>()
+            .mark_contacts_synced(wework_user_id, synced_at)
+    }
+
+    #[cfg(not(feature = "channel-wework"))]
+    pub fn wework_mark_contacts_synced(
+        &self,
+        _wework_user_id: &str,
+        _synced_at: i64,
+    ) -> Result<(), String> {
+        Err("wework channel is not enabled in this build".to_string())
+    }
+
+    /// Channel console APIs handled in Rust using status store plus narrow runtime RPCs.
     pub async fn channel_console_api(
         self: &Arc<Self>,
         path: &str,
         method: &str,
         body: serde_json::Value,
     ) -> Result<serde_json::Value, String> {
-        let sidecar = self.ensure_sidecar().await?;
-        sidecar.console_api(path, method, body).await
+        crate::context::channel::dispatch(&self.app, self, path, method, &body).await
     }
 
+    /// Accept one manual WeCom contacts sync request and run it in the background.
+    ///
+    /// # Returns
+    ///
+    /// * `Value` - Immediate accepted payload for the frontend
+    pub async fn request_wework_contacts_sync(
+        self: &Arc<Self>,
+    ) -> Result<serde_json::Value, String> {
+        let sidecar = self.ensure_sidecar().await?;
+        let sidecar_task = sidecar.clone();
+        tokio::spawn(async move {
+            if let Err(e) = sidecar_task.wework_sync_contacts().await {
+                crate::log_warn!("wework contacts sync failed: {e}");
+            }
+        });
+        Ok(serde_json::json!({
+            "status": "success",
+            "accepted": true,
+        }))
+    }
+
+    /// Persist channel config changes in Rust and coordinate required runtime actions.
+    ///
+    /// # Arguments
+    ///
+    /// * `payload` - Frontend action payload with `action`, `channel`, and `config`
+    ///
+    /// # Returns
+    ///
+    /// * `Value` - JSON response matching the existing frontend contract
     pub async fn channel_python_channels_post(
         self: &Arc<Self>,
         payload: serde_json::Value,
@@ -676,28 +916,59 @@ impl AgentRuntime {
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
+        let config = payload
+            .get("config")
+            .and_then(|v| v.as_object())
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .collect::<std::collections::HashMap<_, _>>();
+
         let sidecar = self.ensure_sidecar().await?;
-        let result = sidecar.channels_post(payload).await?;
-        self.reload_config_from_disk().await?;
-        self.channel_bridge
-            .on_action_result(&self.config_path, &action, &channel, &result)?;
-        if result.get("status").and_then(|v| v.as_str()) == Some("success")
-            && (action == "connect" || action == "save")
-        {
-            if let Ok(status) = sidecar.channels_status().await {
-                let running = status
-                    .get("running")
-                    .and_then(|v| v.as_array())
-                    .map(|a| {
-                        a.iter()
-                            .filter_map(|v| v.as_str())
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    })
-                    .unwrap_or_default();
-                crate::log_info!("Channel '{channel}' action={action} ok; running=[{running}]");
+        let result = match action.as_str() {
+            "save" => {
+                let applied = crate::context::channel::persist_channel_config(
+                    &self.config_path,
+                    &channel,
+                    &config,
+                )?;
+                self.reload_config_from_disk().await?;
+                self.channel_bridge
+                    .sync_from_config_file(&self.config_path)?;
+
+                let restarted = crate::context::channel::should_restart_channel(&channel, &applied);
+                if restarted {
+                    let _ = sidecar.channel_restart(&channel).await?;
+                }
+
+                crate::context::channel::action_response(
+                    self.channel_bridge.active_channels().join(","),
+                    restarted,
+                    applied,
+                )
             }
-        }
+            "connect" => {
+                let (channel_type, applied) =
+                    crate::context::channel::connect_channel(&self.config_path, &channel, &config)?;
+                self.reload_config_from_disk().await?;
+                self.channel_bridge
+                    .sync_from_config_file(&self.config_path)?;
+                let _ = sidecar.channel_start(&channel).await?;
+                crate::context::channel::action_response(channel_type, true, applied)
+            }
+            "disconnect" => {
+                let channel_type =
+                    crate::context::channel::disconnect_channel(&self.config_path, &channel)?;
+                self.reload_config_from_disk().await?;
+                self.channel_bridge
+                    .sync_from_config_file(&self.config_path)?;
+                let _ = sidecar.channel_stop(&channel).await?;
+                crate::context::channel::action_response(channel_type, true, Vec::new())
+            }
+            _ => {
+                return Err(format!("unknown channel action: {action}"));
+            }
+        };
         Ok(result)
     }
 
@@ -842,7 +1113,7 @@ impl AgentRuntime {
             return Ok((source.display().to_string(), String::new()));
         }
 
-        let raw = fs::read_to_string(&source).map_err(|e| e.to_string())?;
+        let raw = crate::utils::fs::read_to_string(&source)?;
         let limit = limit.and_then(|v| usize::try_from(v).ok()).unwrap_or(400);
         let lines: Vec<&str> = raw.lines().collect();
         let start = lines.len().saturating_sub(limit);
@@ -903,7 +1174,7 @@ impl AgentRuntime {
         if !full.starts_with(&self.workspace) {
             return Err("invalid memory path".to_string());
         }
-        fs::read_to_string(full).map_err(|e| e.to_string())
+        crate::utils::fs::read_to_string(full)
     }
 
     /// 读取 scheduler/tasks.json 的任务列表（若不存在返回空数组）。
@@ -913,8 +1184,8 @@ impl AgentRuntime {
         if !task_path.exists() {
             return Ok(Vec::new());
         }
-        let raw = fs::read_to_string(task_path).map_err(|e| e.to_string())?;
-        let value: serde_json::Value = serde_json::from_str(&raw).map_err(|e| e.to_string())?;
+        let raw = crate::utils::fs::read_to_string(task_path)?;
+        let value: serde_json::Value = crate::utils::json::from_str(&raw)?;
         let mut rows = Vec::new();
         let Some(obj) = value.get("tasks").and_then(|v| v.as_object()) else {
             return Ok(rows);
@@ -965,7 +1236,7 @@ impl AgentRuntime {
             .conversation_persistence
             .unwrap_or(true)
         {
-            let store = agent::conversation_store_for_workspace(&self.workspace)?;
+            let store = crate::agent::conversation_store_for_workspace(&self.workspace)?;
             store.clear_context(&session_id)?;
         }
         Ok(())
@@ -1072,7 +1343,7 @@ fn resolve_latest_log_path() -> Result<PathBuf, String> {
 }
 
 fn latest_lines_from(path: &PathBuf, limit: usize) -> Result<String, String> {
-    let raw = fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let raw = crate::utils::fs::read_to_string(path)?;
     let lines: Vec<&str> = raw.lines().collect();
     let start = lines.len().saturating_sub(limit);
     Ok(lines[start..].join("\n"))

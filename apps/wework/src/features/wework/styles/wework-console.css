@@ -1,0 +1,160 @@
+/* 企微智能客服壳层（浅色系，与 data-flavor=wework 搭配） */
+
+.wework-console {
+  --wework-sidebar-width: 13rem;
+  --wework-inbox-list-width: 18rem;
+  --wework-inbox-detail-width: 18rem;
+  --wework-canvas: color-mix(in srgb, hsl(var(--channel-primary-muted)) 34%, white);
+}
+
+.wework-console-sidebar {
+  width: var(--wework-sidebar-width);
+  border-right: 1px solid hsl(var(--border) / 0.5);
+  background: linear-gradient(
+    180deg,
+    hsl(var(--background)) 0%,
+    color-mix(in srgb, hsl(var(--channel-primary-muted)) 20%, white) 100%
+  );
+}
+
+.wework-inbox-shell {
+  background:
+    radial-gradient(circle at top left, hsl(var(--channel-primary-muted) / 0.72), transparent 34%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, hsl(var(--channel-primary-muted)) 24%, white) 0%,
+      color-mix(in srgb, hsl(var(--muted)) 28%, white) 100%
+    );
+}
+
+.wework-inbox-list,
+.wework-thread-panel,
+.wework-inbox-detail,
+.wework-detail-panel {
+  border: 1px solid hsl(var(--border) / 0.55);
+  box-shadow: 0 10px 30px rgb(15 23 42 / 0.04);
+}
+
+.wework-inbox-list,
+.wework-thread-panel,
+.wework-inbox-detail {
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: hsl(var(--card) / 0.84);
+  backdrop-filter: blur(18px);
+}
+
+.wework-sidebar-collapse.ant-collapse {
+  background: transparent;
+}
+
+.wework-sidebar-collapse.ant-collapse > .ant-collapse-item {
+  border: 0;
+}
+
+.wework-sidebar-collapse.ant-collapse > .ant-collapse-item > .ant-collapse-header {
+  padding: 0.35rem 0.45rem;
+  color: hsl(var(--muted-foreground));
+  min-height: 0;
+}
+
+.wework-sidebar-collapse.ant-collapse
+  > .ant-collapse-item
+  > .ant-collapse-header
+  .ant-collapse-expand-icon {
+  color: hsl(var(--muted-foreground));
+}
+
+.wework-sidebar-collapse.ant-collapse > .ant-collapse-item > .ant-collapse-content {
+  border-top: 0;
+  background: transparent;
+}
+
+.wework-sidebar-collapse.ant-collapse
+  > .ant-collapse-item
+  > .ant-collapse-content
+  > .ant-collapse-content-box {
+  padding: 0 0 0 0.125rem;
+}
+
+.wework-sidebar-menu.ant-menu {
+  background: transparent;
+  border-inline-end: 0;
+}
+
+.wework-sidebar-menu.ant-menu .ant-menu-item {
+  height: auto;
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  line-height: 1.2;
+  border-radius: 0.85rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.wework-sidebar-menu.ant-menu .ant-menu-item:hover {
+  background: color-mix(in srgb, hsl(var(--channel-primary-muted)) 62%, white);
+  color: hsl(var(--foreground));
+}
+
+.wework-sidebar-menu.ant-menu .ant-menu-item-selected {
+  background: color-mix(in srgb, hsl(var(--channel-primary-muted)) 74%, white);
+  color: hsl(var(--channel-primary));
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px hsl(var(--channel-primary) / 0.12);
+}
+
+.wework-sidebar-menu.ant-menu .ant-menu-item-selected::after {
+  display: none;
+}
+
+.wework-inbox-list {
+  width: var(--wework-inbox-list-width);
+}
+
+.wework-inbox-detail {
+  width: var(--wework-inbox-detail-width);
+}
+
+.wework-conversation-row {
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.wework-conversation-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgb(15 23 42 / 0.04);
+}
+
+.wework-conversation-row.active {
+  background: color-mix(in srgb, hsl(var(--channel-primary-muted)) 78%, white);
+  box-shadow: inset 0 0 0 1px hsl(var(--channel-primary) / 0.12);
+}
+
+.wework-message-bubble {
+  max-width: min(28rem, 85%);
+  border-radius: 1rem;
+  padding: 0.625rem 0.85rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  box-shadow: 0 6px 20px rgb(15 23 42 / 0.04);
+}
+
+.wework-message-bubble--customer {
+  background: hsl(0 0% 100%);
+  border: 1px solid hsl(var(--border));
+  color: hsl(222 47% 11%);
+}
+
+.wework-message-bubble--assistant,
+.wework-message-bubble--operator {
+  background: hsl(var(--channel-primary));
+  color: hsl(var(--channel-primary-foreground));
+}
+
+.wework-message-bubble--system {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+}

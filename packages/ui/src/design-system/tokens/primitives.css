@@ -1,0 +1,21 @@
+/**
+ * 原始尺度：各 app 一般不改，密度主题可通过 --density-scale 覆盖。
+ */
+:root {
+  --radius-base: 0.625rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --font-family-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-normal: 520ms;
+
+  --shadow-card-rest: 0 1px 2px rgb(15 23 42 / 0.06), 0 2px 6px rgb(15 23 42 / 0.05);
+  --shadow-card-hover: 0 2px 4px rgb(15 23 42 / 0.14), 0 2px 4px rgb(15 23 42 / 0.1);
+}

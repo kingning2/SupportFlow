@@ -9,6 +9,7 @@ import {
   type AgentSessionSummary
 } from "@supportflow/shared/tauri-bridge/cmd/agent";
 import { cn } from "@supportflow/shared";
+import { Button } from "@supportflow/ui/button";
 
 interface SessionPanelProps {
   open: boolean;
@@ -58,22 +59,22 @@ export function SessionPanel({ open, sessionId, onClose, onNewChat }: SessionPan
     <>
       <aside className="session-panel">
         <div className="session-panel-header">
-          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            {t("session_history")}
-          </span>
-          <button
+          <span className="text-foreground text-sm font-semibold">{t("session_history")}</span>
+          <Button
             type="button"
-            className="flex size-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/8 dark:hover:text-slate-200"
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground"
             onClick={onClose}
           >
             <X className="size-3.5" />
-          </button>
+          </Button>
         </div>
 
-        <button type="button" className="session-panel-new" onClick={onNewChat}>
+        <Button type="button" className="session-panel-new" onClick={onNewChat}>
           <Plus className="size-3.5" />
           <span>{t("new_chat")}</span>
-        </button>
+        </Button>
 
         <div className="session-list">
           {loading ? (
@@ -87,8 +88,8 @@ export function SessionPanel({ open, sessionId, onClose, onNewChat }: SessionPan
                 className={cn(
                   "rounded-lg px-3 py-2 text-sm",
                   session.id === sessionId
-                    ? "bg-slate-200/80 text-slate-700 dark:bg-white/10 dark:text-slate-200"
-                    : "text-slate-600 dark:text-slate-400"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground"
                 )}
               >
                 <p className="truncate font-medium">{session.title || t("untitled_session")}</p>
@@ -99,10 +100,11 @@ export function SessionPanel({ open, sessionId, onClose, onNewChat }: SessionPan
         </div>
       </aside>
 
-      <button
+      <Button
         type="button"
         aria-label="Close session panel"
-        className="fixed inset-0 z-30 bg-black/30 lg:hidden"
+        variant="ghost"
+        className="fixed inset-0 z-30 h-auto w-auto rounded-none bg-black/30 lg:hidden"
         onClick={onClose}
       />
     </>

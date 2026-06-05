@@ -38,12 +38,7 @@ impl BridgeRuntime {
         mcp_loader: Arc<McpToolLoader>,
     ) -> Self {
         let bridge = Arc::new(Bridge::new(config.clone()));
-        let agent_bridge = AgentBridge::new(
-            bridge.clone(),
-            workspace,
-            config,
-            mcp_loader,
-        );
+        let agent_bridge = AgentBridge::new(bridge.clone(), workspace, config, mcp_loader);
         bridge.attach_agent_bridge(agent_bridge.clone());
         Self {
             bridge,

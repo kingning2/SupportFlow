@@ -10,6 +10,24 @@ fn current_unix_secs_utc8() -> u64 {
     now.saturating_add(UTC8_OFFSET_SECS)
 }
 
+/// 获取当前 Unix 秒级时间戳。
+pub fn unix_timestamp_seconds() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
+/// 获取当前 Unix 秒级时间戳字符串，适合写入索引文件。
+pub fn unix_timestamp_string() -> String {
+    unix_timestamp_seconds().to_string()
+}
+
+/// 获取当前 Unix 秒级时间戳，兼容需要 i64 的许可证逻辑。
+pub fn unix_timestamp_seconds_i64() -> i64 {
+    unix_timestamp_seconds() as i64
+}
+
 /// 判断闰年
 fn is_leap_year(year: i32) -> bool {
     (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)

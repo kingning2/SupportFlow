@@ -11,6 +11,7 @@ import {
 } from "@supportflow/shared/tauri-bridge/cmd/agent";
 import { ViewShell } from "../shared/console-brand";
 import { Button } from "@supportflow/ui/button";
+import { Checkbox } from "@supportflow/ui/checkbox";
 import { TauriEvent } from "@supportflow/shared/tauri-bridge/enums";
 import { tauriOn } from "@supportflow/shared/tauri-bridge/tauri-event";
 
@@ -37,15 +38,15 @@ function levelClass(level: LogLevel | null) {
     case "critical":
       return "text-white font-semibold";
     case "error":
-      return "text-red-400";
+      return "text-destructive";
     case "warning":
-      return "text-yellow-400";
+      return "text-warning";
     case "info":
-      return "text-blue-400";
+      return "text-info";
     case "debug":
-      return "text-slate-400";
+      return "text-muted-foreground";
     default:
-      return "text-slate-300";
+      return "text-foreground/80";
   }
 }
 
@@ -170,17 +171,17 @@ export function LogsView() {
   return (
     <ViewShell title={t("logs_title")} description={t("logs_desc")}>
       <div className="mx-auto h-full w-full max-w-5xl">
-        <div className="overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-lg">
-          <div className="flex items-center gap-2 border-b border-slate-700 bg-slate-800 px-4 py-2.5">
-            <Terminal className="size-3.5 text-slate-400" />
-            <span className="font-mono text-xs text-slate-400">run.log</span>
+        <div className="bg-surface-2 border-border overflow-hidden rounded-xl border shadow-lg">
+          <div className="bg-surface-1 border-border flex items-center gap-2 border-b px-4 py-2.5">
+            <Terminal className="text-muted-foreground size-3.5" />
+            <span className="text-muted-foreground font-mono text-xs">run.log</span>
             <div className="flex-1" />
             <div className="mr-2 flex items-center gap-1">
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="h-7 px-2 text-slate-300 hover:text-white"
+                className="text-foreground/80 hover:text-foreground h-7 px-2"
                 onClick={() => void copySelected()}
               >
                 <Copy className="mr-1 size-3.5" />
@@ -190,7 +191,7 @@ export function LogsView() {
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="h-7 px-2 text-slate-300 hover:text-white"
+                className="text-foreground/80 hover:text-foreground h-7 px-2"
                 onClick={() => void copyAll()}
               >
                 <Copy className="mr-1 size-3.5" />
@@ -199,14 +200,13 @@ export function LogsView() {
             </div>
             <div className="mr-2 flex items-center gap-3">
               {LEVEL_ORDER.map((lv) => (
-                <label key={lv} className="flex items-center gap-1 text-xs text-slate-300">
-                  <input
-                    type="checkbox"
+                <label key={lv} className="text-foreground/80 flex items-center gap-1 text-xs">
+                  <Checkbox
                     checked={enabledLevels[lv]}
                     onChange={(event) =>
                       setEnabledLevels((prev) => ({
                         ...prev,
-                        [lv]: event.target.checked
+                        [lv]: Boolean(event.target.checked)
                       }))
                     }
                   />
@@ -214,11 +214,11 @@ export function LogsView() {
                 </label>
               ))}
             </div>
-            <span className="text-xs text-slate-500">{t("logs_live")}</span>
+            <span className="text-muted-foreground text-xs">{t("logs_live")}</span>
           </div>
           <div
             id="log-output"
-            className="overflow-y-auto p-4 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap text-slate-300 select-text"
+            className="text-foreground/80 overflow-y-auto p-4 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap select-text"
             style={{ height: "calc(100vh - 272px)" }}
             onScroll={(event) => {
               const el = event.currentTarget;
@@ -227,9 +227,9 @@ export function LogsView() {
             }}
           >
             {loading ? (
-              <p className="text-slate-500">{t("logs_loading")}</p>
+              <p className="text-muted-foreground">{t("logs_loading")}</p>
             ) : lines.length === 0 ? (
-              <p className="text-slate-500">{t("logs_empty")}</p>
+              <p className="text-muted-foreground">{t("logs_empty")}</p>
             ) : (
               lines.map((line, idx) => (
                 <span key={`${idx}-${line.text}`} className={`${levelClass(line.level)} block`}>

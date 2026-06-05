@@ -5,6 +5,7 @@ edition = "2021"
 description = "LLM provider bots, HTTP client, and sessions (mirrors Python models/)"
 
 [dependencies]
+fs_io = { path = "../fs_io" }
 async-trait = "0.1"
 bytes = "1"
 futures-util = "0.3"
