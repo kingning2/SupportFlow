@@ -1,10 +1,10 @@
-﻿//! 会话 ID、Agent 实例访问与流式事件映射。
+//! 会话 ID、Agent 实例访问与流式事件映射。
 
 use std::sync::Arc;
 
-use crate::agent::{Agent, AgentEvent};
 use crate::context::workspace_console;
 use crate::events::payloads::AgentStreamChunk;
+use crate::services::agent::{Agent, AgentEvent};
 
 use super::AgentRuntime;
 
@@ -47,7 +47,7 @@ impl AgentRuntime {
             .conversation_persistence
             .unwrap_or(true)
         {
-            let store = crate::agent::conversation_store_for_workspace(&self.workspace)?;
+            let store = crate::services::agent::conversation_store_for_workspace(&self.workspace)?;
             store.clear_context(&session_id)?;
         }
         Ok(())

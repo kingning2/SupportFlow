@@ -12,6 +12,4 @@ pub mod path;
 pub mod platform;
 #[cfg(feature = "desktop")]
 pub mod process_tauri;
-pub mod skills_config;
-pub mod skills_installer;
 pub mod window;

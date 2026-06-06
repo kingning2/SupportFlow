@@ -22,7 +22,7 @@ pub fn pick_and_read_supported_knowledge_files(
     app: &AppHandle,
 ) -> Result<Option<Vec<PickedKnowledgeFile>>, String> {
     // Collect supported extensions (strip the leading dot for dialog filter API).
-    let raw_exts = crate::agent::knowledge::document_parser::all_doc_suffixes();
+    let raw_exts = crate::services::agent::knowledge::document_parser::all_doc_suffixes();
     let exts: Vec<&str> = raw_exts
         .iter()
         .copied()

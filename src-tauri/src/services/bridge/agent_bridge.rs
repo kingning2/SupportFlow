@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::agent::{
+use crate::services::agent::{
     conversation_store_for_workspace, get_cancel_registry, persist_agent_run, Agent,
     AgentEventCallback, CancelHandle, McpToolLoader, RunStreamOptions,
 };

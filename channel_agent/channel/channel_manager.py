@@ -1,5 +1,22 @@
 # encoding:utf-8
-"""Channel lifecycle for the supported desktop channels."""
+"""Channel lifecycle for the supported desktop channels.
+
+This module is part of the Python sidecar compatibility layer. It may keep the
+minimum SDK-specific lifecycle needed to boot and stop channel adapters inside
+the sidecar process, but it must not grow into a desktop application
+orchestration layer again.
+
+Allowed here:
+- sidecar-local channel instantiation
+- SDK startup / shutdown glue
+- sidecar thread ownership for channel adapters
+
+Should move to Rust instead:
+- desktop runtime policy
+- cross-Webview state decisions
+- restart / retry strategy owned by the app
+- user-visible orchestration and persistence rules
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,9 @@
 # encoding:utf-8
+"""Legacy compatibility DTO for bridge context.
+
+This module should remain a thin Python-side data shape only. New desktop
+orchestration logic must live in Rust models/services instead of growing here.
+"""
 
 from enum import Enum
 

@@ -23,7 +23,7 @@ pub use context_params::context_from_reply_params;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::agent::McpToolLoader;
+use crate::services::agent::McpToolLoader;
 use models::ModelsConfig;
 
 /// Shared bridge stack for one runtime workspace + config.
@@ -53,7 +53,7 @@ impl BridgeRuntime {
         context: Option<models::Context>,
         use_agent: bool,
         clear_history: bool,
-        on_event: Option<crate::agent::AgentEventCallback>,
+        on_event: Option<crate::services::agent::AgentEventCallback>,
     ) -> models::Reply {
         if use_agent || self.bridge.config.agent_enabled() {
             self.agent_bridge

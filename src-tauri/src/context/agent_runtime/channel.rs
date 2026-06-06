@@ -1,6 +1,6 @@
 //! 渠道 sidecar 入站 RPC：回复、消息处理与文本装饰。
 
-use crate::bridge::context_from_reply_params;
+use crate::services::bridge::context_from_reply_params;
 
 use super::AgentRuntime;
 

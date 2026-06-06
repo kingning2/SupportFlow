@@ -1,31 +1,38 @@
 //! 控制台状态、消息发送与模型配置更新。
 
-use std::fs;
 use std::sync::Arc;
 
 use models::catalog::provider_configured;
 use models::provider_catalog::{
     build_provider_details, find_provider_meta as find_provider_meta_detail,
 };
-use models::{
-    clear_provider_credentials, find_provider_meta, list_providers, set_chat_model,
-    update_provider_credentials, ModelsConfig,
-};
+use models::{list_providers, ModelsConfig};
 use tauri::AppHandle;
 
 use crate::context::workspace_console;
 use crate::events::payloads::{
     AgentConsoleState, ModelProviderDetail, ModelProviderItem, SkillDetail, SkillItem, ToolItem,
 };
-use crate::utils::skills_installer::InstallSkillResult;
+use crate::services::agent::{AgentConsoleService, InstallSkillResult};
 
-use super::helpers::{
-    build_bridge_stack, load_models_config_from_path, skill_to_detail, skill_to_item,
-};
+use super::helpers::{skill_to_detail, skill_to_item};
 use super::stream::{register_cancel, run_agent_message};
 use super::AgentRuntime;
 
 impl AgentRuntime {
+    /// Create a console-scoped service facade for config mutations and bridge refresh.
+    ///
+    /// # Returns
+    ///
+    /// * `AgentConsoleService` - Workspace-scoped console service facade
+    fn console_service(&self) -> AgentConsoleService {
+        AgentConsoleService::new(
+            self.workspace.clone(),
+            self.config_path.clone(),
+            self.mcp_loader.clone(),
+        )
+    }
+
     pub async fn config_snapshot(&self) -> ModelsConfig {
         self.config.read().await.clone()
     }
@@ -178,7 +185,7 @@ impl AgentRuntime {
     ///
     /// * `InstallSkillResult` - 安装结果
     pub async fn install_skill(&self, source: &str) -> Result<InstallSkillResult, String> {
-        let result = crate::utils::skills_installer::install_skill_source(&self.workspace, source)
+        let result = crate::services::agent::install_skill_source(&self.workspace, source)
             .await
             .map_err(|error| error.to_string())?;
         self.with_agent_write(|agent| {
@@ -213,14 +220,9 @@ impl AgentRuntime {
     }
 
     pub(crate) async fn reload_config_from_disk(&self) -> Result<(), String> {
-        let fresh = load_models_config_from_path(&self.config_path);
+        let (fresh, bridge_stack) = self.console_service().reload_runtime_inputs()?;
         *self.config.write().await = fresh;
-        let mirror = self.workspace.join("config.json");
-        fs::copy(&self.config_path, &mirror)
-            .map_err(|e| format!("sync config to workspace: {e}"))?;
-        let fresh = self.config.read().await.clone();
-        *self.bridge_stack.write().await =
-            build_bridge_stack(self.workspace.clone(), &fresh, self.mcp_loader.clone());
+        *self.bridge_stack.write().await = bridge_stack;
         Ok(())
     }
 
@@ -231,21 +233,21 @@ impl AgentRuntime {
         api_base: Option<&str>,
         api_base_set: bool,
     ) -> Result<(), String> {
-        let meta = find_provider_meta(provider_id)
-            .ok_or_else(|| format!("unknown provider: {provider_id}"))?;
-        let changed =
-            update_provider_credentials(&self.config_path, meta, api_key, api_base, api_base_set)?;
-        if changed {
-            self.reload_config_from_disk().await?;
+        if let Some((fresh, bridge_stack)) =
+            self.console_service()
+                .update_provider(provider_id, api_key, api_base, api_base_set)?
+        {
+            *self.config.write().await = fresh;
+            *self.bridge_stack.write().await = bridge_stack;
         }
         Ok(())
     }
 
     pub async fn clear_provider(&self, provider_id: &str) -> Result<(), String> {
-        let meta = find_provider_meta(provider_id)
-            .ok_or_else(|| format!("unknown provider: {provider_id}"))?;
-        clear_provider_credentials(&self.config_path, meta)?;
-        self.reload_config_from_disk().await
+        let (fresh, bridge_stack) = self.console_service().clear_provider(provider_id)?;
+        *self.config.write().await = fresh;
+        *self.bridge_stack.write().await = bridge_stack;
+        Ok(())
     }
 
     pub async fn set_active_chat(
@@ -253,9 +255,11 @@ impl AgentRuntime {
         provider_id: Option<&str>,
         model: Option<&str>,
     ) -> Result<(), String> {
-        let changed = set_chat_model(&self.config_path, provider_id, model)?;
-        if changed {
-            self.reload_config_from_disk().await?;
+        if let Some((fresh, bridge_stack)) =
+            self.console_service().set_active_chat(provider_id, model)?
+        {
+            *self.config.write().await = fresh;
+            *self.bridge_stack.write().await = bridge_stack;
         }
         Ok(())
     }

@@ -18,9 +18,9 @@ pub use stream::cancel_request;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::agent::McpToolLoader;
-use crate::bridge::BridgeRuntime;
 use crate::context::channel::ChannelBridge;
+use crate::services::agent::McpToolLoader;
+use crate::services::bridge::BridgeRuntime;
 use models::ModelsConfig;
 use tokio::sync::Mutex;
 

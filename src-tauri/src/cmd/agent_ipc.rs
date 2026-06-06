@@ -10,7 +10,7 @@ use typeshare::typeshare;
 use crate::context::agent_runtime::{self, AgentRuntime};
 use crate::context::license_store::LicenseStore;
 use crate::events::payloads::{AgentConsoleState, SkillDetail, SkillItem};
-use crate::utils::skills_installer::InstallSkillResult;
+use crate::services::agent::InstallSkillResult;
 
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -357,8 +357,8 @@ pub struct AgentKnowledgeUploadResult {
     pub memory_synced: bool,
 }
 
-impl From<crate::agent::IngestBatchResult> for AgentKnowledgeUploadResult {
-    fn from(batch: crate::agent::IngestBatchResult) -> Self {
+impl From<crate::services::agent::IngestBatchResult> for AgentKnowledgeUploadResult {
+    fn from(batch: crate::services::agent::IngestBatchResult) -> Self {
         Self {
             results: batch
                 .results

@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::agent::AgentEvent;
+use crate::services::agent::AgentEvent;
 use models::Context;
 use tracing::debug;
 
@@ -11,7 +11,7 @@ const WEIXIN_THINKING_INSTANT_MAX: usize = 7;
 /// Handles agent stream events; mirrors Python `AgentEventHandler`.
 pub struct AgentEventHandler {
     context: Option<Context>,
-    original: Option<crate::agent::AgentEventCallback>,
+    original: Option<crate::services::agent::AgentEventCallback>,
     is_weixin: bool,
     thinking_sent_count: usize,
     merged_buf: Vec<String>,
@@ -21,7 +21,7 @@ pub struct AgentEventHandler {
 impl AgentEventHandler {
     pub fn new(
         context: Option<Context>,
-        original: Option<crate::agent::AgentEventCallback>,
+        original: Option<crate::services::agent::AgentEventCallback>,
     ) -> Self {
         let is_weixin = context
             .as_ref()
@@ -129,7 +129,7 @@ fn truncate(s: &str, max: usize) -> String {
 
 pub fn make_event_callback(
     handler: Arc<std::sync::Mutex<AgentEventHandler>>,
-) -> crate::agent::AgentEventCallback {
+) -> crate::services::agent::AgentEventCallback {
     Arc::new(move |ev| {
         if let Ok(mut h) = handler.lock() {
             h.handle(&ev);

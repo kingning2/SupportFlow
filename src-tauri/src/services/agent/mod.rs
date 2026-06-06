@@ -14,6 +14,7 @@
 //! | 8 | MCP client + loader | done |
 //! | 9 | memory DB, `env_config`, `web_search` | done (core) |
 
+pub mod console_service;
 pub mod knowledge;
 pub mod memory;
 pub mod prompt;
@@ -21,7 +22,9 @@ pub mod protocol;
 pub mod skills;
 pub mod tools;
 pub mod utils;
+pub mod workspace_service;
 
+pub use console_service::{build_bridge_stack, load_models_config_from_path, AgentConsoleService};
 pub use knowledge::IngestBatchResult;
 pub use memory::{
     conversation_store_for_workspace, create_memory_manager, persist_agent_run,
@@ -38,7 +41,11 @@ pub use protocol::{
     ParsedToolCall, RunStreamError, RunStreamOptions, SchemaStubTool, Task, TaskStatus, TaskType,
     TeamContext, ToolExecutionResult, ToolResult,
 };
-pub use skills::{format_skills_for_prompt, Skill, SkillEntry, SkillManager};
+pub use skills::{
+    format_skills_for_prompt, hub_api_base, install_skill_source, load_skills_config,
+    register_skill, save_skills_config, skills_config_path, skills_dir, InstallSkillResult, Skill,
+    SkillConfigEntry, SkillEntry, SkillManager, SkillsConfigMap,
+};
 pub use tools::{
     load_builtin_tools, load_mcp_configs, noop_uploader, AgentTool, BashConfig, BashTool,
     BrowserSettings, BrowserTool, EditTool, EnvConfigTool, EnvConfigToolConfig,
@@ -48,3 +55,4 @@ pub use tools::{
     ToolRunResult, ToolStage, TruncationResult, VisionTool, WebFetchTool, WebSearchSettings,
     WebSearchTool, WorkspaceToolConfig, WriteTool, DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES,
 };
+pub use workspace_service::AgentWorkspaceService;
