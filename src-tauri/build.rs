@@ -4,8 +4,6 @@ use std::path::Path;
 use chrono::Utc;
 
 fn main() {
-    println!("cargo::rustc-check-cfg=cfg(channel_sidecar_embedded)");
-
     let target = std::env::var("TARGET").unwrap_or_else(|_| "unknown".into());
     println!("cargo:rustc-env=BUILD_TARGET={target}");
 
@@ -16,10 +14,6 @@ fn main() {
     ));
     if sidecar.is_file() {
         println!("cargo:rerun-if-changed={}", sidecar.display());
-        let profile = std::env::var("PROFILE").unwrap_or_default();
-        if profile == "release" {
-            println!("cargo:rustc-cfg=channel_sidecar_embedded");
-        }
     }
     println!(
         "cargo:rerun-if-changed={}",

@@ -3,5 +3,7 @@
 pub mod agent_runtime;
 pub mod channel;
 pub mod license_store;
+#[cfg(feature = "desktop")]
+pub mod process_hub;
 pub mod session;
 pub mod workspace_console;

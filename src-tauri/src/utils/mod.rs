@@ -10,4 +10,6 @@ pub mod license_verifier_exe;
 pub mod log;
 pub mod path;
 pub mod platform;
+#[cfg(feature = "desktop")]
+pub mod process_tauri;
 pub mod window;
