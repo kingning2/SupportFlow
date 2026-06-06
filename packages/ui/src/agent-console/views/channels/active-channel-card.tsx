@@ -28,6 +28,36 @@ interface ActiveChannelCardProps {
   onDisconnect: (name: string) => void;
 }
 
+function ChannelStatusBadge({
+  loginStatus,
+  waitingForWxLogin,
+  t
+}: {
+  loginStatus: string | null | undefined;
+  waitingForWxLogin: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  if (!waitingForWxLogin) {
+    return (
+      <>
+        <span className="bg-success size-2 rounded-full" />
+        <span className="text-success text-xs">{t("channels_connected")}</span>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <span className="size-2 animate-pulse rounded-full bg-amber-400" />
+      {loginStatus === "scanned" ? (
+        <span className="text-success text-xs">{t("weixin_scan_scanned")}</span>
+      ) : (
+        <span className="text-xs text-amber-500">{t("weixin_scan_waiting")}</span>
+      )}
+    </>
+  );
+}
+
 export function ActiveChannelCard({
   channel,
   lang,
@@ -45,20 +75,8 @@ export function ActiveChannelCard({
   const Icon = CHANNEL_ICON_MAP[channel.icon ?? ""] ?? MessageCircle;
   const label = localizeChannelText(channel.label, lang);
 
-  const wxWaiting = channel.name === "wx" && loginStatus && loginStatus !== "logged_in";
+  const wxWaiting = channel.name === "wx" && Boolean(loginStatus && loginStatus !== "logged_in");
   const hasFields = channel.fields.length > 0;
-
-  let statusDot = "bg-success";
-  let statusLabel = <span className="text-success text-xs">{t("channels_connected")}</span>;
-  if (wxWaiting) {
-    statusDot = "animate-pulse bg-amber-400";
-    statusLabel =
-      loginStatus === "scanned" ? (
-        <span className="text-success text-xs">{t("weixin_scan_scanned")}</span>
-      ) : (
-        <span className="text-xs text-amber-500">{t("weixin_scan_waiting")}</span>
-      );
-  }
 
   const showSaveBlock = hasFields && !wxWaiting;
 
@@ -100,8 +118,7 @@ export function ActiveChannelCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="text-foreground font-semibold">{label}</span>
-            <span className={`size-2 rounded-full ${statusDot}`} />
-            {statusLabel}
+            <ChannelStatusBadge loginStatus={loginStatus} waitingForWxLogin={wxWaiting} t={t} />
           </div>
           <p className="text-muted-foreground mt-0.5 font-mono text-xs">{channel.name}</p>
         </div>

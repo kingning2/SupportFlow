@@ -7,7 +7,8 @@ mod agent_bridge;
 mod agent_event_handler;
 mod agent_initializer;
 mod bot_router;
-mod bridge;
+#[path = "bridge.rs"]
+mod bridge_runtime;
 mod config_sync;
 mod context_params;
 
@@ -15,7 +16,7 @@ pub use agent_bridge::AgentBridge;
 pub use agent_event_handler::AgentEventHandler;
 pub use agent_initializer::{AgentInitOptions, AgentInitializer};
 pub use bot_router::{auto_pick_voice_to_text, resolve_bot_type};
-pub use bridge::Bridge;
+pub use bridge_runtime::Bridge;
 pub use config_sync::{load_dotenv_into_process, sync_config_to_dotenv};
 pub use context_params::context_from_reply_params;
 

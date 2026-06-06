@@ -63,7 +63,6 @@ pub struct SkillDetail {
 }
 
 /// Channel lifecycle push from Python sidecar (`channel/status-changed`).
-#[typeshare]
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelStatusChangedPayload {

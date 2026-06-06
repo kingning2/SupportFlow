@@ -276,7 +276,7 @@ impl BaiduWenxinSession {
         let system_prompt = system_prompt.unwrap_or_else(|| default_desc.to_string());
         Self {
             base: BaseSession {
-                session_id: session_id.into(),
+                session_id,
                 system_prompt,
                 messages: Vec::new(),
             },
@@ -308,7 +308,7 @@ impl MinimaxSession {
         let system_prompt = system_prompt.unwrap_or_else(|| default_desc.to_string());
         Self {
             base: BaseSession {
-                session_id: session_id.into(),
+                session_id,
                 system_prompt,
                 messages: Vec::new(),
             },

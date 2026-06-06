@@ -8,6 +8,7 @@ members = [
     "crates/process_runtime",
     "crates/cli",
 ]
+exclude = ["crates/agent", "crates/bridge"]
 
 [package]
 name = "tauri-app"
@@ -36,6 +37,9 @@ channel-wework = []
 tauri-build = { version = "2", features = [] }
 chrono = { version = "0.4", features = ["clock"] }
 serde = { version = "1", features = ["derive"] }
+
+[package.metadata.cargo-machete]
+ignored = ["tauri-build"]
 
 [dependencies]
 fs_io = { path = "crates/fs_io" }

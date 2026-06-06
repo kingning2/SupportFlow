@@ -1,5 +1,6 @@
 //! `agent/tools/bash/`
 
-mod bash;
+#[path = "bash.rs"]
+mod bash_tool;
 
-pub use bash::{BashConfig, BashTool};
+pub use bash_tool::{BashConfig, BashTool};

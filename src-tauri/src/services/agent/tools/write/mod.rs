@@ -1,3 +1,4 @@
-mod write;
+#[path = "write.rs"]
+mod write_tool;
 
-pub use write::WriteTool;
+pub use write_tool::WriteTool;

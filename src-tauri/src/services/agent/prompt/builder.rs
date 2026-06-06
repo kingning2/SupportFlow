@@ -184,7 +184,7 @@ fn build_memory_section(workspace_dir: &Path) -> Vec<String> {
         String::new(),
         "1. 不确定位置 → `memory_search` 关键词/语义检索".into(),
         "2. 已知位置 → `memory_get` 直接读取对应行".into(),
-        format!("3. 每日记忆文件: memory/{today_file}").into(),
+        format!("3. 每日记忆文件: memory/{today_file}"),
         String::new(),
         format!("工作空间: `{}`", workspace_dir.display()),
         String::new(),

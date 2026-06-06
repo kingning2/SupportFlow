@@ -6,6 +6,8 @@
 use tauri::AppHandle;
 use tauri_plugin_dialog::{DialogExt, FilePath};
 
+type PickedKnowledgeFile = (String, Vec<u8>);
+
 /// Pick supported knowledge files from the native OS file dialog, then read them from disk.
 ///
 /// # Arguments
@@ -18,7 +20,7 @@ use tauri_plugin_dialog::{DialogExt, FilePath};
 /// * `Ok(Some(vec))` - picked files read from disk (may be empty if all reads failed)
 pub fn pick_and_read_supported_knowledge_files(
     app: &AppHandle,
-) -> Result<Option<Vec<(String, Vec<u8>)>>, String> {
+) -> Result<Option<Vec<PickedKnowledgeFile>>, String> {
     // Collect supported extensions (strip the leading dot for dialog filter API).
     let raw_exts = crate::agent::knowledge::document_parser::all_doc_suffixes();
     let exts: Vec<&str> = raw_exts
@@ -38,7 +40,7 @@ pub fn pick_and_read_supported_knowledge_files(
     };
 
     // Read bytes on Rust side only. Frontend never sends content over IPC.
-    let files: Vec<(String, Vec<u8>)> = paths
+    let files: Vec<PickedKnowledgeFile> = paths
         .into_iter()
         .filter_map(|fp| {
             let path = match fp {

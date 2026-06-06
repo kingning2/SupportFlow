@@ -1,4 +1,4 @@
-﻿//! Tool execution helpers (`_execute_tool`, failure tracking).
+//! Tool execution helpers (`_execute_tool`, failure tracking).
 
 use std::time::Instant;
 
@@ -235,13 +235,10 @@ pub fn format_tool_result_content(result: &ToolExecutionResult) -> (String, bool
     let mut content = content;
     if content.len() > MAX_CURRENT_TURN_RESULT_CHARS {
         let truncated_len = content.len();
-        content = format!(
-            "{}{}",
-            &content[..MAX_CURRENT_TURN_RESULT_CHARS],
-            format!(
-                "\n\n[Output truncated: {truncated_len} chars total, showing first {MAX_CURRENT_TURN_RESULT_CHARS} chars]"
-            )
+        let suffix = format!(
+            "\n\n[Output truncated: {truncated_len} chars total, showing first {MAX_CURRENT_TURN_RESULT_CHARS} chars]"
         );
+        content = format!("{}{}", &content[..MAX_CURRENT_TURN_RESULT_CHARS], suffix);
         info!(
             truncated_len,
             limit = MAX_CURRENT_TURN_RESULT_CHARS,

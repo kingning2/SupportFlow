@@ -71,16 +71,12 @@ impl AgentTool for McpTool {
     }
 
     async fn execute(&self, params: Value) -> ToolRunResult {
-        let args = match params {
-            Value::Object(map) => Value::Object(map),
-            other => other,
-        };
         tracing::info!(
             server = %self.server_name,
             tool = %self.tool_name,
             "MCP tool execute"
         );
-        let text = self.client.call_tool(&self.tool_name, args).await;
+        let text = self.client.call_tool(&self.tool_name, params).await;
         ToolRunResult::success_text(text)
     }
 }

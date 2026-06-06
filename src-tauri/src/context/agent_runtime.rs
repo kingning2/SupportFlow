@@ -13,8 +13,7 @@ mod stream;
 mod workspace;
 mod workspace_data;
 
-pub use helpers::resolve_config_path;
-pub use stream::{cancel_request, register_cancel, run_agent_message};
+pub use stream::cancel_request;
 
 use std::path::PathBuf;
 use std::sync::Arc;

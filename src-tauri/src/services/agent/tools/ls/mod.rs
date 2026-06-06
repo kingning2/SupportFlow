@@ -1,3 +1,4 @@
-mod ls;
+#[path = "ls.rs"]
+mod ls_tool;
 
-pub use ls::LsTool;
+pub use ls_tool::LsTool;

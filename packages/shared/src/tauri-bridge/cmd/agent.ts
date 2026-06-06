@@ -6,13 +6,17 @@ import type {
   AgentInstallSkillRequest,
   AgentSendMessageRequest,
   AgentSendMessageResponse,
-  InstallSkillResult,
   AgentSetChatModelRequest,
   AgentUpdateProviderRequest,
   SkillDetail
 } from "@supportflow/shared/contracts";
 
 export type { AgentConsoleState, AgentSendMessageRequest, AgentSendMessageResponse };
+
+export interface InstallSkillResult {
+  installed_names: string[];
+  source: string;
+}
 
 export function getAgentConsoleState() {
   return invokeWrapper<AgentConsoleState>(TauriCmd.AgentGetConsoleState);

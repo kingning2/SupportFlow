@@ -28,6 +28,18 @@ interface ChannelAddPanelProps {
   onConnected: () => void;
 }
 
+function emptyDrafts(): ChannelFieldDrafts {
+  return { strings: {}, bools: {}, maskedCleared: {} };
+}
+
+function resolveDrafts(catalog: ChannelCatalogEntry[], channelName?: string): ChannelFieldDrafts {
+  if (!channelName) {
+    return emptyDrafts();
+  }
+  const row = catalog.find((channel) => channel.name === channelName);
+  return row ? draftsFromChannel(row) : emptyDrafts();
+}
+
 export function ChannelAddPanel({
   catalog,
   lang,
@@ -39,13 +51,9 @@ export function ChannelAddPanel({
   const [selected, setSelected] = useState(fixedChannel ?? "");
   const [open, setOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
-  const [drafts, setDrafts] = useState<ChannelFieldDrafts>(() => {
-    if (!fixedChannel) {
-      return { strings: {}, bools: {}, maskedCleared: {} };
-    }
-    const row = catalog.find((c) => c.name === fixedChannel);
-    return row ? draftsFromChannel(row) : { strings: {}, bools: {}, maskedCleared: {} };
-  });
+  const [drafts, setDrafts] = useState<ChannelFieldDrafts>(() =>
+    resolveDrafts(catalog, fixedChannel)
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const activeNames = new Set(catalog.filter((c) => c.active).map((c) => c.name));
@@ -57,9 +65,7 @@ export function ChannelAddPanel({
     (name: string) => {
       setSelected(name);
       setOpen(false);
-      if (!name) return;
-      const next = catalog.find((c) => c.name === name);
-      if (next) setDrafts(draftsFromChannel(next));
+      setDrafts(resolveDrafts(catalog, name));
     },
     [catalog]
   );
@@ -111,6 +117,8 @@ export function ChannelAddPanel({
   };
 
   const showActions = ch && selectedChannel === "wx";
+  const showWxPanel = selectedChannel === "wx" && ch;
+  const showWeworkPanel = selectedChannel === "wework" && ch;
 
   const selectLabel =
     selectedChannel && ch
@@ -175,7 +183,7 @@ export function ChannelAddPanel({
       )}
 
       <div className="space-y-4">
-        {selectedChannel === "wx" && ch ? (
+        {showWxPanel ? (
           <>
             {ch.hint ? <ChannelHint hint={ch.hint} lang={lang} /> : null}
             <ChannelFields
@@ -187,7 +195,7 @@ export function ChannelAddPanel({
             />
           </>
         ) : null}
-        {selectedChannel === "wework" && ch ? (
+        {showWeworkPanel ? (
           <WeworkConnectPanel
             channel={ch}
             lang={lang}

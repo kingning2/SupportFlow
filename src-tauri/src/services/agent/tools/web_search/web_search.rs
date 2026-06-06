@@ -98,7 +98,7 @@ impl WebSearchTool {
             .json(&payload)
             .send()
             .await
-            .map_err(|e| map_reqwest_error(e))?;
+            .map_err(map_reqwest_error)?;
 
         let status = resp.status().as_u16();
         let text = resp.text().await.map_err(|e| e.to_string())?;
@@ -216,7 +216,7 @@ impl WebSearchTool {
             .json(&payload)
             .send()
             .await
-            .map_err(|e| map_reqwest_error(e))?;
+            .map_err(map_reqwest_error)?;
 
         let status = resp.status().as_u16();
         let text = resp.text().await.map_err(|e| e.to_string())?;
@@ -297,7 +297,7 @@ impl WebSearchTool {
             .json(&payload)
             .send()
             .await
-            .map_err(|e| map_reqwest_error(e))?;
+            .map_err(map_reqwest_error)?;
 
         let status = resp.status().as_u16();
         let text = resp.text().await.map_err(|e| e.to_string())?;
@@ -372,7 +372,7 @@ impl WebSearchTool {
             .json(&payload)
             .send()
             .await
-            .map_err(|e| map_reqwest_error(e))?;
+            .map_err(map_reqwest_error)?;
 
         let status = resp.status().as_u16();
         let text = resp.text().await.map_err(|e| e.to_string())?;

@@ -129,15 +129,6 @@ pub(crate) fn load_models_config_from_path(path: &Path) -> ModelsConfig {
     }
 }
 
-/// Resolve mirrored workspace config path if present.
-pub fn resolve_config_path(workspace: &Path) -> Option<PathBuf> {
-    let config = workspace.join("config.json");
-    if config.is_file() {
-        return Some(config);
-    }
-    None
-}
-
 pub(crate) fn build_bridge_stack(
     workspace: PathBuf,
     config: &ModelsConfig,

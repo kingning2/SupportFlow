@@ -60,13 +60,10 @@ pub fn truncate_historical_tool_results(messages: &mut [Value]) {
                 continue;
             }
             let original_len = result_str.len();
-            let new_content = format!(
-                "{}{}",
-                &result_str[..MAX_HISTORY_RESULT_CHARS],
-                format!(
-                    "\n\n[Historical output truncated: {original_len} -> {MAX_HISTORY_RESULT_CHARS} chars]"
-                )
+            let suffix = format!(
+                "\n\n[Historical output truncated: {original_len} -> {MAX_HISTORY_RESULT_CHARS} chars]"
             );
+            let new_content = format!("{}{}", &result_str[..MAX_HISTORY_RESULT_CHARS], suffix);
             block
                 .as_object_mut()
                 .expect("tool_result block")

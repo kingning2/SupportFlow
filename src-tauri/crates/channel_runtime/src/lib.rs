@@ -23,25 +23,13 @@ pub struct ChannelRuntimeConfig {
     pub image_create_prefix: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ChannelRuntimeResult {
     pub should_handle: bool,
     pub normalized_content: String,
     pub reply_prefix: String,
     pub reply_suffix: String,
     pub mention_prefix: String,
-}
-
-impl Default for ChannelRuntimeResult {
-    fn default() -> Self {
-        Self {
-            should_handle: false,
-            normalized_content: String::new(),
-            reply_prefix: String::new(),
-            reply_suffix: String::new(),
-            mention_prefix: String::new(),
-        }
-    }
 }
 
 pub fn process_message(

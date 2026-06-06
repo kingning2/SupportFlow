@@ -6,9 +6,7 @@ use std::sync::Mutex;
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
-use typeshare::typeshare;
 
-#[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WeworkAccountConfigDto {
@@ -22,7 +20,6 @@ pub struct WeworkAccountConfigDto {
     pub wework_init_wait_seconds: Option<i64>,
 }
 
-#[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WeworkSavedAccountDto {

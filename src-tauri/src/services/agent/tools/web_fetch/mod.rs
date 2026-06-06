@@ -2,6 +2,7 @@
 
 mod document;
 mod html;
-mod web_fetch;
+#[path = "web_fetch.rs"]
+mod web_fetch_tool;
 
-pub use web_fetch::WebFetchTool;
+pub use web_fetch_tool::WebFetchTool;

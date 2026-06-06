@@ -1,4 +1,4 @@
-﻿//! `bridge/agent_bridge.py` — `AgentLLMModel` adapter over `models` bots.
+//! `bridge/agent_bridge.py` — `AgentLLMModel` adapter over `models` bots.
 
 use std::pin::Pin;
 use std::sync::Arc;
@@ -103,15 +103,7 @@ impl LlmModel for BotLlmModel {
         );
         match self.bot.call_with_tools(req).await {
             Ok(LlmResult::Stream(stream)) => Ok(stream),
-            Ok(LlmResult::Complete(body)) => {
-                let mut chunks: Vec<Value> = Vec::new();
-                if body.get("error") == Some(&Value::Bool(true)) {
-                    chunks.push(body);
-                } else {
-                    chunks.push(body);
-                }
-                Ok(Box::pin(futures_util::stream::iter(chunks)))
-            }
+            Ok(LlmResult::Complete(body)) => Ok(Box::pin(futures_util::stream::iter(vec![body]))),
             Err(e) => {
                 error!(error = %e, "call_with_tools failed");
                 Err(LlmBridgeError::Message(e.message))

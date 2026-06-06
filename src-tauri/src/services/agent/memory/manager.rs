@@ -336,39 +336,6 @@ fn walk_md_inner(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::services::agent::MemoryManager;
-    use std::sync::Arc;
-
-    #[tokio::test]
-    async fn sync_indexes_workspace_memory_md() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let ws = dir.path().to_path_buf();
-        std::fs::write(ws.join("MEMORY.md"), "user prefers dark mode\n").expect("write");
-
-        let cfg = MemoryConfig::new(&ws);
-        let storage = Arc::new(MemoryStorage::open(&cfg.db_path()).expect("open db"));
-        let manager = DbMemoryManager::new(cfg, storage.clone(), None);
-        manager.sync_index().await.expect("sync");
-
-        let hits = storage
-            .search_keyword("dark mode", None, &["shared"], 5)
-            .expect("search");
-        assert!(!hits.is_empty(), "expected indexed chunks");
-
-        let mgr_hits = manager
-            .search("dark mode", None, 10, 0.1)
-            .await
-            .expect("manager search");
-        assert!(
-            !mgr_hits.is_empty(),
-            "manager hybrid search should return hits"
-        );
-    }
-}
-
 fn temporal_decay(path: &str) -> f64 {
     let re = regex::Regex::new(r"(\d{4})-(\d{2})-(\d{2})\.md$").ok();
     let Some(re) = re else {
@@ -457,5 +424,38 @@ impl MemoryManager for DbMemoryManager {
 
     async fn sync(&self) -> Result<(), String> {
         self.sync_index().await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::agent::MemoryManager;
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn sync_indexes_workspace_memory_md() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let ws = dir.path().to_path_buf();
+        std::fs::write(ws.join("MEMORY.md"), "user prefers dark mode\n").expect("write");
+
+        let cfg = MemoryConfig::new(&ws);
+        let storage = Arc::new(MemoryStorage::open(&cfg.db_path()).expect("open db"));
+        let manager = DbMemoryManager::new(cfg, storage.clone(), None);
+        manager.sync_index().await.expect("sync");
+
+        let hits = storage
+            .search_keyword("dark mode", None, &["shared"], 5)
+            .expect("search");
+        assert!(!hits.is_empty(), "expected indexed chunks");
+
+        let mgr_hits = manager
+            .search("dark mode", None, 10, 0.1)
+            .await
+            .expect("manager search");
+        assert!(
+            !mgr_hits.is_empty(),
+            "manager hybrid search should return hits"
+        );
     }
 }

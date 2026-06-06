@@ -97,7 +97,7 @@ impl ConversationStore {
 
     pub fn for_workspace(workspace: &Path) -> Result<Arc<Self>, String> {
         let db_path = MemoryConfig::new(workspace).db_path();
-        Ok(conversation_store_for_path(&db_path)?)
+        conversation_store_for_path(&db_path)
     }
 
     fn migrate(conn: &Connection) -> Result<(), String> {

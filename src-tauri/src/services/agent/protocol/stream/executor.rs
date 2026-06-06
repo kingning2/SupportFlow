@@ -135,34 +135,37 @@ pub struct AgentStreamExecutor {
     pub files_to_send: Vec<Value>,
 }
 
+pub struct AgentStreamExecutorInit {
+    pub model: Arc<dyn LlmModel>,
+    pub bridge: LlmBridgeConfig,
+    pub system_prompt: String,
+    pub tools: Vec<Arc<dyn AgentTool>>,
+    pub messages: Vec<Value>,
+    pub max_turns: u32,
+    pub max_context_turns: u32,
+    pub on_event: Option<AgentEventCallback>,
+    pub cancel: Option<CancelHandle>,
+    pub host: Option<Arc<dyn AgentStreamHost>>,
+}
+
 impl AgentStreamExecutor {
-    pub fn new(
-        model: Arc<dyn LlmModel>,
-        bridge: LlmBridgeConfig,
-        system_prompt: impl Into<String>,
-        tools: Vec<Arc<dyn AgentTool>>,
-        max_turns: u32,
-        on_event: Option<AgentEventCallback>,
-        messages: Option<Vec<Value>>,
-        max_context_turns: u32,
-        cancel: Option<CancelHandle>,
-        host: Option<Arc<dyn AgentStreamHost>>,
-    ) -> Self {
-        let tools_map = tools
+    pub fn new(init: AgentStreamExecutorInit) -> Self {
+        let tools_map = init
+            .tools
             .into_iter()
             .map(|t| (t.name().to_string(), t))
             .collect();
         Self {
-            model,
-            bridge,
-            system_prompt: system_prompt.into(),
+            model: init.model,
+            bridge: init.bridge,
+            system_prompt: init.system_prompt,
             tools: tools_map,
-            messages: messages.unwrap_or_default(),
-            max_turns,
-            max_context_turns,
-            on_event,
-            cancel,
-            host,
+            messages: init.messages,
+            max_turns: init.max_turns,
+            max_context_turns: init.max_context_turns,
+            on_event: init.on_event,
+            cancel: init.cancel,
+            host: init.host,
             mcp_registry: None,
             tool_failure_history: Vec::new(),
             files_to_send: Vec::new(),
@@ -466,17 +469,18 @@ impl AgentStreamExecutor {
                         }
                     }
 
-                    if is_overflow && !overflow_retry {
-                        if aggressive_trim_for_overflow(&mut self.messages) {
-                            warn!("Aggressively trimmed context, retrying...");
-                            return Box::pin(self.call_llm_stream(
-                                retry_on_empty,
-                                retry_count,
-                                max_retries,
-                                true,
-                            ))
-                            .await;
-                        }
+                    if is_overflow
+                        && !overflow_retry
+                        && aggressive_trim_for_overflow(&mut self.messages)
+                    {
+                        warn!("Aggressively trimmed context, retrying...");
+                        return Box::pin(self.call_llm_stream(
+                            retry_on_empty,
+                            retry_count,
+                            max_retries,
+                            true,
+                        ))
+                        .await;
                     }
 
                     warn!("Clearing conversation history to recover");

@@ -1,6 +1,6 @@
 //! 通过独立 `license-verifier` 子进程完成订阅校验，避免在主程序源码中暴露验签逻辑。
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use process_runtime::{run_sync, CommandSpec, ProcessSharedContext};
 use serde::Deserialize;
@@ -46,11 +46,11 @@ pub fn resolve_verifier_exe() -> Result<PathBuf, String> {
     Err(verifier_missing_message())
 }
 
-fn verifier_spec(exe: &PathBuf, args: Vec<&str>) -> CommandSpec {
-    CommandSpec::binary("license-verifier", exe.clone()).with_args(args)
+fn verifier_spec(exe: &Path, args: Vec<&str>) -> CommandSpec {
+    CommandSpec::binary("license-verifier", exe.to_path_buf()).with_args(args)
 }
 
-fn run_verifier(exe: &PathBuf, args: Vec<&str>) -> Result<(i32, String, String), String> {
+fn run_verifier(exe: &Path, args: Vec<&str>) -> Result<(i32, String, String), String> {
     let output = run_sync(&verifier_spec(exe, args), &ProcessSharedContext::default())?;
     Ok((
         output.code.unwrap_or(2),

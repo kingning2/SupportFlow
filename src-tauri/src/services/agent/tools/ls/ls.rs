@@ -95,13 +95,13 @@ impl AgentTool for LsTool {
         let mut entries: Vec<String> = match std::fs::read_dir(&absolute) {
             Ok(rd) => rd
                 .filter_map(|e| e.ok())
-                .filter_map(|e| {
+                .map(|e| {
                     let name = e.file_name().to_string_lossy().into_owned();
                     let full = e.path();
                     if full.is_dir() {
-                        Some(format!("{name}/"))
+                        format!("{name}/")
                     } else {
-                        Some(name)
+                        name
                     }
                 })
                 .collect(),

@@ -2,13 +2,15 @@ use std::fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typeshare::typeshare;
 
 use crate::utils::skills_config::{hub_api_base, register_skill, skills_dir};
 
+#[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallSkillResult {
     pub installed_names: Vec<String>,
@@ -326,7 +328,7 @@ fn fallback_name_from_url(url: &str) -> String {
     let segment = parsed
         .as_ref()
         .and_then(|value| value.path_segments())
-        .and_then(|segments| segments.last())
+        .and_then(|mut segments| segments.next_back())
         .unwrap_or("skill.zip");
     let stem = segment.strip_suffix(".zip").unwrap_or(segment).trim();
     if stem.is_empty() {
