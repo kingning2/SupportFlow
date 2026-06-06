@@ -79,6 +79,21 @@ export interface SkillItem {
   source: string;
 }
 
+export interface SkillDetail {
+  name: string;
+  description: string;
+  enabled: boolean;
+  source: string;
+  filePath: string;
+  baseDir: string;
+  disableModelInvocation: boolean;
+}
+
+export interface InstallSkillResult {
+  installedNames: string[];
+  source: string;
+}
+
 export interface AgentConsoleState {
   sessionId: string;
   workspaceDir: string;
@@ -207,6 +222,10 @@ export interface AgentRunFinished {
 export interface AgentSendMessageRequest {
   message: string;
   sessionId?: string;
+}
+
+export interface AgentInstallSkillRequest {
+  source: string;
 }
 
 export interface AgentSendMessageResponse {

@@ -7,7 +7,7 @@ use std::sync::Arc;
 use crate::agent::McpToolLoader;
 use crate::agent::SkillEntry;
 use crate::bridge::BridgeRuntime;
-use crate::events::payloads::SkillItem;
+use crate::events::payloads::{SkillDetail, SkillItem};
 use models::ModelsConfig;
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager};
@@ -18,6 +18,18 @@ pub(crate) fn skill_to_item(e: &SkillEntry) -> SkillItem {
         description: e.skill.description.clone(),
         enabled: e.enabled,
         source: e.skill.source.clone(),
+    }
+}
+
+pub(crate) fn skill_to_detail(e: &SkillEntry) -> SkillDetail {
+    SkillDetail {
+        name: e.skill.name.clone(),
+        description: e.skill.description.clone(),
+        enabled: e.enabled,
+        source: e.skill.source.clone(),
+        file_path: e.skill.file_path.clone(),
+        base_dir: e.skill.base_dir.clone(),
+        disable_model_invocation: e.skill.disable_model_invocation,
     }
 }
 

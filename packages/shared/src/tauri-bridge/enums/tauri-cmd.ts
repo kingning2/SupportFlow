@@ -19,6 +19,8 @@ export enum TauriCmd {
   AgentClearContext = "agent_clear_context",
   AgentNewSession = "agent_new_session",
   AgentRefreshSkills = "agent_refresh_skills",
+  AgentGetSkillDetail = "agent_get_skill_detail",
+  AgentInstallSkill = "agent_install_skill",
   AgentUpdateProvider = "agent_update_provider",
   AgentClearProvider = "agent_clear_provider",
   AgentSetChatModel = "agent_set_chat_model",

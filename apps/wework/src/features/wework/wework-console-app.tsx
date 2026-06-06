@@ -19,6 +19,7 @@ import { WeworkConsoleHeader } from "./layout/wework-console-header";
 import { WeworkConsoleSidebar } from "./layout/wework-console-sidebar";
 import { ConfigPlaceholderView } from "./views/config-placeholder-view";
 import { KnowledgeView } from "./views/knowledge-view";
+import { SkillsView } from "./views/skills-view";
 
 const DEFAULT_OPEN_GROUPS: Record<string, boolean> = {
   workspace: true,
@@ -86,6 +87,9 @@ export function WeworkConsoleApp({ lang, actions }: WeworkConsoleAppProps) {
       // Wework-specific knowledge view using antd components for light enterprise layout,
       // sharing the same IPC upload/list/read/graph with markitdown backend.
       return <KnowledgeView />;
+    }
+    if (activeRoute === WeworkConsoleRoute.Skills) {
+      return <SkillsView />;
     }
     const pageKey = WEWORK_ROUTE_PAGE_LABEL[activeRoute];
     return <ConfigPlaceholderView labelKey={pageKey} />;

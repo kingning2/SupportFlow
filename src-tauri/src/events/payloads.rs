@@ -49,6 +49,19 @@ pub struct SkillItem {
     pub source: String,
 }
 
+#[typeshare]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SkillDetail {
+    pub name: String,
+    pub description: String,
+    pub enabled: bool,
+    pub source: String,
+    pub file_path: String,
+    pub base_dir: String,
+    pub disable_model_invocation: bool,
+}
+
 /// Channel lifecycle push from Python sidecar (`channel/status-changed`).
 #[typeshare]
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]

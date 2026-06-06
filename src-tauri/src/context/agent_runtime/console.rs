@@ -15,10 +15,13 @@ use tauri::AppHandle;
 
 use crate::context::workspace_console;
 use crate::events::payloads::{
-    AgentConsoleState, ModelProviderDetail, ModelProviderItem, SkillItem, ToolItem,
+    AgentConsoleState, ModelProviderDetail, ModelProviderItem, SkillDetail, SkillItem, ToolItem,
 };
+use crate::utils::skills_installer::InstallSkillResult;
 
-use super::helpers::{build_bridge_stack, load_models_config_from_path, skill_to_item};
+use super::helpers::{
+    build_bridge_stack, load_models_config_from_path, skill_to_detail, skill_to_item,
+};
 use super::stream::{register_cancel, run_agent_message};
 use super::AgentRuntime;
 
@@ -163,6 +166,50 @@ impl AgentRuntime {
                 .collect::<Vec<_>>()
         })
         .await
+    }
+
+    /// 安装外部技能并刷新当前运行时中的技能列表。
+    ///
+    /// # Arguments
+    ///
+    /// * `source` - Skill Hub 名称、GitHub 仓库、zip 链接或本地路径
+    ///
+    /// # Returns
+    ///
+    /// * `InstallSkillResult` - 安装结果
+    pub async fn install_skill(&self, source: &str) -> Result<InstallSkillResult, String> {
+        let result = crate::utils::skills_installer::install_skill_source(&self.workspace, source)
+            .await
+            .map_err(|error| error.to_string())?;
+        self.with_agent_write(|agent| {
+            agent.refresh_skills();
+        })
+        .await?;
+        Ok(result)
+    }
+
+    /// 获取指定技能的详情信息。
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - 技能名称
+    ///
+    /// # Returns
+    ///
+    /// * `SkillDetail` - 技能详情
+    pub async fn skill_detail(&self, name: &str) -> Result<SkillDetail, String> {
+        let skill_name = name.trim().to_string();
+        if skill_name.is_empty() {
+            return Err("skill name is empty".into());
+        }
+
+        self.with_agent_read(|agent| {
+            agent
+                .get_skill(&skill_name)
+                .map(|entry| skill_to_detail(&entry))
+                .ok_or_else(|| format!("skill not found: {skill_name}"))
+        })
+        .await?
     }
 
     pub(crate) async fn reload_config_from_disk(&self) -> Result<(), String> {

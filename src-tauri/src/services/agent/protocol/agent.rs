@@ -212,6 +212,14 @@ impl Agent {
             .unwrap_or_default()
     }
 
+    pub fn get_skill(&self, name: &str) -> Option<crate::services::agent::skills::SkillEntry> {
+        self.skill_manager
+            .lock()
+            .expect("skill_manager")
+            .as_ref()
+            .and_then(|sm| sm.get_skill(name).cloned())
+    }
+
     pub fn with_llm_model(
         system_prompt: impl Into<String>,
         model: Arc<dyn LlmModel>,
