@@ -10,7 +10,12 @@ const outDir = dirname(outFile);
 mkdirSync(outDir, { recursive: true });
 
 function run(cmd, args, opts = {}) {
-  const result = spawnSync(cmd, args, { stdio: "inherit", cwd: root, ...opts });
+  const result = spawnSync(cmd, args, {
+    stdio: "inherit",
+    cwd: root,
+    shell: process.platform === "win32",
+    ...opts
+  });
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }
@@ -40,5 +45,7 @@ if (!ts.includes("export type Value")) {
   );
   writeFileSync(outFile, ts);
 }
+
+run("pnpm", ["prettier", "--write", outFile]);
 
 console.log(`wrote ${outFile}`);

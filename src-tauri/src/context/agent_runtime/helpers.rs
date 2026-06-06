@@ -1,14 +1,9 @@
 //! 初始化路径解析与跨模块共享的纯函数。
 
+use crate::events::payloads::{SkillDetail, SkillItem};
+use crate::services::agent::SkillEntry;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
-
-use crate::agent::McpToolLoader;
-use crate::agent::SkillEntry;
-use crate::bridge::BridgeRuntime;
-use crate::events::payloads::SkillItem;
-use models::ModelsConfig;
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager};
 
@@ -18,6 +13,18 @@ pub(crate) fn skill_to_item(e: &SkillEntry) -> SkillItem {
         description: e.skill.description.clone(),
         enabled: e.enabled,
         source: e.skill.source.clone(),
+    }
+}
+
+pub(crate) fn skill_to_detail(e: &SkillEntry) -> SkillDetail {
+    SkillDetail {
+        name: e.skill.name.clone(),
+        description: e.skill.description.clone(),
+        enabled: e.enabled,
+        source: e.skill.source.clone(),
+        file_path: e.skill.file_path.clone(),
+        base_dir: e.skill.base_dir.clone(),
+        disable_model_invocation: e.skill.disable_model_invocation,
     }
 }
 
@@ -102,38 +109,4 @@ pub(crate) fn resolve_agent_dirs(app: &AppHandle) -> Result<(PathBuf, PathBuf), 
         config_path.display()
     );
     Ok((workspace, config_path))
-}
-
-pub(crate) fn load_models_config_from_path(path: &Path) -> ModelsConfig {
-    if path.is_file() {
-        if let Ok(cfg) = ModelsConfig::from_json_file(path) {
-            return cfg;
-        }
-    }
-    ModelsConfig {
-        bot_type: "deepseek".into(),
-        model: Some("deepseek-chat".into()),
-        ..Default::default()
-    }
-}
-
-/// Resolve mirrored workspace config path if present.
-pub fn resolve_config_path(workspace: &Path) -> Option<PathBuf> {
-    let config = workspace.join("config.json");
-    if config.is_file() {
-        return Some(config);
-    }
-    None
-}
-
-pub(crate) fn build_bridge_stack(
-    workspace: PathBuf,
-    config: &ModelsConfig,
-    mcp_loader: Arc<McpToolLoader>,
-) -> Arc<BridgeRuntime> {
-    Arc::new(BridgeRuntime::new(
-        workspace,
-        Arc::new(config.clone()),
-        mcp_loader,
-    ))
 }

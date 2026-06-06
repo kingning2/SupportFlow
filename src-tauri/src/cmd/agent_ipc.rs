@@ -9,7 +9,8 @@ use typeshare::typeshare;
 
 use crate::context::agent_runtime::{self, AgentRuntime};
 use crate::context::license_store::LicenseStore;
-use crate::events::payloads::{AgentConsoleState, SkillItem};
+use crate::events::payloads::{AgentConsoleState, SkillDetail, SkillItem};
+use crate::services::agent::InstallSkillResult;
 
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -63,6 +64,20 @@ pub struct AgentSetChatModelRequest {
     pub provider_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model: Option<String>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentGetSkillDetailRequest {
+    pub name: String,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentInstallSkillRequest {
+    pub source: String,
 }
 
 #[tauri::command]
@@ -178,6 +193,28 @@ pub async fn agent_refresh_skills(
 ) -> Result<Vec<SkillItem>, String> {
     license.require_valid()?;
     runtime.refresh_skills().await
+}
+
+#[tauri::command]
+/// Load a single skill detail by skill name.
+pub async fn agent_get_skill_detail(
+    license: tauri::State<'_, LicenseStore>,
+    runtime: State<'_, Arc<AgentRuntime>>,
+    body: AgentGetSkillDetailRequest,
+) -> Result<SkillDetail, String> {
+    license.require_valid()?;
+    runtime.skill_detail(&body.name).await
+}
+
+#[tauri::command]
+/// Install an external skill source and return the installed names.
+pub async fn agent_install_skill(
+    license: tauri::State<'_, LicenseStore>,
+    runtime: State<'_, Arc<AgentRuntime>>,
+    body: AgentInstallSkillRequest,
+) -> Result<InstallSkillResult, String> {
+    license.require_valid()?;
+    runtime.install_skill(&body.source).await
 }
 
 #[typeshare]
@@ -320,8 +357,8 @@ pub struct AgentKnowledgeUploadResult {
     pub memory_synced: bool,
 }
 
-impl From<crate::agent::IngestBatchResult> for AgentKnowledgeUploadResult {
-    fn from(batch: crate::agent::IngestBatchResult) -> Self {
+impl From<crate::services::agent::IngestBatchResult> for AgentKnowledgeUploadResult {
+    fn from(batch: crate::services::agent::IngestBatchResult) -> Self {
         Self {
             results: batch
                 .results

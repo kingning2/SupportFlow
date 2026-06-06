@@ -1,6 +1,11 @@
 # encoding:utf-8
 """Global HTTP proxy control for ``requests`` (LLM APIs, downloads, etc.).
 
+This module is tolerated in Python only because some sidecar-local SDK and
+``requests`` calls still need proxy adaptation. New desktop-wide proxy policy,
+configuration interpretation, and user-facing orchestration should live in
+Rust, with Python consuming only the resolved runtime settings.
+
 Config (``config.json``):
 
 - ``use_proxy`` (bool, default ``false``): when ``false``, ignore ``HTTP_PROXY`` /

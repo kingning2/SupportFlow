@@ -39,7 +39,6 @@ pub struct BashTool {
 
 impl BashTool {
     pub fn new(config: BashConfig) -> Self {
-        let config = config;
         if !config.cwd.exists() {
             let _ = std::fs::create_dir_all(&config.cwd);
         }

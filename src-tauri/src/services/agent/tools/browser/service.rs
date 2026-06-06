@@ -1,6 +1,6 @@
 //! Chromium automation via `chromiumoxide` (pure Rust CDP, no Node Playwright).
 
-use std::path::PathBuf;
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -173,7 +173,7 @@ impl BrowserService {
         Err("Provide either ref (from snapshot) or selector".into())
     }
 
-    pub async fn screenshot(&self, full_page: bool, cwd: &PathBuf) -> Result<String, String> {
+    pub async fn screenshot(&self, full_page: bool, cwd: &Path) -> Result<String, String> {
         let page = self.page().await?;
         let dir = cwd.join("tmp");
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;

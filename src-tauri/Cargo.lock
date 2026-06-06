@@ -780,7 +780,6 @@ name = "cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "chrono",
  "clap",
  "dirs 5.0.1",
  "fs_io",
@@ -791,10 +790,7 @@ dependencies = [
  "serde_json",
  "tauri-app",
  "tokio",
- "tracing",
  "tracing-subscriber",
- "walkdir",
- "windows-sys 0.59.0",
  "zip",
 ]
 
@@ -4520,6 +4516,7 @@ dependencies = [
 name = "tauri-app"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "async-trait",
  "base64 0.22.1",
  "calamine",

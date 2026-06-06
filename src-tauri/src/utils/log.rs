@@ -1,7 +1,7 @@
 use std::{
     fs::{create_dir_all, OpenOptions},
     io::Write,
-    path::PathBuf,
+    path::Path,
     sync::{mpsc::Sender, OnceLock},
     thread,
 };
@@ -77,7 +77,7 @@ macro_rules! log_cmd_result {
 
 static LOG_TX: OnceLock<Sender<String>> = OnceLock::new();
 
-fn start_log_writer(log_path: &PathBuf) -> Result<(), String> {
+fn start_log_writer(log_path: &Path) -> Result<(), String> {
     if LOG_TX.get().is_some() {
         return Ok(());
     }
@@ -94,7 +94,6 @@ fn start_log_writer(log_path: &PathBuf) -> Result<(), String> {
 
     let file = OpenOptions::new()
         .read(true)
-        .write(true)
         .append(true)
         .create(true)
         .open(&log_file_path)

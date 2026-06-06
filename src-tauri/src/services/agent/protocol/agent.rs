@@ -11,8 +11,8 @@ use crate::services::agent::protocol::result::{
     AgentAction, AgentActionType, ToolResult as CapturedToolResult,
 };
 use crate::services::agent::protocol::stream::{
-    AgentEventCallback, AgentStreamExecutor, AgentStreamHost, LlmBridgeConfig, LlmModel,
-    RunStreamError,
+    AgentEventCallback, AgentStreamExecutor, AgentStreamExecutorInit, AgentStreamHost,
+    LlmBridgeConfig, LlmModel, RunStreamError,
 };
 use crate::services::agent::protocol::tokens::{context_reserve_tokens, model_context_window};
 use crate::services::agent::skills::SkillManager;
@@ -23,14 +23,17 @@ use crate::services::agent::tools::{
 
 const DEFAULT_MAX_CONTEXT_TURNS: u32 = 20;
 
+type ClearSessionCallback = Arc<dyn Fn() + Send + Sync>;
+type MemoryFlushCallback = Arc<dyn Fn(&[Value], &str) + Send + Sync>;
+
 /// Host bridge from [`Agent`] into [`AgentStreamExecutor`].
 struct AgentHostBridge {
     model_name: String,
     max_context_tokens: Option<u32>,
     context_reserve_tokens: Option<u32>,
     session_id: Option<String>,
-    on_clear_session: Option<Arc<dyn Fn() + Send + Sync>>,
-    on_memory_flush: Option<Arc<dyn Fn(&[Value], &str) + Send + Sync>>,
+    on_clear_session: Option<ClearSessionCallback>,
+    on_memory_flush: Option<MemoryFlushCallback>,
 }
 
 impl AgentStreamHost for AgentHostBridge {
@@ -74,23 +77,13 @@ impl AgentStreamHost for AgentHostBridge {
     }
 }
 
+#[derive(Default)]
 /// Options for [`Agent::run_stream`].
 pub struct RunStreamOptions<'a> {
     pub on_event: Option<AgentEventCallback>,
     pub clear_history: bool,
     pub cancel: Option<CancelHandle>,
     pub skill_filter: Option<&'a [String]>,
-}
-
-impl Default for RunStreamOptions<'_> {
-    fn default() -> Self {
-        Self {
-            on_event: None,
-            clear_history: false,
-            cancel: None,
-            skill_filter: None,
-        }
-    }
 }
 
 /// Top-level agent (`agent/protocol/agent.py::Agent`).
@@ -212,6 +205,14 @@ impl Agent {
             .unwrap_or_default()
     }
 
+    pub fn get_skill(&self, name: &str) -> Option<crate::services::agent::skills::SkillEntry> {
+        self.skill_manager
+            .lock()
+            .expect("skill_manager")
+            .as_ref()
+            .and_then(|sm| sm.get_skill(name).cloned())
+    }
+
     pub fn with_llm_model(
         system_prompt: impl Into<String>,
         model: Arc<dyn LlmModel>,
@@ -301,18 +302,18 @@ impl Agent {
 
         let tool_arcs: Vec<Arc<dyn AgentTool>> = self.tools.clone();
 
-        let mut executor = AgentStreamExecutor::new(
-            model.clone(),
-            self.bridge.clone(),
-            full_system_prompt,
-            tool_arcs,
-            self.max_steps,
-            options.on_event,
-            Some(messages_copy),
-            self.max_context_turns,
-            options.cancel,
-            Some(host),
-        );
+        let mut executor = AgentStreamExecutor::new(AgentStreamExecutorInit {
+            model: model.clone(),
+            bridge: self.bridge.clone(),
+            system_prompt: full_system_prompt,
+            tools: tool_arcs,
+            messages: messages_copy,
+            max_turns: self.max_steps,
+            max_context_turns: self.max_context_turns,
+            on_event: options.on_event,
+            cancel: options.cancel,
+            host: Some(host),
+        });
         executor.mcp_registry = self.mcp_registry.clone();
 
         let response = match executor.run_stream(user_message).await {

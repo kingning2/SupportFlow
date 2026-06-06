@@ -30,10 +30,10 @@ export function useAgentConsoleState() {
 
     void (async () => {
       try {
-        const next = await getAgentConsoleState();
         if (!active) {
           return;
         }
+        const next = await getAgentConsoleState();
         setState(next);
         localStorage.setItem(LocalCacheKey.AgentSessionId, next.sessionId);
       } catch (err) {

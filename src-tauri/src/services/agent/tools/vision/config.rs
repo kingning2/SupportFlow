@@ -48,7 +48,11 @@ fn ensure_v1(api_base: &str) -> String {
     if base.is_empty() {
         return "https://api.openai.com/v1".into();
     }
-    if base.split('/').last().is_some_and(|s| s.starts_with('v')) {
+    if base
+        .split('/')
+        .next_back()
+        .is_some_and(|s| s.starts_with('v'))
+    {
         return base.to_string();
     }
     format!("{base}/v1")
@@ -273,7 +277,7 @@ fn append_discoverable(config: Arc<ModelsConfig>, providers: &mut Vec<VisionProv
             "minimax_api_key" => config.minimax_api_key.as_deref(),
             _ => None,
         };
-        if !key.is_some_and(|k| valid_key(k)) {
+        if !key.is_some_and(valid_key) {
             continue;
         }
         if let Some(p) = build_bot_provider(
@@ -293,7 +297,7 @@ pub fn resolve_providers(config: Arc<ModelsConfig>) -> Vec<VisionProvider> {
     let user_provider = user_vision_provider(&config);
     let mut providers = Vec::new();
 
-    if let (Some(pid), Some(ref um)) = (user_provider.as_deref(), user_model.as_deref()) {
+    if let (Some(pid), Some(um)) = (user_provider.as_deref(), user_model.as_deref()) {
         if let Some(mut preferred) = route_by_provider_id(config.clone(), pid, um) {
             providers.append(&mut preferred);
         }

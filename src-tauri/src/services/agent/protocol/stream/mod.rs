@@ -10,8 +10,9 @@ mod trim;
 mod turns;
 
 pub use executor::{
-    tools_from_schemas, AgentEvent, AgentEventCallback, AgentStreamExecutor, AgentStreamHost,
-    AgentToolSchema, CallLlmError, ParsedToolCall, SchemaStubTool,
+    tools_from_schemas, AgentEvent, AgentEventCallback, AgentStreamExecutor,
+    AgentStreamExecutorInit, AgentStreamHost, AgentToolSchema, CallLlmError, ParsedToolCall,
+    SchemaStubTool,
 };
 pub use helpers::{
     filter_think_tags, is_context_overflow_error, is_message_format_error, is_rate_limit_error,

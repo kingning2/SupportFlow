@@ -37,9 +37,9 @@ pub struct McpToolSchema {
 
 enum Transport {
     Stdio {
-        child: Child,
-        stdin: ChildStdin,
-        stdout: BufReader<ChildStdout>,
+        child: Box<Child>,
+        stdin: Box<ChildStdin>,
+        stdout: Box<BufReader<ChildStdout>>,
     },
     Sse {
         post_url: String,
@@ -241,9 +241,9 @@ impl McpClient {
         debug!(server = %config.name, "stdio process started");
 
         Ok(Transport::Stdio {
-            child,
-            stdin,
-            stdout: BufReader::new(stdout),
+            child: Box::new(child),
+            stdin: Box::new(stdin),
+            stdout: Box::new(BufReader::new(stdout)),
         })
     }
 

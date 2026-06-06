@@ -202,18 +202,16 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
           >
             <Minus className="size-4" />
           </Button>
-          {false && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className={controlBtnClass}
-              aria-label={t("maximize")}
-              onClick={() => void mainWindow.toggleMaximize()}
-            >
-              <Square className="size-3.5" />
-            </Button>
-          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={controlBtnClass}
+            aria-label={t("maximize")}
+            onClick={() => void mainWindow.toggleMaximize()}
+          >
+            <Square className="size-3.5" />
+          </Button>
           <Button
             type="button"
             variant="ghost"

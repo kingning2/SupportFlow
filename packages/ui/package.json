@@ -42,6 +42,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.5",
+    "@antv/g6": "^5.1.1",
+    "@antv/graphin": "^3.0.5",
     "@reduxjs/toolkit": "^2.11.2",
     "@streamdown/cjk": "^1.0.3",
     "@streamdown/code": "^1.1.1",

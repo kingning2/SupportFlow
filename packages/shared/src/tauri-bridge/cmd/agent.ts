@@ -3,13 +3,20 @@ import { TauriCmd } from "../enums";
 import type {
   AgentClearProviderRequest,
   AgentConsoleState,
+  AgentInstallSkillRequest,
   AgentSendMessageRequest,
   AgentSendMessageResponse,
   AgentSetChatModelRequest,
-  AgentUpdateProviderRequest
+  AgentUpdateProviderRequest,
+  SkillDetail
 } from "@supportflow/shared/contracts";
 
 export type { AgentConsoleState, AgentSendMessageRequest, AgentSendMessageResponse };
+
+export interface InstallSkillResult {
+  installed_names: string[];
+  source: string;
+}
 
 export function getAgentConsoleState() {
   return invokeWrapper<AgentConsoleState>(TauriCmd.AgentGetConsoleState);
@@ -33,6 +40,16 @@ export function newAgentSession() {
 
 export function refreshAgentSkills() {
   return invokeWrapper<AgentConsoleState["skills"]>(TauriCmd.AgentRefreshSkills);
+}
+
+export function getAgentSkillDetail(name: string) {
+  return invokeWrapper<SkillDetail>(TauriCmd.AgentGetSkillDetail, {
+    body: { name }
+  });
+}
+
+export function installAgentSkill(body: AgentInstallSkillRequest) {
+  return invokeWrapper<InstallSkillResult>(TauriCmd.AgentInstallSkill, { body });
 }
 
 export function updateAgentProvider(body: AgentUpdateProviderRequest) {

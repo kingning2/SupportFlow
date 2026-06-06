@@ -1,3 +1,4 @@
-mod read;
+#[path = "read.rs"]
+mod read_tool;
 
-pub use read::ReadTool;
+pub use read_tool::ReadTool;

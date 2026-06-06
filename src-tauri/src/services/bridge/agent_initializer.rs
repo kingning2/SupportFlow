@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::agent::{
+use crate::services::agent::{
     build_agent_system_prompt, create_memory_manager, restore_agent_messages, Agent, BotLlmModel,
     LlmBridgeConfig, McpToolLoader, ToolManagerConfig,
 };

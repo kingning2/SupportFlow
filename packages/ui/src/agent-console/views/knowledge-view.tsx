@@ -13,9 +13,11 @@ import {
   type AgentKnowledgeGraphLink,
   type AgentKnowledgeGraphNode
 } from "@supportflow/shared/tauri-bridge/cmd/agent";
-import { ViewShell } from "../shared/console-brand";
-import { Button } from "@supportflow/ui/button";
 import { cn } from "@supportflow/shared";
+import { Button } from "@supportflow/ui/button";
+
+import { ViewShell } from "../shared/console-brand";
+import { KnowledgeGraphPanel } from "./knowledge-graph-panel";
 
 type KnowledgeTab = "docs" | "graph";
 
@@ -90,8 +92,7 @@ export function KnowledgeView() {
     }
   };
 
-  // Opens the system file dialog from Rust side. Rust reads the files directly (better for large docs,
-  // and ensures MarkItDown path is used with local FS access).
+  // Opens the system file dialog from Rust side. Rust reads the files directly and performs ingest.
   const handleUploadClick = async () => {
     setUploading(true);
     setStatusMessage(t("knowledge_uploading"));
@@ -103,7 +104,7 @@ export function KnowledgeView() {
       if (result.count > 0) {
         let msg = t("knowledge_upload_success", { count: result.count });
         if (result.memorySynced) {
-          msg += ` · ${t("knowledge_upload_memory_synced")}`;
+          msg += ` / ${t("knowledge_upload_memory_synced")}`;
         }
         setStatusMessage(msg);
         setStatusTone("success");
@@ -111,6 +112,9 @@ export function KnowledgeView() {
         const first = result.results[0]?.path;
         if (first) {
           await openFile(first);
+        }
+        if (tab === "graph") {
+          await loadGraph();
         }
       } else {
         setStatusMessage(t("knowledge_upload_failed"));
@@ -143,9 +147,9 @@ export function KnowledgeView() {
               <p
                 className={cn(
                   "text-xs whitespace-pre-wrap",
-                  statusTone === "success" && "text-emerald-600 dark:text-emerald-400",
-                  statusTone === "error" && "text-red-600 dark:text-red-400",
-                  statusTone === "info" && "text-slate-500"
+                  statusTone === "success" && "text-success",
+                  statusTone === "error" && "text-destructive",
+                  statusTone === "info" && "text-muted-foreground"
                 )}
               >
                 {statusMessage}
@@ -164,11 +168,11 @@ export function KnowledgeView() {
               <Upload className="mr-1.5 size-3.5" />
               {uploading ? t("knowledge_uploading") : t("knowledge_upload_btn")}
             </Button>
-            <div className="flex items-center rounded-lg bg-slate-100 p-0.5 dark:bg-white/10">
+            <div className="bg-muted flex items-center rounded-lg p-0.5">
               <Button
                 type="button"
                 size="sm"
-                className={cn("h-8 px-3 text-xs", tab === "docs" && "bg-white dark:bg-[#1A1A1A]")}
+                className={cn("h-8 px-3 text-xs", tab === "docs" && "bg-background")}
                 variant={tab === "docs" ? "default" : "ghost"}
                 onClick={() => setTab("docs")}
               >
@@ -178,7 +182,7 @@ export function KnowledgeView() {
               <Button
                 type="button"
                 size="sm"
-                className={cn("h-8 px-3 text-xs", tab === "graph" && "bg-white dark:bg-[#1A1A1A]")}
+                className={cn("h-8 px-3 text-xs", tab === "graph" && "bg-background")}
                 variant={tab === "graph" ? "default" : "ghost"}
                 onClick={() => setTab("graph")}
               >
@@ -191,16 +195,18 @@ export function KnowledgeView() {
 
         {tab === "docs" ? (
           <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[280px_1fr]">
-            <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-white/10">
-              <div className="border-b border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 dark:border-white/10">
+            <div className="bg-card border-border overflow-hidden rounded-xl border">
+              <div className="border-border text-muted-foreground border-b px-3 py-2 text-xs font-medium">
                 {t("knowledge_tab_docs")} ({files.length})
               </div>
               <div className="max-h-[calc(100vh-240px)] overflow-y-auto p-2">
                 {loading ? (
-                  <p className="px-2 py-4 text-sm text-slate-400">{t("knowledge_loading_desc")}</p>
+                  <p className="text-muted-foreground px-2 py-4 text-sm">
+                    {t("knowledge_loading_desc")}
+                  </p>
                 ) : files.length === 0 ? (
                   <div className="space-y-3 px-2 py-4">
-                    <p className="text-sm text-slate-400">{t("knowledge_empty_hint")}</p>
+                    <p className="text-muted-foreground text-sm">{t("knowledge_empty_hint")}</p>
                     <Button
                       type="button"
                       size="sm"
@@ -218,35 +224,33 @@ export function KnowledgeView() {
                       key={file.path}
                       type="button"
                       className={cn(
-                        "mb-1 flex w-full flex-col rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-slate-100 dark:hover:bg-white/5",
-                        activePath === file.path && "bg-slate-200/80 dark:bg-white/10"
+                        "hover:bg-accent/40 mb-1 flex w-full flex-col rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                        activePath === file.path && "bg-accent/70"
                       )}
                       onClick={() => void openFile(file.path)}
                     >
-                      <span className="font-medium text-slate-700 dark:text-slate-200">
-                        {file.title}
-                      </span>
-                      <span className="font-mono text-xs text-slate-400">{file.path}</span>
+                      <span className="text-foreground font-medium">{file.title}</span>
+                      <span className="text-muted-foreground font-mono text-xs">{file.path}</span>
                     </button>
                   ))
                 )}
               </div>
             </div>
 
-            <div className="flex min-h-[320px] flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-white/10">
+            <div className="bg-card border-border flex min-h-[320px] flex-col overflow-hidden rounded-xl border">
               {activePath ? (
                 <>
-                  <div className="border-b border-slate-200 px-4 py-2 font-mono text-xs text-slate-500 dark:border-white/10">
+                  <div className="border-border text-muted-foreground border-b px-4 py-2 font-mono text-xs">
                     {activePath}
                   </div>
-                  <pre className="max-h-[calc(100vh-272px)] flex-1 overflow-y-auto p-4 text-sm whitespace-pre-wrap text-slate-700 dark:text-slate-200">
+                  <pre className="text-foreground max-h-[calc(100vh-272px)] flex-1 overflow-y-auto p-4 text-sm whitespace-pre-wrap">
                     {content || t("knowledge_select_hint")}
                   </pre>
                 </>
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-                  <BookOpen className="size-8 text-emerald-400" />
-                  <p className="text-sm text-slate-500">{t("knowledge_select_hint")}</p>
+                  <BookOpen className="text-primary size-8" />
+                  <p className="text-muted-foreground text-sm">{t("knowledge_select_hint")}</p>
                   <Button
                     type="button"
                     size="sm"
@@ -262,63 +266,13 @@ export function KnowledgeView() {
             </div>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-white/10">
-            {graphLoading ? (
-              <p className="p-8 text-center text-sm text-slate-400">
-                {t("knowledge_loading_desc")}
-              </p>
-            ) : graphNodes.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 p-8 text-center">
-                <p className="text-sm text-slate-400">{t("knowledge_empty_hint")}</p>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  disabled={uploading}
-                  onClick={handleUploadClick}
-                >
-                  <Upload className="mr-1.5 size-3.5" />
-                  {t("knowledge_upload_btn")}
-                </Button>
-              </div>
-            ) : (
-              <div className="grid gap-6 p-4 lg:grid-cols-2">
-                <section>
-                  <h3 className="mb-2 text-sm font-semibold">
-                    {t("knowledge_graph_nodes")} ({graphNodes.length})
-                  </h3>
-                  <ul className="max-h-[50vh] space-y-1 overflow-y-auto text-sm">
-                    {graphNodes.map((node) => (
-                      <li
-                        key={node.id}
-                        className="rounded-md border border-slate-100 px-2 py-1.5 dark:border-white/10"
-                      >
-                        <span className="font-medium">{node.label}</span>
-                        <span className="text-muted-foreground ml-2 font-mono text-xs">
-                          {node.category}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-                <section>
-                  <h3 className="mb-2 text-sm font-semibold">
-                    {t("knowledge_graph_links")} ({graphLinks.length})
-                  </h3>
-                  <ul className="max-h-[50vh] space-y-1 overflow-y-auto font-mono text-xs">
-                    {graphLinks.map((link) => (
-                      <li
-                        key={`${link.source}-${link.target}`}
-                        className="rounded-md border border-slate-100 px-2 py-1.5 dark:border-white/10"
-                      >
-                        {link.source} → {link.target}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              </div>
-            )}
-          </div>
+          <KnowledgeGraphPanel
+            nodes={graphNodes}
+            links={graphLinks}
+            loading={graphLoading}
+            uploading={uploading}
+            onUpload={handleUploadClick}
+          />
         )}
       </div>
     </ViewShell>

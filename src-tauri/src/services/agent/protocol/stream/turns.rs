@@ -1,4 +1,4 @@
-﻿//! Turn identification and aggressive trim (`agent_stream.py`).
+//! Turn identification and aggressive trim (`agent_stream.py`).
 
 use serde_json::{json, Value};
 use tracing::{info, warn};
@@ -73,15 +73,12 @@ pub fn aggressive_trim_for_overflow(messages: &mut Vec<Value>) -> bool {
             if msg.get("role").and_then(|r| r.as_str()) == Some("user") {
                 if let Some(s) = msg.get("content").and_then(|c| c.as_str()) {
                     if s.len() > USER_MSG_LIMIT {
-                        let new_content = format!(
-                            "{}{}",
-                            &s[..USER_MSG_LIMIT],
-                            format!(
-                                "\n\n[Message truncated for context recovery: {} -> {} chars]",
-                                s.len(),
-                                USER_MSG_LIMIT
-                            )
+                        let suffix = format!(
+                            "\n\n[Message truncated for context recovery: {} -> {} chars]",
+                            s.len(),
+                            USER_MSG_LIMIT
                         );
+                        let new_content = format!("{}{}", &s[..USER_MSG_LIMIT], suffix);
                         msg.as_object_mut()
                             .expect("msg object")
                             .insert("content".into(), json!(new_content));
@@ -97,14 +94,11 @@ pub fn aggressive_trim_for_overflow(messages: &mut Vec<Value>) -> bool {
                 if let Some(s) = block.get("content").and_then(|c| c.as_str()) {
                     if s.len() > AGGRESSIVE_LIMIT {
                         let original_len = s.len();
-                        let new_s = format!(
-                            "{}{}",
-                            &s[..AGGRESSIVE_LIMIT],
-                            format!(
-                                "\n\n[Truncated for context recovery: {} -> {} chars]",
-                                original_len, AGGRESSIVE_LIMIT
-                            )
+                        let suffix = format!(
+                            "\n\n[Truncated for context recovery: {} -> {} chars]",
+                            original_len, AGGRESSIVE_LIMIT
                         );
+                        let new_s = format!("{}{}", &s[..AGGRESSIVE_LIMIT], suffix);
                         block
                             .as_object_mut()
                             .expect("block")
@@ -136,14 +130,11 @@ pub fn aggressive_trim_for_overflow(messages: &mut Vec<Value>) -> bool {
                 if let Some(Value::String(text)) = block.get_mut("text") {
                     if text.len() > USER_MSG_LIMIT {
                         let len = text.len();
-                        let new_text = format!(
-                            "{}{}",
-                            &text[..USER_MSG_LIMIT],
-                            format!(
-                                "\n\n[Message truncated for context recovery: {} -> {} chars]",
-                                len, USER_MSG_LIMIT
-                            )
+                        let suffix = format!(
+                            "\n\n[Message truncated for context recovery: {} -> {} chars]",
+                            len, USER_MSG_LIMIT
                         );
+                        let new_text = format!("{}{}", &text[..USER_MSG_LIMIT], suffix);
                         *text = new_text;
                         truncated += 1;
                     }

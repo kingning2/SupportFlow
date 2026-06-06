@@ -95,6 +95,14 @@ export interface AgentConsoleState {
   requestTimeout?: number;
 }
 
+export interface AgentGetSkillDetailRequest {
+  name: string;
+}
+
+export interface AgentInstallSkillRequest {
+  source: string;
+}
+
 export interface AgentKnowledgeFile {
   path: string;
   title: string;
@@ -130,6 +138,11 @@ export interface AgentKnowledgeIngestItem {
   truncated: boolean;
   charCount: number;
   archive: string;
+}
+
+/** Request for the picker command (category only; dialog is shown on Rust side). */
+export interface AgentKnowledgePickUploadRequest {
+  category?: string;
 }
 
 export interface AgentKnowledgeReadRequest {
@@ -253,4 +266,25 @@ export interface AgentUpdateProviderRequest {
 
 export interface AppSession {
   currentLanguage: string;
+}
+
+export interface InstallSkillResult {
+  installed_names: string[];
+  source: string;
+}
+
+export interface LicenseStatusDto {
+  machineCode: string;
+  valid: boolean;
+  reason?: string;
+}
+
+export interface SkillDetail {
+  name: string;
+  description: string;
+  enabled: boolean;
+  source: string;
+  filePath: string;
+  baseDir: string;
+  disableModelInvocation: boolean;
 }

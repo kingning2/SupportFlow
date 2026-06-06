@@ -3,17 +3,17 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::agent::McpToolLoader;
 use crate::context::channel::ChannelBridge;
 use crate::context::workspace_console;
+use crate::services::agent::McpToolLoader;
 use tauri::AppHandle;
 use tokio::sync::Mutex;
 
 use super::helpers::{
-    build_bridge_stack, deferred_autostart_channels, load_models_config_from_path,
-    resolve_agent_dirs, should_skip_deferred_channel_autostart,
+    deferred_autostart_channels, resolve_agent_dirs, should_skip_deferred_channel_autostart,
 };
 use super::AgentRuntime;
+use crate::services::agent::{build_bridge_stack, load_models_config_from_path};
 
 impl AgentRuntime {
     pub fn app_handle(&self) -> AppHandle {

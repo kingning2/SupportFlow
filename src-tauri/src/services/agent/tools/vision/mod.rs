@@ -1,6 +1,7 @@
 //! `agent/tools/vision/`
 
 mod config;
-mod vision;
+#[path = "vision.rs"]
+mod vision_tool;
 
-pub use vision::VisionTool;
+pub use vision_tool::VisionTool;

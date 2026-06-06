@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::agent::{
+use crate::services::agent::{
     conversation_store_for_workspace, get_cancel_registry, persist_agent_run, Agent,
     AgentEventCallback, CancelHandle, McpToolLoader, RunStreamOptions,
 };
@@ -14,7 +14,7 @@ use tracing::{error, info};
 
 use super::agent_event_handler::{make_event_callback, AgentEventHandler};
 use super::agent_initializer::{AgentInitOptions, AgentInitializer};
-use super::bridge::Bridge;
+use super::bridge_runtime::Bridge;
 
 /// Integrates super `Agent` with channel/desktop runtime.
 pub struct AgentBridge {
@@ -218,7 +218,7 @@ impl AgentBridge {
 
 fn release_cancel(request_id: &Option<String>, session_id: &Option<String>) {
     if let Some(key) = request_id.as_ref().or(session_id.as_ref()) {
-        let _ = get_cancel_registry().unregister(key);
+        get_cancel_registry().unregister(key);
     }
 }
 

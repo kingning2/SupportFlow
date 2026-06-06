@@ -500,7 +500,7 @@ fn encode_embedding(embedding: Option<&[f32]>) -> Option<Vec<u8>> {
 }
 
 fn decode_embedding(raw: &[u8]) -> Option<Vec<f32>> {
-    if raw.len() % 4 != 0 {
+    if !raw.len().is_multiple_of(4) {
         return None;
     }
     Some(
@@ -560,9 +560,7 @@ fn contains_cjk(text: &str) -> bool {
     })
 }
 
-fn row_to_vector_parts(
-    row: &rusqlite::Row<'_>,
-) -> rusqlite::Result<(
+type VectorRowParts = (
     String,
     i64,
     i64,
@@ -570,7 +568,9 @@ fn row_to_vector_parts(
     String,
     Option<String>,
     Option<Vec<u8>>,
-)> {
+);
+
+fn row_to_vector_parts(row: &rusqlite::Row<'_>) -> rusqlite::Result<VectorRowParts> {
     Ok((
         row.get(0)?,
         row.get(1)?,

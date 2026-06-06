@@ -8,6 +8,7 @@ members = [
     "crates/process_runtime",
     "crates/cli",
 ]
+exclude = ["crates/agent", "crates/bridge"]
 
 [package]
 name = "tauri-app"
@@ -36,6 +37,9 @@ channel-wework = []
 tauri-build = { version = "2", features = [] }
 chrono = { version = "0.4", features = ["clock"] }
 serde = { version = "1", features = ["derive"] }
+
+[package.metadata.cargo-machete]
+ignored = ["tauri-build"]
 
 [dependencies]
 fs_io = { path = "crates/fs_io" }
@@ -76,6 +80,7 @@ similar = "2"
 tracing = "0.1"
 walkdir = "2"
 chromiumoxide = { version = "0.7", default-features = false, features = ["tokio-runtime"] }
+anyhow = "1"
 
 [dev-dependencies]
 tempfile = "3"

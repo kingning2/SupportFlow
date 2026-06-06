@@ -1,4 +1,9 @@
 # encoding:utf-8
+"""Legacy compatibility DTO for bridge reply payloads.
+
+Keep this file as a minimal Python-side data shape. New application behavior
+and reply orchestration should be implemented in Rust, not added here.
+"""
 
 from enum import Enum
 

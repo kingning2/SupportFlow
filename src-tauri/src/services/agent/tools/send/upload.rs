@@ -21,6 +21,9 @@ impl SendFileUploader for NoopSendFileUploader {
 }
 
 pub type SharedSendFileUploader = std::sync::Arc<dyn SendFileUploader>;
+type SendFileUploadFuture =
+    std::pin::Pin<Box<dyn std::future::Future<Output = Option<String>> + Send>>;
+type SendFileUploadCallback = dyn Fn(PathBuf, PathBuf) -> SendFileUploadFuture + Send + Sync;
 
 pub fn noop_uploader() -> SharedSendFileUploader {
     std::sync::Arc::new(NoopSendFileUploader)
@@ -29,15 +32,7 @@ pub fn noop_uploader() -> SharedSendFileUploader {
 /// Callback-based uploader for app integration.
 #[allow(dead_code)]
 pub struct CallbackSendFileUploader {
-    pub f: std::sync::Arc<
-        dyn Fn(
-                PathBuf,
-                PathBuf,
-            )
-                -> std::pin::Pin<Box<dyn std::future::Future<Output = Option<String>> + Send>>
-            + Send
-            + Sync,
-    >,
+    pub f: std::sync::Arc<SendFileUploadCallback>,
 }
 
 #[async_trait]

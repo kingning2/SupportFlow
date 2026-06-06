@@ -23,25 +23,13 @@ pub struct ChannelRuntimeConfig {
     pub image_create_prefix: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ChannelRuntimeResult {
     pub should_handle: bool,
     pub normalized_content: String,
     pub reply_prefix: String,
     pub reply_suffix: String,
     pub mention_prefix: String,
-}
-
-impl Default for ChannelRuntimeResult {
-    fn default() -> Self {
-        Self {
-            should_handle: false,
-            normalized_content: String::new(),
-            reply_prefix: String::new(),
-            reply_suffix: String::new(),
-            mention_prefix: String::new(),
-        }
-    }
 }
 
 pub fn process_message(
@@ -55,35 +43,20 @@ pub fn process_message(
     }
 
     if ctx.is_group {
-        let match_all = prefix_matches_all(&cfg.group_chat_prefix);
-        let has_prefix = match_all || find_prefix(&content, &cfg.group_chat_prefix).is_some();
-        let has_keyword = contains_keyword(&content, &cfg.group_chat_keyword);
-        if !(has_prefix || has_keyword) {
+        if !should_handle_group_message(&content, cfg) {
             return out;
         }
-        if !match_all {
-            if let Some(prefix) = find_prefix(&content, &cfg.group_chat_prefix) {
-                content = content.replacen(prefix, "", 1).trim().to_string();
-            }
-        }
+        content = strip_prefix_if_needed(content, &cfg.group_chat_prefix);
         out.reply_prefix = cfg.group_chat_reply_prefix.clone();
         out.reply_suffix = cfg.group_chat_reply_suffix.clone();
-        if !ctx.no_need_at {
-            if let Some(name) = &ctx.actual_user_nickname {
-                if !name.is_empty() {
-                    out.mention_prefix = format!("@{}\n", name);
-                }
-            }
-        }
+        out.mention_prefix = build_mention_prefix(ctx);
     } else {
-        let match_all = prefix_matches_all(&cfg.single_chat_prefix);
-        if match_all {
-            // single_chat_prefix: [""] — reply to every direct message
-        } else if let Some(prefix) = find_prefix(&content, &cfg.single_chat_prefix) {
-            content = content.replacen(prefix, "", 1).trim().to_string();
-        } else {
+        if !prefix_matches_all(&cfg.single_chat_prefix)
+            && find_prefix(&content, &cfg.single_chat_prefix).is_none()
+        {
             return out;
         }
+        content = strip_prefix_if_needed(content, &cfg.single_chat_prefix);
         out.reply_prefix = cfg.single_chat_reply_prefix.clone();
         out.reply_suffix = cfg.single_chat_reply_suffix.clone();
     }
@@ -151,6 +124,45 @@ fn push_unique(out: &mut Vec<(String, String)>, item: (String, String), limit: u
 /// `prefixes` contains `""` — match every message (SupportFlow Agent-style config).
 fn prefix_matches_all(prefixes: &[String]) -> bool {
     prefixes.iter().any(|p| p.is_empty())
+}
+
+fn should_handle_group_message(content: &str, cfg: &ChannelRuntimeConfig) -> bool {
+    if prefix_matches_all(&cfg.group_chat_prefix) {
+        return true;
+    }
+
+    if find_prefix(content, &cfg.group_chat_prefix).is_some() {
+        return true;
+    }
+
+    contains_keyword(content, &cfg.group_chat_keyword)
+}
+
+fn strip_prefix_if_needed(content: String, prefixes: &[String]) -> String {
+    if prefix_matches_all(prefixes) {
+        return content;
+    }
+
+    let Some(prefix) = find_prefix(&content, prefixes) else {
+        return content;
+    };
+
+    content.replacen(prefix, "", 1).trim().to_string()
+}
+
+fn build_mention_prefix(ctx: &ChannelRuntimeContext) -> String {
+    if ctx.no_need_at {
+        return String::new();
+    }
+
+    let Some(name) = &ctx.actual_user_nickname else {
+        return String::new();
+    };
+    if name.is_empty() {
+        return String::new();
+    }
+
+    format!("@{}\n", name)
 }
 
 fn find_prefix<'a>(content: &'a str, prefixes: &'a [String]) -> Option<&'a str> {

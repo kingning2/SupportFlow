@@ -75,6 +75,8 @@ pub fn run() {
             cmd::agent_ipc::agent_clear_context,
             cmd::agent_ipc::agent_new_session,
             cmd::agent_ipc::agent_refresh_skills,
+            cmd::agent_ipc::agent_get_skill_detail,
+            cmd::agent_ipc::agent_install_skill,
             cmd::agent_ipc::agent_update_provider,
             cmd::agent_ipc::agent_clear_provider,
             cmd::agent_ipc::agent_set_chat_model,

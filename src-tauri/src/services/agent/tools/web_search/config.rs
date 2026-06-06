@@ -170,23 +170,27 @@ mod tests {
 
     #[test]
     fn auto_picks_first_configured_provider() {
-        let mut cfg = ModelsConfig::default();
-        cfg.linkai_api_key = Some("lk".into());
+        let cfg = ModelsConfig {
+            linkai_api_key: Some("lk".into()),
+            ..Default::default()
+        };
         let settings = WebSearchSettings::from_models(&cfg);
         assert_eq!(settings.resolve_provider(None).as_deref(), Some("linkai"));
     }
 
     #[test]
     fn respects_explicit_provider_when_configured() {
-        let mut cfg = ModelsConfig::default();
-        cfg.tools = Some(models::ToolsConfig {
-            web_search: Some(models::WebSearchConfig {
-                bocha_api_key: Some("b".into()),
+        let cfg = ModelsConfig {
+            linkai_api_key: Some("lk".into()),
+            tools: Some(models::ToolsConfig {
+                web_search: Some(models::WebSearchConfig {
+                    bocha_api_key: Some("b".into()),
+                    ..Default::default()
+                }),
                 ..Default::default()
             }),
             ..Default::default()
-        });
-        cfg.linkai_api_key = Some("lk".into());
+        };
         let settings = WebSearchSettings::from_models(&cfg);
         assert_eq!(
             settings.resolve_provider(Some("linkai")).as_deref(),

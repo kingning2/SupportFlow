@@ -2,9 +2,11 @@
 
 use std::sync::Arc;
 
-use crate::agent::{get_cancel_registry, AgentEventCallback, CancelHandle, RunStreamOptions};
 use crate::events::names::{AGENT_RUN_FINISHED, AGENT_STREAM_CHUNK};
 use crate::events::payloads::{AgentRunFinished, AgentStreamChunk};
+use crate::services::agent::{
+    get_cancel_registry, AgentEventCallback, CancelHandle, RunStreamOptions,
+};
 use tauri::{AppHandle, Emitter};
 
 use super::AgentRuntime;

@@ -13,15 +13,14 @@ mod stream;
 mod workspace;
 mod workspace_data;
 
-pub use helpers::resolve_config_path;
-pub use stream::{cancel_request, register_cancel, run_agent_message};
+pub use stream::cancel_request;
 
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::agent::McpToolLoader;
-use crate::bridge::BridgeRuntime;
 use crate::context::channel::ChannelBridge;
+use crate::services::agent::McpToolLoader;
+use crate::services::bridge::BridgeRuntime;
 use models::ModelsConfig;
 use tokio::sync::Mutex;
 

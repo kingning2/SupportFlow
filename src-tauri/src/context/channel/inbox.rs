@@ -5,9 +5,7 @@ use std::sync::Mutex;
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
-use typeshare::typeshare;
 
-#[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelMessageDto {
@@ -20,7 +18,6 @@ pub struct ChannelMessageDto {
     pub created_at: i64,
 }
 
-#[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelConversationSummaryDto {
@@ -34,7 +31,6 @@ pub struct ChannelConversationSummaryDto {
     pub unread: Option<i32>,
 }
 
-#[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelInboxSnapshotDto {
@@ -42,7 +38,6 @@ pub struct ChannelInboxSnapshotDto {
     pub messages: Vec<ChannelMessageDto>,
 }
 
-#[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelInboxMessagePayload {

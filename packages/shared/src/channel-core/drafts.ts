@@ -1,6 +1,31 @@
 import type { ChannelCatalogEntry, ChannelFieldDrafts } from "@supportflow/shared";
 import { channelFieldValueString, isChannelMaskedSecret } from "@supportflow/shared";
 
+function resolveBooleanFieldValue(channelValue: unknown, draftValue: boolean | undefined): boolean {
+  return draftValue ?? channelFieldValueString(channelValue) === "true";
+}
+
+function resolveNumberFieldValue(channelValue: unknown, draftValue: string | undefined): number {
+  return Number.parseInt(draftValue ?? channelFieldValueString(channelValue), 10) || 0;
+}
+
+function shouldSkipSecretField(
+  channelValue: unknown,
+  fieldKey: string,
+  rawDraftValue: string,
+  maskedCleared: Record<string, boolean>
+): boolean {
+  if (isChannelMaskedSecret(rawDraftValue)) {
+    return true;
+  }
+
+  return isChannelMaskedSecret(channelFieldValueString(channelValue)) && !maskedCleared[fieldKey];
+}
+
+function resolveStringFieldValue(channelValue: unknown, draftValue: string): string {
+  return draftValue || channelFieldValueString(channelValue);
+}
+
 export function buildConfigFromDrafts(
   channel: ChannelCatalogEntry,
   drafts: ChannelFieldDrafts
@@ -8,25 +33,24 @@ export function buildConfigFromDrafts(
   const config: Record<string, string | number | boolean> = {};
   for (const field of channel.fields) {
     if (field.type === "bool" || field.type === "checkbox") {
-      config[field.key] =
-        drafts.bools[field.key] ?? channelFieldValueString(field.value) === "true";
-    } else if (field.type === "number") {
-      config[field.key] =
-        Number.parseInt(drafts.strings[field.key] ?? channelFieldValueString(field.value), 10) || 0;
-    } else {
-      const raw = drafts.strings[field.key] ?? "";
-      if (field.type === "secret" && isChannelMaskedSecret(raw)) {
-        continue;
-      }
-      if (
-        field.type === "secret" &&
-        isChannelMaskedSecret(channelFieldValueString(field.value)) &&
-        !drafts.maskedCleared[field.key]
-      ) {
-        continue;
-      }
-      config[field.key] = raw || channelFieldValueString(field.value);
+      config[field.key] = resolveBooleanFieldValue(field.value, drafts.bools[field.key]);
+      continue;
     }
+
+    if (field.type === "number") {
+      config[field.key] = resolveNumberFieldValue(field.value, drafts.strings[field.key]);
+      continue;
+    }
+
+    const raw = drafts.strings[field.key] ?? "";
+    if (
+      field.type === "secret" &&
+      shouldSkipSecretField(field.value, field.key, raw, drafts.maskedCleared)
+    ) {
+      continue;
+    }
+
+    config[field.key] = resolveStringFieldValue(field.value, raw);
   }
   return config;
 }

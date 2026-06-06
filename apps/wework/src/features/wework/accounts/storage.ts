@@ -108,6 +108,62 @@ export function defaultAccountLabel(config: WeworkAccountConfig): string {
   return parts[parts.length - 1] ?? "";
 }
 
+function findExistingAccount(
+  accounts: WeworkSavedAccount[],
+  fingerprint: string,
+  weworkUserId?: string
+): WeworkSavedAccount | undefined {
+  const trimmedUserId = weworkUserId?.trim();
+  if (trimmedUserId) {
+    const account = accounts.find((item) => item.weworkUserId === trimmedUserId);
+    if (account) {
+      return account;
+    }
+  }
+
+  return fingerprint
+    ? accounts.find((item) => configFingerprint(item.config) === fingerprint)
+    : undefined;
+}
+
+function buildUpdatedAccount(params: {
+  config: WeworkAccountConfig;
+  existing: WeworkSavedAccount;
+  label?: string;
+  now: number;
+  weworkUserId?: string;
+}): WeworkSavedAccount {
+  const { config, existing, label, now, weworkUserId } = params;
+  return {
+    ...existing,
+    config: { ...existing.config, ...config },
+    label: label?.trim() || existing.label,
+    weworkUserId: weworkUserId?.trim() || existing.weworkUserId,
+    lastConnectedAt: now,
+    contactsSynced: existing.contactsSynced,
+    contactsSyncedAt: existing.contactsSyncedAt
+  };
+}
+
+function buildNewAccount(params: {
+  config: WeworkAccountConfig;
+  label?: string;
+  now: number;
+  weworkUserId?: string;
+}): WeworkSavedAccount {
+  const { config, label, now, weworkUserId } = params;
+  return {
+    id: crypto.randomUUID(),
+    label: label?.trim() || defaultAccountLabel(config) || "WeCom",
+    config,
+    createdAt: now,
+    lastConnectedAt: now,
+    weworkUserId: weworkUserId?.trim() || undefined,
+    contactsSynced: false,
+    contactsSyncedAt: undefined
+  };
+}
+
 export async function loadSavedAccounts(): Promise<WeworkSavedAccount[]> {
   const list = await weworkListAccounts();
   const accounts = list.map(dtoToAccount);
@@ -131,42 +187,16 @@ export async function upsertSavedAccount(
 ): Promise<{ accounts: WeworkSavedAccount[]; account: WeworkSavedAccount }> {
   const fp = configFingerprint(config);
   const now = Date.now();
-  const trimmedLabel = label?.trim();
-  const trimmedUserId = weworkUserId?.trim();
-
-  let existing: WeworkSavedAccount | undefined;
-  if (trimmedUserId) {
-    existing = accounts.find((a) => a.weworkUserId === trimmedUserId);
-  }
-  if (!existing && fp) {
-    existing = accounts.find((a) => configFingerprint(a.config) === fp);
-  }
+  const existing = findExistingAccount(accounts, fp, weworkUserId);
 
   if (existing) {
-    const next: WeworkSavedAccount = {
-      ...existing,
-      config: { ...existing.config, ...config },
-      label: trimmedLabel || existing.label,
-      weworkUserId: trimmedUserId || existing.weworkUserId,
-      lastConnectedAt: now,
-      contactsSynced: existing.contactsSynced,
-      contactsSyncedAt: existing.contactsSyncedAt
-    };
+    const next = buildUpdatedAccount({ config, existing, label, now, weworkUserId });
     await weworkUpsertAccount(accountToDto(next));
-    const nextAccounts = accounts.map((a) => (a.id === existing!.id ? next : a));
+    const nextAccounts = accounts.map((account) => (account.id === existing.id ? next : account));
     return { accounts: nextAccounts, account: next };
   }
 
-  const account: WeworkSavedAccount = {
-    id: crypto.randomUUID(),
-    label: trimmedLabel || defaultAccountLabel(config) || "WeCom",
-    config,
-    createdAt: now,
-    lastConnectedAt: now,
-    weworkUserId: trimmedUserId || undefined,
-    contactsSynced: false,
-    contactsSyncedAt: undefined
-  };
+  const account = buildNewAccount({ config, label, now, weworkUserId });
   await weworkUpsertAccount(accountToDto(account));
   return { accounts: [account, ...accounts], account };
 }

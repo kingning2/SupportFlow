@@ -13,16 +13,42 @@ export type MainWindowSize = {
 const DEFAULT_SIZE: MainWindowSize = { width: 1200, height: 800 };
 
 /**
+ * 同步主窗口最大化状态到根节点 class，便于桌面壳切换圆角。
+ *
+ * # Arguments
+ *
+ * * `root` - 主窗口根节点
+ */
+async function syncMaximizedClass(root: HTMLElement) {
+  const maximized = await mainWindow.isMaximized();
+  root.classList.toggle("window-maximized", maximized);
+}
+
+/**
  * 在 WebView 内注册主窗体行为：
  * - DPI / 缩放变化时恢复逻辑尺寸
+ * - 最大化切换时同步根节点样式
  * - 关闭请求时销毁所有窗口
+ *
+ * # Arguments
+ *
+ * * `size` - 主窗口默认逻辑尺寸
  */
 export function initWindowConfig(size: MainWindowSize = DEFAULT_SIZE) {
   if (typeof window === "undefined") return;
 
+  const root = document.getElementById("App");
+
   void mainWindow.onScaleChanged(() => {
     void mainWindow.setSize(new LogicalSize(size.width, size.height));
   });
+
+  if (root) {
+    void syncMaximizedClass(root);
+    void mainWindow.onResized(() => {
+      void syncMaximizedClass(root);
+    });
+  }
 
   void mainWindow.onCloseRequested(async () => {
     const allWindow = await Window.getAll();
