@@ -16,6 +16,8 @@ import type { WeworkPageHandlers, WeworkPageState } from "./wework-page-state";
 import { useWeworkPageState } from "./wework-page-state";
 import type { ChannelCatalogEntry } from "@supportflow/shared";
 
+type Translate = (key: string, options?: Record<string, unknown>) => string;
+
 export interface WeworkPageProps {
   lang: string;
   actions: WeworkPageActions;
@@ -96,7 +98,7 @@ function WeworkPageAccountsSection({
   handlers: WeworkPageHandlers;
   lang: string;
   state: WeworkPageState;
-  t: ReturnType<typeof useTranslation>["t"];
+  t: Translate;
 }) {
   return (
     <>
@@ -113,7 +115,7 @@ function WeworkPageAccountsSection({
 
       {state.accounts.length === 0 && !state.showNewForm ? (
         <p className="text-muted-foreground py-8 text-center text-sm">
-          {t("wework_accounts_empty")}
+          {"暂无已保存账号，点击下方「新建连接」添加。"}
         </p>
       ) : (
         <WeworkAccountList
@@ -137,7 +139,7 @@ function WeworkPageAccountsSection({
         <div className="border-channel/25 bg-card mt-4 rounded-xl border p-5 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
             <Radio className="text-channel size-4" />
-            <h2 className="text-foreground font-semibold">{t("wework_account_new")}</h2>
+            <h2 className="text-foreground font-semibold">{"新建连接"}</h2>
           </div>
           <WeworkConnectPanel
             channel={channel}
@@ -174,18 +176,23 @@ export function WeworkPage({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <WeworkPageHeader title={t("wework_menu_account")} description={t("wework_accounts_desc")} />
+      <WeworkPageHeader
+        title={"账号与通道"}
+        description={"保存常用企微配置，需要时手动连接；连接成功后会自动加入列表。"}
+      />
 
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
         {!state.accountsLoaded || channelLoading ? (
-          <WeworkPageLoading text={t("channels_loading")} />
+          <WeworkPageLoading text={"加载通道配置…"} />
         ) : (
           <>
             <WeworkPageError
               backendErrorMessage={state.backendErrorMessage}
-              offlineText={t("wework_accounts_backend_offline")}
-              retryLabel={t("channels_retry")}
-              title={t("channels_python_unreachable_title")}
+              offlineText={
+                "无法连接通道服务，以下为本地已保存的账号；连接与切换需等服务就绪后再试。"
+              }
+              retryLabel={"重试"}
+              title={"通道 sidecar 未就绪"}
               onRetry={handlers.onRetry}
             />
 
@@ -218,7 +225,7 @@ export function WeworkPage({
           onClick={() => handlers.setShowNewForm(true)}
         >
           <Plus className="size-4" />
-          {t("wework_account_new")}
+          {"新建连接"}
         </Button>
       </div>
     </div>

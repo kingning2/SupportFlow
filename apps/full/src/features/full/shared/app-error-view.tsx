@@ -36,11 +36,11 @@ export default function AppErrorView({
       <Card className="w-full max-w-md">
         <CardContent className="pt-6">
           <div className="text-center">
-            <div className="text-lg font-semibold">{t("error_title")}</div>
+            <div className="text-lg font-semibold">{"出錯了"}</div>
             <div className="text-muted-foreground mt-2 text-sm wrap-break-word">{message}</div>
             {error.digest ? (
               <div className="text-muted-foreground/80 mt-2 text-xs wrap-break-word">
-                {t("error_digest", { digest: error.digest })}
+                {`錯誤編號：${error.digest}`}
               </div>
             ) : null}
           </div>
@@ -51,7 +51,7 @@ export default function AppErrorView({
                 {t(backLabelKey)}
               </Button>
             ) : null}
-            <Button onClick={reset}>{t("error_retry")}</Button>
+            <Button onClick={reset}>{"重試"}</Button>
           </div>
         </CardContent>
       </Card>

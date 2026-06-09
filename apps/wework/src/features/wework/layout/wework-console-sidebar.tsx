@@ -63,7 +63,7 @@ export function WeworkConsoleSidebar({
               </p>
               <p className="flex items-center gap-1.5 text-[10px] text-emerald-600">
                 <span className="size-1.5 rounded-full bg-emerald-500" />
-                {t("wework_status_ready")}
+                {"已连接"}
               </p>
             </div>
           </div>
@@ -73,9 +73,7 @@ export function WeworkConsoleSidebar({
               <Building2 className="size-4 text-white" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-foreground truncate text-sm font-semibold">
-                {t("wework_brand_title")}
-              </p>
+              <p className="text-foreground truncate text-sm font-semibold">{"企微智能客服"}</p>
               <p className="text-muted-foreground flex items-center gap-1.5 text-[10px]">
                 <span
                   className={cn(

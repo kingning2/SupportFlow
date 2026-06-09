@@ -10,7 +10,7 @@ export {
   channelLangFromI18n,
   isChannelMaskedSecret,
   localizeChannelText
-} from "./channel/i18n";
+} from "./channel-core/utils";
 
 export {
   buildConfigFromDrafts,

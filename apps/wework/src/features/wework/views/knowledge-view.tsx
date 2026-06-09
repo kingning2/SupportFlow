@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { BookOpen, FolderTree, Network, Trash2, Upload } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import {
   getAgentKnowledgeGraph,
@@ -22,7 +21,6 @@ import { KnowledgeGraphPanel } from "@supportflow/ui/agent-console/views/knowled
 type KnowledgeTab = "docs" | "graph";
 
 export function KnowledgeView() {
-  const { t } = useTranslation("console");
   const [tab, setTab] = useState<KnowledgeTab>("docs");
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -94,16 +92,16 @@ export function KnowledgeView() {
 
   const handleUploadClick = async () => {
     setUploading(true);
-    setStatusMessage(t("knowledge_uploading"));
+    setStatusMessage("正在导入…");
     setStatusTone("info");
 
     try {
       const result = await pickAndUploadKnowledge("uploads");
 
       if (result.count > 0) {
-        let msg = t("knowledge_upload_success", { count: result.count });
+        let msg = `已导入 ${result.count} 个文档`;
         if (result.memorySynced) {
-          msg += ` / ${t("knowledge_upload_memory_synced")}`;
+          msg += ` / ${"记忆索引已更新"}`;
         }
         setStatusMessage(msg);
         setStatusTone("success");
@@ -116,12 +114,12 @@ export function KnowledgeView() {
           await loadGraph();
         }
       } else {
-        setStatusMessage(t("knowledge_upload_failed"));
+        setStatusMessage("导入失败");
         setStatusTone("error");
       }
 
       if (result.errors.length > 0) {
-        const partial = t("knowledge_upload_partial", { count: result.errors.length });
+        const partial = `${result.errors.length} 个文件导入失败`;
         const detail = result.errors.map((e) => `${e.file}: ${e.message}`).join("\n");
         setStatusMessage((prev) =>
           prev ? `${prev}\n${partial}\n${detail}` : `${partial}\n${detail}`
@@ -130,7 +128,7 @@ export function KnowledgeView() {
       }
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
-      setStatusMessage(`${t("knowledge_upload_failed")}: ${detail}`);
+      setStatusMessage(`${"导入失败"}: ${detail}`);
       setStatusTone("error");
     } finally {
       setUploading(false);
@@ -154,8 +152,8 @@ export function KnowledgeView() {
       <div className="border-border/70 bg-card/88 shrink-0 border-b px-6 py-4 backdrop-blur">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <h2 className="text-foreground text-base font-semibold">{t("knowledge_title")}</h2>
-            <p className="text-muted-foreground mt-1 text-sm">{t("knowledge_desc")}</p>
+            <h2 className="text-foreground text-base font-semibold">{"知识库"}</h2>
+            <p className="text-muted-foreground mt-1 text-sm">{"浏览和探索你的知识库"}</p>
             {statusMessage ? (
               <p
                 className={cn(
@@ -178,7 +176,7 @@ export function KnowledgeView() {
               onClick={handleUploadClick}
             >
               <Upload className="mr-1.5 size-3.5" />
-              {uploading ? t("knowledge_uploading") : t("knowledge_upload_btn")}
+              {uploading ? "正在导入…" : "上传文档"}
             </Button>
             <div className="bg-muted flex items-center rounded-lg p-0.5">
               <Button
@@ -189,7 +187,7 @@ export function KnowledgeView() {
                 onClick={() => setTab("docs")}
               >
                 <FolderTree className="mr-1.5 size-3.5" />
-                {t("knowledge_tab_docs")}
+                {"文档"}
               </Button>
               <Button
                 type="button"
@@ -199,7 +197,7 @@ export function KnowledgeView() {
                 onClick={() => setTab("graph")}
               >
                 <Network className="mr-1.5 size-3.5" />
-                {t("knowledge_tab_graph")}
+                {"图谱"}
               </Button>
             </div>
           </div>
@@ -211,16 +209,18 @@ export function KnowledgeView() {
           <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[300px_1fr]">
             <div className="bg-card border-border flex min-h-0 flex-col overflow-hidden rounded-2xl border shadow-sm">
               <div className="border-border text-muted-foreground border-b px-4 py-3 text-xs font-medium">
-                {t("knowledge_tab_docs")} ({files.length})
+                {"文档"} ({files.length})
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto p-2">
                 {loading ? (
-                  <p className="text-muted-foreground px-2 py-4 text-sm">
-                    {t("knowledge_loading_desc")}
-                  </p>
+                  <p className="text-muted-foreground px-2 py-4 text-sm">{"加载知识库中…"}</p>
                 ) : files.length === 0 ? (
                   <div className="space-y-3 px-2 py-4">
-                    <p className="text-muted-foreground text-sm">{t("knowledge_empty_hint")}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {
+                        "暂无知识文档。点击「上传文档」导入 PDF、Word 等，或在工作区 knowledge/ 添加 Markdown。"
+                      }
+                    </p>
                     <Button
                       type="button"
                       size="sm"
@@ -229,7 +229,7 @@ export function KnowledgeView() {
                       onClick={handleUploadClick}
                     >
                       <Upload className="mr-1.5 size-3.5" />
-                      {t("knowledge_upload_btn")}
+                      {"上传文档"}
                     </Button>
                   </div>
                 ) : (
@@ -260,7 +260,7 @@ export function KnowledgeView() {
                           onClick={() => void handleRemove(file.path)}
                         >
                           <Trash2 className="mr-1.5 size-3.5" />
-                          {t("knowledge_remove_btn")}
+                          {"删除"}
                         </Button>
                       </div>
                     </div>
@@ -276,13 +276,13 @@ export function KnowledgeView() {
                     {activePath}
                   </div>
                   <pre className="text-foreground flex-1 overflow-auto p-4 text-sm whitespace-pre-wrap">
-                    {content || t("knowledge_select_hint")}
+                    {content || "从左侧选择文档查看"}
                   </pre>
                 </>
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
                   <BookOpen className="text-primary size-8" />
-                  <p className="text-muted-foreground text-sm">{t("knowledge_select_hint")}</p>
+                  <p className="text-muted-foreground text-sm">{"从左侧选择文档查看"}</p>
                   <Button
                     type="button"
                     size="sm"
@@ -291,7 +291,7 @@ export function KnowledgeView() {
                     onClick={handleUploadClick}
                   >
                     <Upload className="mr-1.5 size-3.5" />
-                    {t("knowledge_upload_btn")}
+                    {"上传文档"}
                   </Button>
                 </div>
               )}

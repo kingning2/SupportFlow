@@ -1,7 +1,6 @@
 "use client";
 
 import { Loader2, Search, Users } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { cn } from "@supportflow/shared";
 import { Button } from "@supportflow/ui/button";
@@ -40,21 +39,17 @@ export function ConversationList({
   onSearchChange,
   onSelect
 }: ConversationListProps) {
-  const { t } = useTranslation("console");
-
   return (
     <aside className="wework-inbox-list flex min-h-0 shrink-0 flex-col">
       <div className="border-border/70 shrink-0 border-b px-3 py-3">
-        <h2 className="text-foreground text-base font-semibold tracking-tight">
-          {t("wework_inbox_title")}
-        </h2>
+        <h2 className="text-foreground text-base font-semibold tracking-tight">{"会话"}</h2>
         <div className="relative mt-2">
           <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
           <Input
             type="search"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={t("wework_inbox_search")}
+            placeholder={"搜索群聊或联系人"}
             className="bg-background border-border h-9 w-full rounded-xl pr-2 pl-8 text-sm shadow-none"
           />
         </div>
@@ -64,12 +59,10 @@ export function ConversationList({
         {loading ? (
           <div className="text-muted-foreground flex items-center justify-center gap-2 py-12 text-sm">
             <Loader2 className="size-4 animate-spin" />
-            <span>{t("wework_inbox_loading")}</span>
+            <span>{"加载会话…"}</span>
           </div>
         ) : conversations.length === 0 ? (
-          <p className="text-muted-foreground px-4 py-8 text-center text-sm">
-            {t("wework_inbox_empty")}
-          </p>
+          <p className="text-muted-foreground px-4 py-8 text-center text-sm">{"暂无会话"}</p>
         ) : (
           <ul className="space-y-1 px-2 py-2">
             {conversations.map((item) => {

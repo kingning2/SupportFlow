@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 import {
   isWeworkConsoleRoute,
@@ -42,7 +41,6 @@ export interface WeworkConsoleAppProps {
 }
 
 export function WeworkConsoleApp({ lang, actions }: WeworkConsoleAppProps) {
-  const { t } = useTranslation("console");
   const [activeRoute, setActiveRoute] = useState<WeworkConsoleRoute>(readStoredRoute);
   const [openGroups, setOpenGroups] = useState(DEFAULT_OPEN_GROUPS);
 
@@ -110,7 +108,7 @@ export function WeworkConsoleApp({ lang, actions }: WeworkConsoleAppProps) {
         <WeworkConsoleHeader activeRoute={activeRoute} />
         {connectionStatus !== "ready" && activeRoute === WeworkConsoleRoute.Inbox ? (
           <div className="bg-warning/10 border-warning/20 mx-3 mt-3 shrink-0 rounded-xl border px-3 py-2 text-xs">
-            {t("wework_connect_required")}
+            {"请先在「账号与通道」完成企微接入，再使用对话收件箱。"}
           </div>
         ) : null}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{mainContent}</div>

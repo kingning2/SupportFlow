@@ -1,7 +1,6 @@
 "use client";
 
 import { MessageSquare } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { cn } from "@supportflow/shared";
 import { Input } from "@supportflow/ui/input";
@@ -23,17 +22,13 @@ export interface MessageThreadProps {
 }
 
 export function MessageThread({ conversation, messages }: MessageThreadProps) {
-  const { t } = useTranslation("console");
-
   if (!conversation) {
     return (
       <div className="wework-thread-panel flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
         <div className="bg-channel-muted/70 flex size-18 items-center justify-center rounded-3xl">
           <MessageSquare className="text-channel/50 size-9" />
         </div>
-        <p className="text-foreground text-base font-medium">
-          {t("wework_inbox_select_conversation")}
-        </p>
+        <p className="text-foreground text-base font-medium">{"选择一个会话开始查看"}</p>
       </div>
     );
   }
@@ -46,16 +41,14 @@ export function MessageThread({ conversation, messages }: MessageThreadProps) {
           <p className="text-muted-foreground truncate text-xs">{conversation.conversationId}</p>
         </div>
         <span className="bg-channel-muted text-channel inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium">
-          {conversation.kind === "group" ? t("wework_kind_group") : t("wework_kind_direct")}
+          {conversation.kind === "group" ? "群聊" : "单聊"}
         </span>
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           {messages.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center text-sm">
-              {t("wework_inbox_no_messages")}
-            </p>
+            <p className="text-muted-foreground py-8 text-center text-sm">{"暂无消息"}</p>
           ) : (
             messages.map((msg) => {
               const isOutbound = msg.role === "assistant" || msg.role === "operator";
@@ -93,11 +86,11 @@ export function MessageThread({ conversation, messages }: MessageThreadProps) {
           <Input
             type="text"
             disabled
-            placeholder={t("wework_inbox_composer_placeholder")}
+            placeholder={"人工回复（即将支持）"}
             className="bg-background border-border text-muted-foreground h-10 w-full rounded-xl text-sm"
           />
           <p className="text-muted-foreground mt-1 text-center text-[10px]">
-            {t("wework_inbox_composer_hint")}
+            {"消息已从渠道实时同步"}
           </p>
         </div>
       </footer>

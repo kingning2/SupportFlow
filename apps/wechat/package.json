@@ -15,14 +15,19 @@
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-router-dom": "^7.9.6",
     "react-i18next": "^17.0.8"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4",
+    "@vitejs/plugin-react": "^5.1.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vite": "^7.1.12",
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }
