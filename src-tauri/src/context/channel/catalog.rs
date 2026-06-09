@@ -28,16 +28,6 @@ struct ChannelDef {
     fields: &'static [ChannelFieldDef],
 }
 
-const WX_FIELDS: &[ChannelFieldDef] = &[ChannelFieldDef {
-    key: "hot_reload",
-    label_zh: "热重载登录",
-    label_en: "Hot reload login",
-    field_type: "bool",
-    default_value: Value::Bool(false),
-    placeholder_zh: None,
-    placeholder_en: None,
-}];
-
 #[cfg(feature = "channel-wework")]
 const WEWORK_FIELDS: &[ChannelFieldDef] = &[ChannelFieldDef {
     key: "wework_exe_path",
@@ -50,16 +40,6 @@ const WEWORK_FIELDS: &[ChannelFieldDef] = &[ChannelFieldDef {
 }];
 
 const CHANNEL_DEFS: &[ChannelDef] = &[
-    ChannelDef {
-        name: "wx",
-        label_zh: "个人微信",
-        label_en: "Personal WeChat",
-        icon: "fa-brands fa-weixin",
-        color: "green",
-        hint_zh: "基于 itchat 网页协议，存在封号风险，仅建议测试。支持私聊与群聊；登录态保存在数据目录 itchat.pkl。",
-        hint_en: "itchat web protocol; account risk; test use only. Supports DM and groups.",
-        fields: WX_FIELDS,
-    },
     #[cfg(feature = "channel-wework")]
     ChannelDef {
         name: "wework",

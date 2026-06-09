@@ -8,9 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const FLAVOR_CONFIG = {
-  full: "src-tauri/tauri.conf.json",
-  wework: "src-tauri/tauri.wework.conf.json",
-  wechat: "src-tauri/tauri.wechat.conf.json"
+  wework: "src-tauri/tauri.wework.conf.json"
 };
 
 const flavor = process.argv[2]?.trim().toLowerCase();
@@ -27,12 +25,8 @@ if (!config) {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const env = {
   ...process.env,
-  ...(flavor === "full"
-    ? {}
-    : {
-        DEV_CHANNEL: flavor === "wechat" ? "wx" : flavor,
-        NEXT_PUBLIC_DEV_CHANNEL: flavor === "wechat" ? "wx" : flavor
-      })
+  DEV_CHANNEL: flavor,
+  NEXT_PUBLIC_DEV_CHANNEL: flavor
 };
 
 console.log(`[tauri-build-flavor] flavor=${flavor} config=${config}`);

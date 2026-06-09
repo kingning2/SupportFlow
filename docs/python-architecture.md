@@ -6,7 +6,6 @@ Python sidecar 是渠道 SDK 适配进程，不是应用主后端。
 
 ## 负责内容
 
-- `wechat` 登录、扫码、消息回调、发送
 - `wework` 登录、消息回调、发送、联系人同步触发
 - 媒体下载与少量 SDK 必需格式转换
 - `markitdown` 文档转 Markdown
@@ -26,7 +25,6 @@ Python sidecar 是渠道 SDK 适配进程，不是应用主后端。
 
 Python 最终只剩：
 
-- `wechat_channel + wechat_message + itchat vendored`
 - `wework_channel + wework_message + run + ntwork glue`
 - `rust_ipc / rpc_handlers / stdio_server / config`
 - `markitdown_convert.py`

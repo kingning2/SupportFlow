@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 description = "Language-agnostic child process infrastructure: oneshot, stdio RPC, slots, task-local context"
 
+[lints]
+workspace = true
+
 [dependencies]
 async-trait = "0.1"
 serde_json = "1"

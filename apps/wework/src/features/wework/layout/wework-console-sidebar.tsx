@@ -12,7 +12,7 @@ import { AccountAvatar } from "../accounts/avatar";
 import { WEWORK_NAV_GROUPS } from "../constants/wework-nav";
 import type { WeworkConnectionStatus } from "../types/wework-conversation";
 
-export interface SidebarProps {
+export interface WeworkConsoleSidebarProps {
   activeRoute: WeworkConsoleRoute;
   onNavigate: (route: WeworkConsoleRoute) => void;
   connectionStatus: WeworkConnectionStatus;
@@ -32,14 +32,14 @@ function connectionLabelKey(status: WeworkConnectionStatus): string {
   }
 }
 
-export function Sidebar({
+export function WeworkConsoleSidebar({
   activeRoute,
   onNavigate,
   connectionStatus,
   connectedAccountName,
   openGroups,
   onToggleGroup
-}: SidebarProps) {
+}: WeworkConsoleSidebarProps) {
   const { t } = useTranslation("console");
   const showAccount = connectionStatus === "ready" && connectedAccountName;
   const activeGroupKeys = WEWORK_NAV_GROUPS.filter((group) => openGroups[group.id]).map(
@@ -47,7 +47,7 @@ export function Sidebar({
   );
 
   return (
-    <aside className="sidebar flex min-h-0 shrink-0 flex-col">
+    <aside className="wework-console-sidebar flex min-h-0 shrink-0 flex-col">
       <div
         className={cn(
           "shrink-0 border-b border-[hsl(var(--border))] px-3",
@@ -121,13 +121,13 @@ export function Sidebar({
                     label: <span className="truncate">{t(item.labelKey)}</span>
                   } satisfies MenuItemType;
                 })}
-                className="sidebar-menu border-none bg-transparent"
+                className="wework-sidebar-menu border-none bg-transparent"
                 onClick={({ key }) => onNavigate(key as WeworkConsoleRoute)}
               />
             ),
             className: "!mb-1 !border-none !bg-transparent"
           }))}
-          className="sidebar-collapse bg-transparent"
+          className="wework-sidebar-collapse bg-transparent"
         />
       </nav>
     </aside>

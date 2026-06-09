@@ -1,5 +1,5 @@
 {
-  "name": "SupportFlow",
+  "name": "supportflow",
   "private": true,
   "version": "0.1.0",
   "repository": {
@@ -13,13 +13,10 @@
     "check:ts:deps": "depcruise --config .dependency-cruiser.cjs apps packages",
     "check:frontend": "pnpm run lint && pnpm run typecheck && pnpm run check:ts:deps && pnpm run check:contracts",
     "check:rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml -- --check",
-    "dev": "turbo run dev --filter=@supportflow/app-full",
-    "dev:turbo": "turbo run dev:turbo --filter=@supportflow/app-full",
-    "build": "turbo run build --filter=@supportflow/app-full",
-    "build:flavor:full": "node scripts/build-flavor.mjs full",
+    "dev": "turbo run dev --filter=@supportflow/app-wework",
+    "build": "turbo run build --filter=@supportflow/app-wework",
     "build:flavor:wework": "node scripts/build-flavor.mjs wework",
-    "build:flavor:wechat": "node scripts/build-flavor.mjs wechat",
-    "start": "pnpm --filter @supportflow/app-full start",
+    "start": "pnpm --filter @supportflow/app-wework start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write . && cargo fmt --manifest-path src-tauri/Cargo.toml",
@@ -42,12 +39,9 @@
     "tauri": "tauri",
     "prepare": "husky",
     "tauri:dev": "tauri dev --no-watch",
-    "tauri:dev:wechat": "node scripts/tauri-dev-channel.mjs wechat",
-    "tauri:dev:wx": "node scripts/tauri-dev-channel.mjs wx",
     "tauri:dev:wework": "node scripts/tauri-dev-channel.mjs wework",
-    "tauri:build": "node scripts/tauri-build-flavor.mjs full",
-    "tauri:build:wework": "node scripts/tauri-build-flavor.mjs wework",
-    "tauri:build:wechat": "node scripts/tauri-build-flavor.mjs wechat"
+    "tauri:build": "node scripts/tauri-build-flavor.mjs wework",
+    "tauri:build:wework": "node scripts/tauri-build-flavor.mjs wework"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.1",
@@ -55,7 +49,6 @@
     "@tauri-apps/cli": "^2.10.1",
     "dependency-cruiser": "^17.4.3",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-sonarjs": "^4.0.3",
     "husky": "^9.1.7",

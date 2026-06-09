@@ -6,10 +6,6 @@ TypeScript 只负责桌面前端界面、状态管理、以及调用 Rust IPC �
 
 ## 核心目录
 
-- `apps/full/`
-  - 完整桌面应用前端
-- `apps/wechat/`
-  - 个人微信桌面前端
 - `apps/wework/`
   - 个人企业微信桌面前端
 - `packages/shared/`

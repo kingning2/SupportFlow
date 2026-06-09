@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import i18next from "i18next";
 
-import { getLanguageResourceBundle } from "@supportflow/shared/tauri-bridge/cmd/lang";
-import "../../config/i18n";
 import { useAppSelector } from "../../store/hooks";
 
 export default function LanguageGuard({ children }: { children: React.ReactNode }) {
@@ -13,21 +11,6 @@ export default function LanguageGuard({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     let cancelled = false;
-
-    getLanguageResourceBundle(currentLanguage)
-      .catch((err) => {
-        console.error("get_language_resource_bundle", err);
-        return {};
-      })
-      .then((resource: Record<string, Record<string, unknown>>) => {
-        if (cancelled) return;
-        Object.keys(resource).forEach((key) => {
-          i18next.addResourceBundle(currentLanguage, key, resource[key], true, true);
-        });
-        void i18next.changeLanguage(currentLanguage);
-        setReadyLanguage(currentLanguage);
-      });
-
     return () => {
       cancelled = true;
     };

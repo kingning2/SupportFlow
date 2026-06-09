@@ -2,7 +2,7 @@
 
 import { Button } from "@supportflow/ui/button";
 
-import { AccountAvatar } from "@/features/wework/accounts/account-avatar";
+import { AccountAvatar } from "@/features/wework/accounts/avatar";
 import type { WeworkSavedAccount } from "@/features/wework/accounts/types";
 
 type Translate = (key: string, options?: Record<string, unknown>) => string;

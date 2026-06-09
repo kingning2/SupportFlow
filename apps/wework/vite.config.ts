@@ -5,6 +5,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), tsconfigPaths()],
+  resolve: { dedupe: ["react", "react-dom"] },
   build: {
     outDir: "out",
     emptyOutDir: true

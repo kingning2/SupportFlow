@@ -1,18 +1,15 @@
-import { Route, Routes } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 import { DesktopAppLayout } from "@supportflow/ui/app-shell";
 
-import { weworkShellAccent } from "@/config/wework-shell-accent";
-import { WEWORK_SHELL_CONTENT_CLASS } from "@/config/wework-shell";
+import { weworkShellAccent } from "./config/shell-accent";
+import { WEWORK_SHELL_CONTENT_CLASS } from "./config/shell";
 
-import { WeworkAppPage } from "@/features/wework/page";
-
+/** 根布局：DesktopAppLayout 包裹子路由通过 Outlet 渲染 */
 export function App() {
   return (
     <DesktopAppLayout accent={weworkShellAccent} contentClassName={WEWORK_SHELL_CONTENT_CLASS}>
-      <Routes>
-        <Route path="*" element={<WeworkAppPage />} />
-      </Routes>
+      <Outlet />
     </DesktopAppLayout>
   );
 }

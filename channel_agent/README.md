@@ -4,7 +4,6 @@ Python sidecar for channel access. Rust stays frontend-facing and orchestrates t
 
 ## Scope
 
-- `channel/wechat/`: personal WeChat (`wx`)
 - `channel/wework/`: personal WeCom desktop (`wework`)
 - `bridge/`: Python to Rust bridge
 - `common/`, `config.py`, `lib/`: shared sidecar config, logging, and vendored libraries
@@ -14,7 +13,6 @@ Python sidecar for channel access. Rust stays frontend-facing and orchestrates t
 ```bash
 pnpm run setup:channel-sidecar-dev
 pnpm run tauri:dev:wework
-pnpm run tauri:dev:wechat
 ```
 
 Manual run:
@@ -32,4 +30,4 @@ pnpm run bootstrap:sidecar-wheels
 pnpm run build:channel-sidecar
 ```
 
-`requirements-sidecar.txt` now only contains shared runtime dependencies for the retained `wx` and `wework` channels. `requirements-wework.txt` handles the additional `ntwork` path for WeCom.
+`requirements-sidecar.txt` now only contains shared runtime dependencies for the retained `wework` channel. `requirements-wework.txt` handles the additional `ntwork` path for WeCom.

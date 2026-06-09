@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.supportflow.app",
   "build": {
-    "beforeDevCommand": "pnpm --filter @supportflow/app-full dev",
+    "beforeDevCommand": "pnpm --filter @supportflow/app-wework dev",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "pnpm run build:flavor:full && pnpm run build:channel-sidecar",
-    "frontendDist": "../apps/full/out"
+    "beforeBuildCommand": "pnpm run build:flavor:wework && pnpm run build:channel-sidecar && pnpm run build:license-verifier",
+    "frontendDist": "../apps/wework/out"
   },
   "app": {
     "windows": [

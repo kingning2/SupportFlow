@@ -1,21 +1,13 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
 import sonarjs from "eslint-plugin-sonarjs";
 
 const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
   prettier,
   globalIgnores([
-    ".next/**",
     "out/**",
-    "apps/**/.next/**",
     "apps/**/out/**",
     "build/**",
-    "next-env.d.ts",
-    "apps/**/next-env.d.ts",
     "node_modules/**",
     "src-tauri/**",
     "apps/full/src/components/ai-elements/**",
@@ -23,11 +15,6 @@ const eslintConfig = defineConfig([
     ".agents/**"
   ]),
   {
-    settings: {
-      next: {
-        rootDir: ["apps/*/"]
-      }
-    },
     plugins: {
       sonarjs
     },
@@ -38,7 +25,6 @@ const eslintConfig = defineConfig([
       "react-hooks/exhaustive-deps": "off",
       "react/display-name": "off",
       "@typescript-eslint/no-empty-object-type": "off",
-      "@next/next/no-img-element": "off",
       "react-hooks/immutability": "off",
       // 1. 限制单个文件最大行数为 500 行
       "max-lines": [

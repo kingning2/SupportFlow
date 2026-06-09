@@ -22,7 +22,6 @@ import { memo, useCallback, useMemo, useState } from "react";
 import { cn } from "@supportflow/shared";
 import { useAppDispatch, useAppSelector } from "@supportflow/shared/desktop-shell/store/hooks";
 import { changeCurrentLanguageAction } from "@supportflow/shared/desktop-shell/store/modules/app";
-import { setLang } from "@supportflow/shared/tauri-bridge/cmd/lang";
 import type { Language } from "@supportflow/shared/tauri-bridge/enums";
 import { mainWindow } from "@supportflow/shared/tauri-bridge/window/main-window";
 import { Button } from "@supportflow/ui/button";
@@ -77,11 +76,7 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
   const switchLanguage = useCallback(
     async (next: Language) => {
       if (next === currentLanguage) return;
-      try {
-        await setLang(next);
-      } catch {
-        dispatch(changeCurrentLanguageAction(next));
-      }
+      dispatch(changeCurrentLanguageAction(next));
     },
     [currentLanguage, dispatch]
   );

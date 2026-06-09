@@ -10,6 +10,11 @@ members = [
 ]
 exclude = ["crates/agent", "crates/bridge"]
 
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+unimplemented = "warn"
+
 [package]
 name = "tauri-app"
 version = "0.1.0"
@@ -18,19 +23,21 @@ authors = ["you"]
 edition = "2021"
 default-run = "tauri-app"
 
+[lints]
+workspace = true
+
 [lib]
 name = "tauri_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [features]
-default = ["desktop", "channel-wx", "channel-wework"]
+default = ["desktop", "channel-wework"]
 desktop = [
     "dep:tauri",
     "dep:tauri-plugin-opener",
     "dep:tauri-plugin-dialog",
     "dep:tauri-plugin-shell",
 ]
-channel-wx = []
 channel-wework = []
 
 [build-dependencies]

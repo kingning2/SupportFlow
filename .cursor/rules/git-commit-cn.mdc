@@ -46,7 +46,7 @@ docs: 补充工具清单字段说明
 | Python Sidecar | `src-tauri/channel_agent/` | `tauri` 或 `sidecar` |
 | 前端 IPC / 枚举 / 契约 | `packages/shared/src/tauri-bridge/`、`packages/shared/src/contracts/` | `frontend` |
 | 控制台 UI | `packages/ui/src/agent-console/`、`packages/ui/src/` 基础组件 | `ui` |
-| 应用壳 / 路由 | `apps/full/`、`apps/wework/`、`apps/wechat/` | `frontend` |
+| 应用壳 / 路由 | `apps/wework/` | `frontend` |
 | i18n | `src-tauri/resources/languages/` | `tauri` 或 `i18n` |
 | 文档 | `docs/`、`AGENTS.md` | `docs` |
 | 契约生成 | `scripts/generate-contracts.mjs` 及生成物 | `chore` / `build` |

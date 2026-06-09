@@ -86,7 +86,7 @@ jobs:
             "SKIP_LICENSE_VERIFIER_BUILD=1" | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
-      - name: Build & upload SupportFlow (full)
+      - name: Build & upload SupportFlow
         uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -100,9 +100,7 @@ jobs:
 
             | Flavor | 说明 |
             | --- | --- |
-            | full | SupportFlow 完整控制台 |
             | wework | SupportFlow 企微 |
-            | wechat | SupportFlow 微信 |
 
             本 Release 为草稿，确认产物无误后在 GitHub 页面 Publish。
           releaseDraft: true
@@ -122,16 +120,3 @@ jobs:
           tagName: ${{ env.RELEASE_TAG }}
           releaseDraft: true
           args: --config tauri.wework.conf.json
-
-      - name: Build & upload SupportFlow 微信 (wechat)
-        uses: tauri-apps/tauri-action@v0.6.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEV_CHANNEL: wx
-          NEXT_PUBLIC_DEV_CHANNEL: wx
-        with:
-          projectPath: src-tauri
-          tauriScript: pnpm run tauri
-          tagName: ${{ env.RELEASE_TAG }}
-          releaseDraft: true
-          args: --config tauri.wechat.conf.json

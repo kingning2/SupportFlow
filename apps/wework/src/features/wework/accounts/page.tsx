@@ -7,8 +7,8 @@ import { Button } from "@supportflow/ui/button";
 import { WeworkConnectPanel } from "@supportflow/ui/channel/wework-connect-panel";
 
 import { ActiveAccountCard } from "@/features/wework/accounts/active-account-card";
-import { AccountList } from "@/features/wework/accounts/account-list";
-import { AccountSwitchDialog } from "@/features/wework/accounts/account-switch-dialog";
+import { AccountList } from "@/features/wework/accounts/list";
+import { AccountSwitchDialog } from "@/features/wework/accounts/switch-dialog";
 import type { PageActions } from "@/features/wework/accounts/page-types";
 import type { WeworkConnectionStatus } from "@/features/wework/types/wework-conversation";
 
@@ -129,7 +129,9 @@ function AccountsSection({
           onAccountClick={handlers.handleAccountClick}
           onDeleteAccount={handlers.handleDeleteAccount}
           onDisconnect={() => void handlers.handleDisconnect()}
-          onMenuToggle={(id) => handlers.setMenuOpenId((current) => (current === id ? null : id))}
+          onMenuToggle={(id: string) =>
+            handlers.setMenuOpenId((current) => (current === id ? null : id))
+          }
           switching={state.switching}
           t={t}
         />

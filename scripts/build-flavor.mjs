@@ -8,9 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const FLAVORS = {
-  full: { cwd: "apps/full", label: "SupportFlow 完整控制台" },
-  wework: { cwd: "apps/wework", label: "企微个人号 (wework)" },
-  wechat: { cwd: "apps/wechat", label: "微信个人号 (wx)" }
+  wework: { cwd: "apps/wework", label: "企微个人号 (wework)" }
 };
 
 const flavor = process.argv[2]?.trim().toLowerCase();

@@ -1,25 +1,21 @@
 #!/usr/bin/env node
 /**
  * Run `tauri dev` with a single supported personal channel preset.
- * Usage: node scripts/tauri-dev-channel.mjs wechat
+ * Usage: node scripts/tauri-dev-channel.mjs wework
  */
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const CHANNEL_IDS = new Set(["wx", "wework"]);
+const CHANNEL_IDS = new Set(["wework"]);
 
 const ALIASES = {
-  wechat: "wx",
-  personal_wechat: "wx",
-  wx: "wx",
   wework: "wework"
 };
 
 /** Channel id → standalone Tauri config (separate Next app, isolated bundle). */
 const STANDALONE_TAURI_CONFIG = {
-  wework: "src-tauri/tauri.wework.conf.json",
-  wx: "src-tauri/tauri.wechat.conf.json"
+  wework: "src-tauri/tauri.wework.conf.json"
 };
 
 function resolveChannel(raw) {
@@ -43,8 +39,7 @@ if (!channel) {
   console.error(
     "Usage: node scripts/tauri-dev-channel.mjs <channel>\n" +
       "Channels: " +
-      [...CHANNEL_IDS].join(", ") +
-      "\nAliases: wechat→wx"
+      [...CHANNEL_IDS].join(", ")
   );
   process.exit(1);
 }

@@ -5,6 +5,9 @@ edition = "2021"
 description = "SupportFlow CLI (sf) — manage agent workspace, skills, and headless chat"
 default-run = "sf"
 
+[lints]
+workspace = true
+
 [[bin]]
 name = "sf"
 path = "src/main.rs"
