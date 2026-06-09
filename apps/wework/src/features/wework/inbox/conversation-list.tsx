@@ -40,7 +40,7 @@ export function ConversationList({
   onSelect
 }: ConversationListProps) {
   return (
-    <aside className="wework-inbox-list flex min-h-0 shrink-0 flex-col">
+    <aside className="inbox-list flex min-h-0 shrink-0 flex-col">
       <div className="border-border/70 shrink-0 border-b px-3 py-3">
         <h2 className="text-foreground text-base font-semibold tracking-tight">{"会话"}</h2>
         <div className="relative mt-2">
@@ -73,7 +73,7 @@ export function ConversationList({
                     type="button"
                     variant="ghost"
                     className={cn(
-                      "wework-conversation-row flex h-auto w-full items-start gap-3 rounded-2xl px-3 py-3 text-left",
+                      "conversation-row flex h-auto w-full items-start gap-3 rounded-2xl px-3 py-3 text-left",
                       isActive && "active"
                     )}
                     onClick={() => onSelect(item.conversationId)}

@@ -6,14 +6,14 @@ import { Navigate, type RouteObject } from "react-router-dom";
 import type { ChannelCatalogEntry } from "@supportflow/shared";
 import { WeworkConsoleRoute } from "@supportflow/shared/tauri-bridge/enums";
 
-import { WeworkPage } from "./accounts/wework-page";
-import type { WeworkPageActions } from "./accounts/wework-page-types";
+import { Page } from "./accounts/page";
+import type { PageActions } from "./accounts/page-types";
 import { WEWORK_ROUTE_PAGE_LABEL } from "./constants/wework-nav";
-import { InboxView } from "./inbox/inbox-view";
+import { Inbox } from "./inbox/inbox";
 import type { WeworkConnectionStatus } from "./types/wework-conversation";
-import { ConfigPlaceholderView } from "./views/config-placeholder-view";
-import { KnowledgeView } from "./views/knowledge-view";
-import { SkillsView } from "./views/skills-view";
+import { ConfigPlaceholder } from "./views/config-placeholder";
+import { Knowledge } from "./views/knowledge";
+import { Skills } from "./views/skills";
 
 export function toWeworkConsolePath(route: WeworkConsoleRoute): string {
   return `/${route}`;
@@ -22,7 +22,7 @@ export function toWeworkConsolePath(route: WeworkConsoleRoute): string {
 export interface WeworkConsoleRouterDeps {
   fallbackRoute: WeworkConsoleRoute;
   lang: string;
-  actions: WeworkPageActions;
+  actions: PageActions;
   channel: ChannelCatalogEntry | null;
   channelLoading: boolean;
   channelError: string | null;
@@ -34,7 +34,7 @@ function accountRouteElement(params: WeworkConsoleRouterDeps): ReactNode {
   return createElement(
     "div",
     { className: "min-h-0 flex-1 overflow-y-auto" },
-    createElement(WeworkPage, {
+    createElement(Page, {
       lang: params.lang,
       actions: params.actions,
       channel: params.channel,
@@ -57,7 +57,7 @@ export function buildWeworkConsoleRouteObjects(params: WeworkConsoleRouterDeps):
     },
     {
       path: WeworkConsoleRoute.Inbox,
-      element: createElement(InboxView, { connectionStatus: params.connectionStatus })
+      element: createElement(Inbox, { connectionStatus: params.connectionStatus })
     },
     {
       path: WeworkConsoleRoute.Account,
@@ -65,21 +65,21 @@ export function buildWeworkConsoleRouteObjects(params: WeworkConsoleRouterDeps):
     },
     {
       path: WeworkConsoleRoute.Knowledge,
-      element: createElement(KnowledgeView)
+      element: createElement(Knowledge)
     },
     {
       path: WeworkConsoleRoute.Skills,
-      element: createElement(SkillsView)
+      element: createElement(Skills)
     },
     {
       path: WeworkConsoleRoute.Mcp,
-      element: createElement(ConfigPlaceholderView, {
+      element: createElement(ConfigPlaceholder, {
         labelKey: WEWORK_ROUTE_PAGE_LABEL[WeworkConsoleRoute.Mcp]
       })
     },
     {
       path: WeworkConsoleRoute.AiConfig,
-      element: createElement(ConfigPlaceholderView, {
+      element: createElement(ConfigPlaceholder, {
         labelKey: WEWORK_ROUTE_PAGE_LABEL[WeworkConsoleRoute.AiConfig]
       })
     },

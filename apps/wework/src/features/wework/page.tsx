@@ -10,7 +10,7 @@ import {
   fetchChannels
 } from "@supportflow/ui/app-shell";
 
-import { WeworkConsoleApp } from "@/features/wework/wework-console-app";
+import { App } from "@/features/wework/app";
 
 export function WeworkAppPage() {
   const { i18n } = useTranslation("console");
@@ -35,5 +35,5 @@ export function WeworkAppPage() {
     []
   );
 
-  return <WeworkConsoleApp lang={lang} actions={actions} />;
+  return <App lang={lang} actions={actions} />;
 }

@@ -9,7 +9,7 @@ import { TauriEvent } from "@supportflow/shared/tauri-bridge/enums";
 import { tauriOn } from "@supportflow/shared/tauri-bridge/tauri-event";
 
 import type { WeworkConnectionStatus } from "../types/wework-conversation";
-import type { WeworkPageActions } from "@/features/wework/accounts/wework-page-types";
+import type { PageActions } from "@/features/wework/accounts/page-types";
 
 const CONNECTING_PHASES = new Set(["starting", "waiting_login", "logged_in", "syncing"]);
 const STATUS_REFRESH_DEBOUNCE_MS = 400;
@@ -134,7 +134,7 @@ function applyLifecycleEvent(
 }
 
 /** 同步后端通道状态，不自动 connect */
-export function useWeworkChannel(actions: WeworkPageActions) {
+export function useWeworkChannel(actions: PageActions) {
   const [channel, setChannel] = useState<ChannelCatalogEntry | null>(null);
   const [channelLoading, setChannelLoading] = useState(true);
   const [channelError, setChannelError] = useState<string | null>(null);

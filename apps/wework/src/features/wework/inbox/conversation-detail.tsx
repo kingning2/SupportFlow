@@ -17,7 +17,7 @@ export function ConversationDetail({ conversation }: ConversationDetailProps) {
 
   if (collapsed) {
     return (
-      <div className="wework-detail-panel bg-card/88 flex w-10 shrink-0 flex-col border-l border-[hsl(var(--border))]">
+      <div className="detail bg-card/88 flex w-10 shrink-0 flex-col border-l border-[hsl(var(--border))]">
         <Button
           type="button"
           variant="ghost"
@@ -32,7 +32,7 @@ export function ConversationDetail({ conversation }: ConversationDetailProps) {
   }
 
   return (
-    <aside className="wework-inbox-detail flex min-h-0 shrink-0 flex-col">
+    <aside className="inbox-detail flex min-h-0 shrink-0 flex-col">
       <div className="border-border/70 flex shrink-0 items-center justify-between border-b px-3 py-3">
         <span className="text-foreground text-sm font-semibold">{"会话详情"}</span>
         <Button

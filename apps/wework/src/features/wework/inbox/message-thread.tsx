@@ -24,7 +24,7 @@ export interface MessageThreadProps {
 export function MessageThread({ conversation, messages }: MessageThreadProps) {
   if (!conversation) {
     return (
-      <div className="wework-thread-panel flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="thread flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
         <div className="bg-channel-muted/70 flex size-18 items-center justify-center rounded-3xl">
           <MessageSquare className="text-channel/50 size-9" />
         </div>
@@ -34,7 +34,7 @@ export function MessageThread({ conversation, messages }: MessageThreadProps) {
   }
 
   return (
-    <div className="wework-thread-panel flex min-h-0 min-w-0 flex-1 flex-col">
+    <div className="thread flex min-h-0 min-w-0 flex-1 flex-col">
       <header className="bg-card/88 border-border/70 flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur">
         <div className="min-w-0">
           <h3 className="text-foreground truncate text-sm font-semibold">{conversation.title}</h3>
@@ -62,11 +62,10 @@ export function MessageThread({ conversation, messages }: MessageThreadProps) {
                   ) : null}
                   <div
                     className={cn(
-                      "wework-message-bubble",
-                      msg.role === "customer" && "wework-message-bubble--customer",
-                      (msg.role === "assistant" || msg.role === "operator") &&
-                        "wework-message-bubble--assistant",
-                      msg.role === "system" && "wework-message-bubble--system"
+                      "bubble",
+                      msg.role === "customer" && "bubble--customer",
+                      (msg.role === "assistant" || msg.role === "operator") && "bubble--assistant",
+                      msg.role === "system" && "bubble--system"
                     )}
                   >
                     {msg.content}

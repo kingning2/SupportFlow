@@ -1,7 +1,7 @@
 "use client";
 
-import { FullModalWindowPage } from "@/features/full/modal-window/modal-window-page";
+import { Page } from "@/features/full/modal-window/page";
 
 export default function ModalWindowPageRoute() {
-  return <FullModalWindowPage />;
+  return <Page />;
 }

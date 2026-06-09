@@ -27,7 +27,7 @@
   color: hsl(var(--console-accent));
 }
 
-.agent-console .session-panel {
+.agent-console .sessions {
   width: 220px;
   flex-shrink: 0;
   display: flex;
@@ -37,12 +37,12 @@
   overflow: hidden;
 }
 
-.dark .agent-console .session-panel {
+.dark .agent-console .sessions {
   background: var(--console-page-bg);
   border-right-color: rgba(255, 255, 255, 0.08);
 }
 
-.agent-console .session-panel-header {
+.agent-console .sessions-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -51,11 +51,11 @@
   flex-shrink: 0;
 }
 
-.dark .agent-console .session-panel-header {
+.dark .agent-console .sessions-header {
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-.agent-console .session-panel-new {
+.agent-console .sessions-new {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -74,18 +74,18 @@
   flex-shrink: 0;
 }
 
-.dark .agent-console .session-panel-new {
+.dark .agent-console .sessions-new {
   border-color: rgba(255, 255, 255, 0.12);
   color: hsl(var(--muted-foreground));
 }
 
-.agent-console .session-panel-new:hover {
+.agent-console .sessions-new:hover {
   border-color: hsl(var(--muted-foreground));
   color: hsl(var(--foreground));
   background: hsl(var(--accent));
 }
 
-.dark .agent-console .session-panel-new:hover {
+.dark .agent-console .sessions-new:hover {
   border-color: rgba(255, 255, 255, 0.25);
   color: #e5e5e5;
   background: rgba(255, 255, 255, 0.04);

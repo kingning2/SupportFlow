@@ -1,6 +1,6 @@
 "use client";
 
-import { FullModalWindowErrorView } from "@/features/full/modal-window/modal-window-error-view";
+import { ErrorView } from "@/features/full/modal-window/error-view";
 
 type ErrorProps = {
   error: Error & { digest?: string };
@@ -8,5 +8,5 @@ type ErrorProps = {
 };
 
 export default function Error({ error, reset }: ErrorProps) {
-  return <FullModalWindowErrorView error={error} reset={reset} />;
+  return <ErrorView error={error} reset={reset} />;
 }

@@ -1,1 +1,1 @@
-export { AgentConsoleApp } from "./layout/agent-console-app";
+export { AgentConsoleApp } from "./layout/app";
