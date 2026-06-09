@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 import { ChatView } from "../chat/chat-view";
 import {
@@ -40,7 +39,6 @@ const DEFAULT_OPEN_GROUPS: Record<SidebarGroupId, boolean> = {
 };
 
 export function AgentConsoleApp() {
-  const { t } = useTranslation("console");
   const { state, setState, loading, error } = useAgentConsoleState();
   const devChannel = useMemo(() => getDevChannel(), []);
   const sidebarNavGroups = useMemo(() => getSidebarNavGroups(devChannel), [devChannel]);
@@ -136,7 +134,7 @@ export function AgentConsoleApp() {
     return (
       <TooltipProvider>
         <div className="agent-console flex flex-1 items-center justify-center text-sm text-slate-500">
-          {t("loading_state")}
+          {"正在加载 Agent…"}
         </div>
       </TooltipProvider>
     );
@@ -146,7 +144,7 @@ export function AgentConsoleApp() {
     return (
       <TooltipProvider>
         <div className="agent-console flex flex-1 flex-col items-center justify-center gap-2 p-6 text-sm text-red-500">
-          <p>{t("load_failed")}</p>
+          <p>{"无法初始化 Agent"}</p>
           <p className="text-muted-foreground max-w-md text-center text-xs">{error}</p>
         </div>
       </TooltipProvider>

@@ -47,7 +47,7 @@ export function ConsoleSidebar({
           </div>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold text-white">SupportFlow</span>
-            <span className="text-xs text-[hsl(var(--text-tertiary))]">{t("console")}</span>
+            <span className="text-xs text-[hsl(var(--text-tertiary))]">{"控制台"}</span>
           </div>
         </div>
 

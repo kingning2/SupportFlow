@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { Button } from "@supportflow/ui/button";
 import { Checkbox } from "@supportflow/ui/checkbox";
@@ -59,16 +58,13 @@ export function WeworkConnectPanel({
   onConnect,
   onCancel
 }: WeworkConnectPanelProps) {
-  const { t } = useTranslation("console");
   const [drafts, setDrafts] = useState<ChannelFieldDrafts>(() => draftsFromWeworkChannel(channel));
 
   const pathField = useMemo(
     () => channel.fields.find((f) => f.key === "wework_exe_path"),
     [channel.fields]
   );
-  const pathLabel = pathField
-    ? localizeChannelText(pathField.label, lang)
-    : t("wework_connect_path_label");
+  const pathLabel = pathField ? localizeChannelText(pathField.label, lang) : "企微程序路径";
   const pathPlaceholder = pathField?.placeholder
     ? localizeChannelText(pathField.placeholder, lang)
     : pathLabel;
@@ -77,7 +73,7 @@ export function WeworkConnectPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* <p className="text-xs leading-relaxed text-slate-500">{t("wework_connect_note")}</p> */}
+      {/* <p className="text-xs leading-relaxed text-slate-500">{"请先手动打开并登录企业微信 PC，保持客户端在运行，再点击「接入」。"}</p> */}
 
       <div>
         <label
@@ -110,13 +106,13 @@ export function WeworkConnectPanel({
             }))
           }
         />
-        {t("wework_connect_reuse_client")}
+        {"复用已登录的企业微信（推荐）"}
       </label>
 
       <div className="border-border flex shrink-0 items-center justify-end gap-2 pt-4">
         {onCancel ? (
           <Button type="button" variant="ghost" disabled={connecting} onClick={onCancel}>
-            {t("wework_account_cancel_new")}
+            {"取消"}
           </Button>
         ) : null}
         <Button
@@ -126,7 +122,7 @@ export function WeworkConnectPanel({
           className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-22"
           onClick={() => void onConnect(buildWeworkConnectConfig(drafts))}
         >
-          {t("channels_connect_btn")}
+          {"接入"}
         </Button>
       </div>
     </div>

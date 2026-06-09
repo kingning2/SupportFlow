@@ -141,10 +141,12 @@ function SkillsListSection({
 }) {
   return (
     <section>
-      <h3 className="mb-3 text-sm font-semibold">{t("skills_section_title")}</h3>
+      <h3 className="mb-3 text-sm font-semibold">{"技能"}</h3>
       <ul className="space-y-2">
         {(skills ?? []).length === 0 ? (
-          <li className="text-muted-foreground text-sm">{t("skills_loading_desc")}</li>
+          <li className="text-muted-foreground text-sm">
+            {"暂无技能，可在工作区 skills/ 目录添加。"}
+          </li>
         ) : (
           skills?.map((skill) => (
             <li
@@ -154,7 +156,7 @@ function SkillsListSection({
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">{skill.name}</span>
                 <Badge variant={skill.enabled ? "default" : "secondary"}>
-                  {skill.enabled ? t("skill_enabled") : t("skill_disabled")}
+                  {skill.enabled ? "已启用" : "已禁用"}
                 </Badge>
               </div>
               <p className="text-muted-foreground mt-1 text-sm">{skill.description}</p>
@@ -189,7 +191,7 @@ function ToolsListSection({
 }) {
   return (
     <section>
-      <h3 className="mb-3 text-sm font-semibold">{t("tools_section_title")}</h3>
+      <h3 className="mb-3 text-sm font-semibold">{"工具"}</h3>
       <ul className="space-y-2">
         {(tools ?? []).map((tool) => (
           <li
@@ -243,7 +245,7 @@ function SkillDetailDialog({
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant={selectedSkill.enabled ? "default" : "secondary"}>
-                {selectedSkill.enabled ? t("skill_enabled") : t("skill_disabled")}
+                {selectedSkill.enabled ? "已启用" : "已禁用"}
               </Badge>
               <Badge variant="outline">
                 {selectedSkill.disableModelInvocation
@@ -347,7 +349,10 @@ export function SkillsView({ state, onRefresh }: SkillsViewProps) {
   };
 
   return (
-    <ViewShell title={t("skills_title")} description={t("skills_desc")}>
+    <ViewShell
+      title={"技能与工具"}
+      description={"当前进程内已注册的工具与技能（通过 Tauri invoke 读取）。"}
+    >
       <SkillInstallSection
         copy={copy}
         installError={installError}
@@ -361,7 +366,7 @@ export function SkillsView({ state, onRefresh }: SkillsViewProps) {
       <div className="mb-4 flex justify-end">
         <Button type="button" variant="outline" size="sm" onClick={() => void refreshSkillsState()}>
           <RefreshCw className="mr-2 size-3.5" />
-          {t("refresh")}
+          {"刷新"}
         </Button>
       </div>
 

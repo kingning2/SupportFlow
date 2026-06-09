@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import {
   fetchChannelConsoleApi,
@@ -14,10 +13,9 @@ interface WxQrPanelProps {
 }
 
 export function WxQrPanel({ onLoggedIn }: WxQrPanelProps) {
-  const { t, i18n } = useTranslation("console");
-  const lang = i18n.language.startsWith("zh") ? "zh" : "en";
+  const lang = "zh";
   const [qrImage, setQrImage] = useState<string | null>(null);
-  const [statusText, setStatusText] = useState(t("weixin_scan_loading"));
+  const [statusText, setStatusText] = useState("正在获取二维码…");
   const [statusClass, setStatusClass] = useState("text-slate-500 dark:text-slate-400");
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statusPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -43,7 +41,7 @@ export function WxQrPanel({ onLoggedIn }: WxQrPanelProps) {
         }
         if (data.qr_status === "confirmed" || data.login_status === "logged_in") {
           stopAll();
-          setStatusText(t("weixin_scan_success"));
+          setStatusText("登录成功，正在启动通道…");
           setStatusClass("text-[#35A85B]");
           onLoggedIn();
           return;
@@ -52,7 +50,7 @@ export function WxQrPanel({ onLoggedIn }: WxQrPanelProps) {
         if (img) {
           setQrImage(img);
           const scanned = data.qr_status === "scaned" || data.login_status === "scanned";
-          setStatusText(scanned ? t("weixin_scan_scanned") : t("weixin_scan_waiting"));
+          setStatusText(scanned ? "已扫码，请在手机上确认" : "等待扫码…");
           setStatusClass(scanned ? "text-[#35A85B]" : "text-slate-500 dark:text-slate-400");
         }
         pollWx();
@@ -60,14 +58,14 @@ export function WxQrPanel({ onLoggedIn }: WxQrPanelProps) {
         pollWx();
       }
     }, 2000);
-  }, [onLoggedIn, stopAll, t]);
+  }, [onLoggedIn, stopAll]);
 
   const loadQr = useCallback(async () => {
-    setStatusText(t("weixin_scan_loading"));
+    setStatusText("正在获取二维码…");
     try {
       const data = await fetchChannelConsoleApi("wx/qrlogin", "GET");
       if (data.status !== "success") {
-        setStatusText(`${t("weixin_scan_fail")}: ${data.message ?? ""}`);
+        setStatusText(`获取二维码失败: ${data.message ?? ""}`);
         setStatusClass("text-red-500");
         return;
       }
@@ -78,14 +76,14 @@ export function WxQrPanel({ onLoggedIn }: WxQrPanelProps) {
       const img = String(data.qr_image || data.qrcode_url || "");
       if (img) {
         setQrImage(img);
-        setStatusText(t("weixin_scan_waiting"));
+        setStatusText("等待扫码…");
         pollWx();
       }
     } catch {
-      setStatusText(t("weixin_scan_fail"));
+      setStatusText("获取二维码失败");
       setStatusClass("text-red-500");
     }
-  }, [onLoggedIn, pollWx, t]);
+  }, [onLoggedIn, pollWx]);
 
   const startStatusPoll = useCallback(() => {
     statusPollRef.current = setTimeout(async () => {
@@ -125,7 +123,7 @@ export function WxQrPanel({ onLoggedIn }: WxQrPanelProps) {
       ) : (
         <>
           <p className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">
-            {t("weixin_scan_title")}
+            {"微信扫码登录"}
           </p>
           <p className="mb-4 text-xs text-slate-400 dark:text-slate-500">
             {lang === "zh" ? "个人微信 itchat 扫码" : "Personal WeChat (itchat) QR"}
@@ -141,7 +139,7 @@ export function WxQrPanel({ onLoggedIn }: WxQrPanelProps) {
         </>
       )}
       <p className={`mb-1 text-xs ${statusClass}`}>{statusText}</p>
-      <p className="text-xs text-slate-400 dark:text-slate-500">{t("weixin_qr_tip")}</p>
+      <p className="text-xs text-slate-400 dark:text-slate-500">{"二维码约 2 分钟后过期"}</p>
     </div>
   );
 }

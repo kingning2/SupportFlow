@@ -66,7 +66,7 @@ export function VendorCredentialDialog({
     const trimmedKey = apiKey.trim();
     const hasMasked = Boolean(active.apiKeyMasked);
     if (!trimmedKey && !hasMasked) {
-      setError(t("models_save_failed"));
+      setError("保存失败，请检查 Key 或网络权限。");
       return;
     }
 
@@ -82,7 +82,7 @@ export function VendorCredentialDialog({
       onOpenChange(false);
       await onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("models_save_failed"));
+      setError(err instanceof Error ? err.message : "保存失败，请检查 Key 或网络权限。");
     } finally {
       setSaving(false);
     }
@@ -92,7 +92,7 @@ export function VendorCredentialDialog({
     if (!active) {
       return;
     }
-    if (!window.confirm(`${t("models_clear_confirm_title")}\n${t("models_clear_confirm_msg")}`)) {
+    if (!window.confirm(`${"清除厂商凭据？"}\n${"将删除该厂商的 API Key 与 Base URL。"}`)) {
       return;
     }
     setSaving(true);
@@ -102,7 +102,7 @@ export function VendorCredentialDialog({
       onOpenChange(false);
       await onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("models_save_failed"));
+      setError(err instanceof Error ? err.message : "保存失败，请检查 Key 或网络权限。");
     } finally {
       setSaving(false);
     }
@@ -112,17 +112,17 @@ export function VendorCredentialDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{provider ? t("models_edit_vendor") : t("models_add_vendor")}</DialogTitle>
+          <DialogTitle>{provider ? "编辑凭据" : "添加厂商"}</DialogTitle>
           <DialogDescription className="font-mono text-xs">{active?.id ?? "—"}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {isPickerMode ? (
             <div className="space-y-2">
-              <span className="text-sm font-medium">{t("models_select_provider")}</span>
+              <span className="text-sm font-medium">{"选择厂商"}</span>
               <Select value={selectedId} onValueChange={setSelectedId}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t("models_select_provider")} />
+                  <SelectValue placeholder={"选择厂商"} />
                 </SelectTrigger>
                 <SelectContent>
                   {pickableProviders.map((p) => (
@@ -137,15 +137,13 @@ export function VendorCredentialDialog({
 
           <div className="space-y-2">
             <label htmlFor="vendor-api-key" className="text-sm font-medium">
-              {t("models_api_key")}
+              {"API Key"}
             </label>
             <Input
               id="vendor-api-key"
               type="password"
               autoComplete="off"
-              placeholder={
-                active?.apiKeyMasked ? active.apiKeyMasked : t("models_api_key_placeholder")
-              }
+              placeholder={active?.apiKeyMasked ? active.apiKeyMasked : "留空表示不修改已有 Key"}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
             />
@@ -154,7 +152,7 @@ export function VendorCredentialDialog({
           {active?.hasApiBase ? (
             <div className="space-y-2">
               <label htmlFor="vendor-api-base" className="text-sm font-medium">
-                {t("models_api_base")}
+                {"API Base"}
               </label>
               <Input
                 id="vendor-api-base"
@@ -176,7 +174,7 @@ export function VendorCredentialDialog({
             disabled={saving || !active?.configured}
             onClick={() => void handleClear()}
           >
-            {t("models_clear_credential")}
+            {"清除凭据"}
           </Button>
           <div className="flex gap-2">
             <Button
@@ -185,10 +183,10 @@ export function VendorCredentialDialog({
               disabled={saving}
               onClick={() => onOpenChange(false)}
             >
-              {t("models_cancel")}
+              {"取消"}
             </Button>
             <Button type="button" disabled={saving || !active} onClick={() => void handleSave()}>
-              {t("models_save")}
+              {"保存"}
             </Button>
           </div>
         </DialogFooter>

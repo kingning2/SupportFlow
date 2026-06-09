@@ -5,15 +5,12 @@ import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "../ai-elem
 import { Message, MessageContent, MessageResponse } from "../ai-elements/message";
 import { mapToolStepState } from "../lib/agent-console/map-tool-state";
 import type { AssistantChatMessage } from "../types/agent-chat";
-import { useTranslation } from "react-i18next";
 
 interface AssistantMessageBlockProps {
   message: AssistantChatMessage;
 }
 
 export function AssistantMessageBlock({ message }: AssistantMessageBlockProps) {
-  const { t } = useTranslation("console");
-
   return (
     <Message from="assistant">
       <MessageContent>
@@ -52,7 +49,7 @@ export function AssistantMessageBlock({ message }: AssistantMessageBlockProps) {
         ) : null}
 
         {message.cancelled ? (
-          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">{t("cancelled_tag")}</p>
+          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">{"已中止"}</p>
         ) : null}
       </MessageContent>
     </Message>

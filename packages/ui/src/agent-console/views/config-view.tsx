@@ -1,44 +1,43 @@
 "use client";
 
-import { useTranslation } from "react-i18next";
-
 import { ViewShell } from "../shared/console-brand";
 import type { AgentConsoleState } from "@supportflow/shared/contracts";
 
 export function ConfigView({ state }: { state: AgentConsoleState | null }) {
-  const { t } = useTranslation("console");
-
   return (
-    <ViewShell title={t("config_title")} description={t("config_desc_invoke")}>
+    <ViewShell
+      title={"运行配置"}
+      description={"工作区路径、采样参数与 MCP；模型厂商请在「模型」页查看。"}
+    >
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-xl border border-slate-200 p-4 dark:border-white/10">
-          <h3 className="mb-3 text-sm font-semibold">{t("config_paths")}</h3>
+          <h3 className="mb-3 text-sm font-semibold">{"路径"}</h3>
           <dl className="space-y-2 text-sm">
             <div>
-              <dt className="text-muted-foreground">{t("workspace_label")}</dt>
+              <dt className="text-muted-foreground">{"工作区"}</dt>
               <dd className="font-mono text-xs break-all">{state?.workspaceDir ?? "—"}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">{t("config_bundled_label")}</dt>
+              <dt className="text-muted-foreground">{"配置源 (resources)"}</dt>
               <dd className="font-mono text-xs break-all">{state?.configPath ?? "—"}</dd>
             </div>
           </dl>
         </section>
 
         <section className="rounded-xl border border-slate-200 p-4 dark:border-white/10">
-          <h3 className="mb-3 text-sm font-semibold">{t("config_sampling")}</h3>
+          <h3 className="mb-3 text-sm font-semibold">{"采样参数"}</h3>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <dt className="text-muted-foreground">{t("config_temperature")}</dt>
-              <dd>{state?.temperature ?? t("config_default")}</dd>
+              <dt className="text-muted-foreground">{"temperature"}</dt>
+              <dd>{state?.temperature ?? "默认"}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">top_p</dt>
-              <dd>{state?.topP ?? t("config_default")}</dd>
+              <dd>{state?.topP ?? "默认"}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">{t("config_timeout")}</dt>
-              <dd>{state?.requestTimeout ?? t("config_default")}</dd>
+              <dt className="text-muted-foreground">{"请求超时"}</dt>
+              <dd>{state?.requestTimeout ?? "默认"}</dd>
             </div>
           </dl>
         </section>
@@ -58,7 +57,9 @@ export function ConfigView({ state }: { state: AgentConsoleState | null }) {
         </section>
       ) : null}
 
-      <p className="text-muted-foreground mt-6 text-xs">{t("config_edit_hint")}</p>
+      <p className="text-muted-foreground mt-6 text-xs">
+        {"配置源文件：src-tauri/resources/config.json（随 Tauri 打包）。修改后需重启应用。"}
+      </p>
     </ViewShell>
   );
 }

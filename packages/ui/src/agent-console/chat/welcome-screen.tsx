@@ -30,9 +30,9 @@ export function WelcomeScreen({ onSelectPrompt }: WelcomeScreenProps) {
       style={{ paddingTop: "6vh" }}
     >
       <ConsoleBrandMark className="mb-6 size-16" />
-      <h1 className="text-foreground mb-3 text-2xl font-bold">{t("welcome_title")}</h1>
+      <h1 className="text-foreground mb-3 text-2xl font-bold">{"SupportFlow"}</h1>
       <p className="text-muted-foreground mb-10 max-w-lg text-center leading-relaxed">
-        {t("welcome_subtitle")}
+        {"我可以帮你解答问题、管理计算机、创造和执行技能，并通过长期记忆和知识库不断成长"}
       </p>
 
       <div className="grid w-full max-w-2xl grid-cols-2 gap-3 sm:grid-cols-3">

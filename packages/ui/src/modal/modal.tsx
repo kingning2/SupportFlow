@@ -15,7 +15,6 @@ import {
 } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { useTranslation } from "react-i18next";
 
 import { getModalMotionTarget, playModalEnter, playModalExit } from "./motion/play-window-motion";
 import {
@@ -218,7 +217,6 @@ export type ModalPanelRegistry = Record<string, ComponentType>;
 
 /** 监听 Rust `modal/open-panel`，渲染应用提供的 panels 注册表 */
 export function ModalPanelHost({ registry }: { registry: ModalPanelRegistry }) {
-  const { t } = useTranslation("modal_window");
   const { notifyPanelOpen } = useModalMotion();
   const [panelName, setPanelName] = useState("");
   const [openNonce, setOpenNonce] = useState(0);
@@ -252,10 +250,8 @@ export function ModalPanelHost({ registry }: { registry: ModalPanelRegistry }) {
 
   if (!isModalPanel(panelName)) {
     return (
-      <Modal title={t("title")}>
-        <p className="text-muted-foreground text-sm">
-          {t("unknown_panel", { name: panelName || "—" })}
-        </p>
+      <Modal title={"視窗"}>
+        <p className="text-muted-foreground text-sm">{`未知面板：${panelName || "—"}`}</p>
       </Modal>
     );
   }
@@ -263,10 +259,8 @@ export function ModalPanelHost({ registry }: { registry: ModalPanelRegistry }) {
   const Panel = registry[panelName];
   if (!Panel) {
     return (
-      <Modal title={t("title")}>
-        <p className="text-muted-foreground text-sm">
-          {t("unknown_panel", { name: panelName || "—" })}
-        </p>
+      <Modal title={"視窗"}>
+        <p className="text-muted-foreground text-sm">{`未知面板：${panelName || "—"}`}</p>
       </Modal>
     );
   }

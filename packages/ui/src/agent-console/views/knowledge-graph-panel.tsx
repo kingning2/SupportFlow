@@ -4,7 +4,6 @@ import { Graphin } from "@antv/graphin";
 import { CanvasEvent, type Graph, NodeEvent } from "@antv/g6";
 import { Network, RotateCcw, Search, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 import type {
   AgentKnowledgeGraphLink,
@@ -222,19 +221,16 @@ function GraphCanvasSection(props: {
   onReset: () => void;
   query: string;
   summary: string;
-  t: ReturnType<typeof useTranslation>["t"];
 }) {
-  const { graphState, linksCount, nodesCount, onInit, onQueryChange, onReset, query, summary, t } =
+  const { graphState, linksCount, nodesCount, onInit, onQueryChange, onReset, query, summary } =
     props;
   return (
     <section className="bg-card border-border flex min-h-0 flex-col overflow-hidden rounded-2xl border">
       <div className="border-border flex flex-col gap-3 border-b px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h3 className="text-foreground text-sm font-semibold">
-            {t("knowledge_graph_canvas_title")}
-          </h3>
+          <h3 className="text-foreground text-sm font-semibold">{"知识图谱"}</h3>
           <p className="text-muted-foreground mt-1 text-xs">
-            {t("knowledge_graph_canvas_desc", { links: linksCount, nodes: nodesCount })}
+            {`根据文档之间的引用关系，当前共显示 ${nodesCount} 个节点和 ${linksCount} 条关系。`}
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -243,27 +239,27 @@ function GraphCanvasSection(props: {
             <Input
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
-              placeholder={t("knowledge_graph_search_placeholder")}
+              placeholder={"按标题、路径或分类搜索节点"}
               className="bg-background border-border pl-9"
             />
           </div>
           <Button type="button" size="sm" variant="outline" onClick={onReset}>
             <RotateCcw className="mr-1.5 size-3.5" />
-            {t("knowledge_graph_reset_view")}
+            {"重置视图"}
           </Button>
         </div>
       </div>
 
       <div className="border-border bg-muted/25 flex items-center gap-2 border-b px-4 py-2 text-xs">
         <span className="text-foreground font-medium">
-          {t("knowledge_graph_nodes")} {summary}
+          {"节点"} {summary}
         </span>
         <span className="text-muted-foreground">|</span>
         <span className="text-muted-foreground">
-          {t("knowledge_graph_links")} {linksCount}
+          {"引用关系"} {linksCount}
         </span>
         <span className="text-muted-foreground">|</span>
-        <span className="text-muted-foreground">{t("knowledge_graph_interaction_hint")}</span>
+        <span className="text-muted-foreground">{"点击节点可查看关联文档"}</span>
       </div>
 
       <div className="relative flex-1 bg-[hsl(var(--surface-0,var(--background)))]">
@@ -282,19 +278,16 @@ function GraphCanvasSection(props: {
 function GraphDetailsPanel(props: {
   onNeighborSelect: (id: string | null) => void;
   selectedNode: GraphPanelNode | null;
-  t: ReturnType<typeof useTranslation>["t"];
 }) {
-  const { onNeighborSelect, selectedNode, t } = props;
+  const { onNeighborSelect, selectedNode } = props;
   return (
     <aside className="bg-card border-border flex min-h-0 flex-col overflow-hidden rounded-2xl border">
       <div className="border-border border-b px-4 py-3">
-        <h3 className="text-foreground text-sm font-semibold">
-          {t("knowledge_graph_details_title")}
-        </h3>
+        <h3 className="text-foreground text-sm font-semibold">{"节点详情"}</h3>
         <p className="text-muted-foreground mt-1 text-xs">
           {selectedNode
-            ? t("knowledge_graph_details_selected")
-            : t("knowledge_graph_details_empty")}
+            ? "正在查看当前选中的文档节点。"
+            : "请在图谱中选择一个节点，查看其关联详情。"}
         </p>
       </div>
 
@@ -318,13 +311,11 @@ function GraphDetailsPanel(props: {
 
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="bg-background border-border rounded-xl border p-3">
-              <p className="text-muted-foreground text-[11px]">{t("knowledge_graph_degree")}</p>
+              <p className="text-muted-foreground text-[11px]">{"连接度"}</p>
               <p className="text-foreground mt-1 text-lg font-semibold">{selectedNode.degree}</p>
             </div>
             <div className="bg-background border-border rounded-xl border p-3">
-              <p className="text-muted-foreground text-[11px]">
-                {t("knowledge_graph_neighbor_count")}
-              </p>
+              <p className="text-muted-foreground text-[11px]">{"关联数量"}</p>
               <p className="text-foreground mt-1 text-lg font-semibold">
                 {selectedNode.neighbors.length}
               </p>
@@ -333,16 +324,14 @@ function GraphDetailsPanel(props: {
 
           <div className="mt-4">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-foreground text-sm font-medium">
-                {t("knowledge_graph_related_nodes")}
-              </p>
+              <p className="text-foreground text-sm font-medium">{"关联文档"}</p>
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
                 onClick={() => onNeighborSelect(null)}
               >
-                {t("knowledge_graph_clear_selection")}
+                {"清除"}
               </Button>
             </div>
             <div className="space-y-2">
@@ -371,9 +360,7 @@ function GraphDetailsPanel(props: {
                 ))
               ) : (
                 <div className="bg-muted/35 rounded-xl px-3 py-4 text-center">
-                  <p className="text-muted-foreground text-sm">
-                    {t("knowledge_graph_no_neighbors")}
-                  </p>
+                  <p className="text-muted-foreground text-sm">{"当前文档暂无关联链接。"}</p>
                 </div>
               )}
             </div>
@@ -382,21 +369,19 @@ function GraphDetailsPanel(props: {
           <div className="mt-4 rounded-xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--surface-1,var(--muted)))]/50 p-3">
             <div className="flex items-center gap-2">
               <Sparkles className="text-primary size-4" />
-              <p className="text-foreground text-sm font-medium">
-                {t("knowledge_graph_tip_title")}
-              </p>
+              <p className="text-foreground text-sm font-medium">{"使用提示"}</p>
             </div>
             <p className="text-muted-foreground mt-2 text-xs leading-5">
-              {t("knowledge_graph_tip_body")}
+              {"在 Markdown 文档之间补充链接，可以让知识图谱更密集、更有用。"}
             </p>
           </div>
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
           <Network className="text-muted-foreground size-8" />
-          <p className="text-foreground text-sm font-medium">{t("knowledge_graph_pick_node")}</p>
+          <p className="text-foreground text-sm font-medium">{"请选择节点"}</p>
           <p className="text-muted-foreground max-w-[240px] text-xs leading-5">
-            {t("knowledge_graph_pick_node_desc")}
+            {"在图中点击一个文档节点，可查看分类、连接度和关联文档。"}
           </p>
         </div>
       )}
@@ -411,7 +396,6 @@ export function KnowledgeGraphPanel({
   onUpload,
   uploading
 }: KnowledgeGraphPanelProps) {
-  const { t } = useTranslation("console");
   const [query, setQuery] = useState("");
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [graphInstance, setGraphInstance] = useState<Graph | null>(null);
@@ -433,12 +417,18 @@ export function KnowledgeGraphPanel({
   }, [graphInstance, selectedNodeId]);
 
   if (loading) {
-    return <LoadingState text={t("knowledge_loading_desc")} />;
+    return <LoadingState text={"加载知识库中…"} />;
   }
 
   if (nodes.length === 0) {
     return (
-      <EmptyState hint={t("knowledge_empty_hint")} onUpload={onUpload} uploading={uploading} />
+      <EmptyState
+        hint={
+          "暂无知识文档。点击「上传文档」导入 PDF、Word 等，或在工作区 knowledge/ 添加 Markdown。"
+        }
+        onUpload={onUpload}
+        uploading={uploading}
+      />
     );
   }
 
@@ -466,12 +456,10 @@ export function KnowledgeGraphPanel({
         }}
         query={query}
         summary={`${graphState.filteredNodeCount}/${nodes.length}`}
-        t={t}
       />
       <GraphDetailsPanel
         onNeighborSelect={setSelectedNodeId}
         selectedNode={graphState.selectedNode}
-        t={t}
       />
     </div>
   );

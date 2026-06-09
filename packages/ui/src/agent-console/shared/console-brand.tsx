@@ -54,8 +54,13 @@ export function PlaceholderView({ viewKey }: { viewKey: string }) {
   const { t } = useTranslation("console");
 
   return (
-    <ViewShell title={t(viewKey)} description={t("placeholder_body")}>
-      <div className="text-muted-foreground text-sm">{t("placeholder_body")}</div>
+    <ViewShell
+      title={t(viewKey)}
+      description={"该功能尚未接入 Rust Agent，请先在「对话」「配置」「技能」页测试。"}
+    >
+      <div className="text-muted-foreground text-sm">
+        {"该功能尚未接入 Rust Agent，请先在「对话」「配置」「技能」页测试。"}
+      </div>
     </ViewShell>
   );
 }

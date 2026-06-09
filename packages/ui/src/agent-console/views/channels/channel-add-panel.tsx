@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronDown, Loader2, Plus } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import {
   channelAction,
@@ -47,7 +46,6 @@ export function ChannelAddPanel({
   onClose,
   onConnected
 }: ChannelAddPanelProps) {
-  const { t } = useTranslation("console");
   const [selected, setSelected] = useState(fixedChannel ?? "");
   const [open, setOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -83,14 +81,14 @@ export function ChannelAddPanel({
   if (available.length === 0) {
     return (
       <div className="bg-card border-border mt-4 rounded-xl border p-6 text-center">
-        <p className="text-muted-foreground text-sm">{t("channels_all_connected")}</p>
+        <p className="text-muted-foreground text-sm">{"所有可用通道均已接入"}</p>
         <Button
           type="button"
           variant="ghost"
           className="text-muted-foreground mt-3 text-xs"
           onClick={onClose}
         >
-          {t("channels_cancel")}
+          {"取消"}
         </Button>
       </div>
     );
@@ -123,7 +121,7 @@ export function ChannelAddPanel({
   const selectLabel =
     selectedChannel && ch
       ? `${localizeChannelText(ch.label, lang)} (${ch.name})`
-      : t("channels_select_placeholder");
+      : "选择要接入的通道…";
 
   return (
     <div className="border-primary/30 bg-card mt-4 rounded-xl border p-6">
@@ -131,7 +129,7 @@ export function ChannelAddPanel({
         <div className="bg-primary/10 flex size-9 items-center justify-center rounded-lg">
           <Plus className="text-primary size-4" />
         </div>
-        <h3 className="text-foreground font-semibold">{t("channels_add")}</h3>
+        <h3 className="text-foreground font-semibold">{"接入通道"}</h3>
       </div>
 
       {fixedChannel ? null : (
@@ -164,7 +162,7 @@ export function ChannelAddPanel({
                 role="option"
                 aria-selected={!selected}
               >
-                {t("channels_select_placeholder")}
+                {"选择要接入的通道…"}
               </div>
               {available.map((item) => (
                 <div
@@ -219,7 +217,7 @@ export function ChannelAddPanel({
       {showActions ? (
         <div className="mt-4 flex items-center justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>
-            {t("channels_cancel")}
+            {"取消"}
           </Button>
           <Button
             type="button"
@@ -230,10 +228,10 @@ export function ChannelAddPanel({
             {connecting ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                {t("channels_connecting")}
+                {"接入中…"}
               </>
             ) : (
-              t("channels_connect_btn")
+              "接入"
             )}
           </Button>
         </div>

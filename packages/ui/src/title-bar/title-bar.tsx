@@ -18,7 +18,6 @@ import {
   type LucideIcon
 } from "lucide-react";
 import { memo, useCallback, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 import { cn } from "@supportflow/shared";
 import { useAppDispatch, useAppSelector } from "@supportflow/shared/desktop-shell/store/hooks";
@@ -45,21 +44,16 @@ const INTERACTIVE_TITLE_BAR_SELECTOR =
 
 type MoreMenuItem = {
   id: string;
-  i18nKey:
-    | "menu_feedback"
-    | "menu_contact_support"
-    | "menu_online_help"
-    | "menu_check_updates"
-    | "menu_about";
+  label: string;
   Icon: LucideIcon;
 };
 
 const MORE_MENU_ITEMS: MoreMenuItem[] = [
-  { id: "feedback", i18nKey: "menu_feedback", Icon: Mail },
-  { id: "contact_support", i18nKey: "menu_contact_support", Icon: Headphones },
-  { id: "online_help", i18nKey: "menu_online_help", Icon: CircleHelp },
-  { id: "check_updates", i18nKey: "menu_check_updates", Icon: ArrowUpCircle },
-  { id: "about", i18nKey: "menu_about", Icon: Info }
+  { id: "feedback", label: "反饋", Icon: Mail },
+  { id: "contact_support", label: "聯絡支援", Icon: Headphones },
+  { id: "online_help", label: "在線幫助", Icon: CircleHelp },
+  { id: "check_updates", label: "檢查更新", Icon: ArrowUpCircle },
+  { id: "about", label: "關於", Icon: Info }
 ];
 
 /** 整栏可拖；仅排除按钮/菜单等可交互控件（由控件区 stopPropagation 兜底） */
@@ -71,10 +65,9 @@ function handleTitleBarMouseDown(e: React.MouseEvent<HTMLDivElement>) {
 }
 
 const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
-  const { t } = useTranslation("title_bar");
   const h = props.height ?? 40;
   const accent = props.accent;
-  const title = accent?.title ?? t("app_name");
+  const title = accent?.title ?? "SupportFlow";
   const logoText = accent?.logoText ?? "T";
   const logoGradient = accent?.logoGradient ?? "from-[#2b7fff] to-[#155dfc]";
   const dispatch = useAppDispatch();
@@ -101,7 +94,7 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
     () => [
       {
         key: "language",
-        label: t("menu_language"),
+        label: "語言",
         icon: <Globe className="size-4 shrink-0 opacity-80" aria-hidden />,
         children: supportLanguages.map((opt) => ({
           key: opt.value,
@@ -123,25 +116,25 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
       { type: "divider" as const },
       {
         key: "license_activation",
-        label: t("menu_license_activation"),
+        label: "訂閱激活",
         icon: <KeyRound className="size-4 shrink-0" aria-hidden />,
         onClick: () => setActivationOpen(true)
       },
       {
         key: "license_machine_code",
-        label: t("menu_license_machine_code"),
+        label: "機器碼",
         icon: <Copy className="size-4 shrink-0" aria-hidden />,
         onClick: () => setMachineCodeOpen(true)
       },
       { type: "divider" as const },
-      ...MORE_MENU_ITEMS.map(({ id, i18nKey, Icon }) => ({
+      ...MORE_MENU_ITEMS.map(({ id, label, Icon }) => ({
         key: id,
-        label: t(i18nKey),
+        label: label,
         icon: <Icon className="size-4 shrink-0" aria-hidden />,
         disabled: true
       }))
     ],
-    [t, supportLanguages, currentLanguage, switchLanguage]
+    [supportLanguages, currentLanguage, switchLanguage]
   );
 
   return (
@@ -183,7 +176,7 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
               variant="ghost"
               size="icon"
               className={controlBtnClass}
-              aria-label={t("menu")}
+              aria-label={"選單"}
             >
               <Menu className="size-4" />
             </Button>
@@ -197,7 +190,7 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
             variant="ghost"
             size="icon"
             className={controlBtnClass}
-            aria-label={t("minimize")}
+            aria-label={"最小化"}
             onClick={() => void mainWindow.minimize()}
           >
             <Minus className="size-4" />
@@ -207,7 +200,7 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
             variant="ghost"
             size="icon"
             className={controlBtnClass}
-            aria-label={t("maximize")}
+            aria-label={"最大化"}
             onClick={() => void mainWindow.toggleMaximize()}
           >
             <Square className="size-3.5" />
@@ -222,7 +215,7 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
                 ? "hover:bg-red-500/10 hover:text-red-600"
                 : "hover:bg-destructive/10 hover:text-destructive"
             )}
-            aria-label={t("close")}
+            aria-label={"關閉"}
             onClick={() => void mainWindow.close()}
           >
             <X className="size-4" />

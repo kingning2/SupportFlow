@@ -109,13 +109,13 @@ function ActiveModelSection({
 }) {
   return (
     <section className="mb-6 rounded-xl border border-slate-200 p-4 dark:border-white/10">
-      <h3 className="mb-4 text-sm font-semibold">{t("models_active_title")}</h3>
+      <h3 className="mb-4 text-sm font-semibold">{"当前对话模型"}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <span className="text-sm font-medium">{t("models_active_provider")}</span>
+          <span className="text-sm font-medium">{"厂商"}</span>
           <Select value={resolvedChatProviderId} onValueChange={onProviderChange}>
             <SelectTrigger>
-              <SelectValue placeholder={t("models_select_provider")} />
+              <SelectValue placeholder={"选择厂商"} />
             </SelectTrigger>
             <SelectContent>
               {configuredEditable.map((provider) => (
@@ -128,7 +128,7 @@ function ActiveModelSection({
         </div>
 
         <div className="space-y-2">
-          <span className="text-sm font-medium">{t("models_active_model")}</span>
+          <span className="text-sm font-medium">{"模型 ID"}</span>
           {modelOptions.length > 0 ? (
             <Select
               value={useCustomModel ? "__custom__" : resolvedChatModel}
@@ -143,7 +143,7 @@ function ActiveModelSection({
                     {model}
                   </SelectItem>
                 ))}
-                <SelectItem value="__custom__">{t("models_custom_model")}</SelectItem>
+                <SelectItem value="__custom__">{"自定义模型名"}</SelectItem>
               </SelectContent>
             </Select>
           ) : (
@@ -157,7 +157,7 @@ function ActiveModelSection({
           {useCustomModel && modelOptions.length > 0 ? (
             <Input
               className="font-mono text-sm"
-              placeholder={t("models_custom_model")}
+              placeholder={"自定义模型名"}
               value={resolvedCustomModel}
               onChange={(event) => onCustomModelChange(event.target.value)}
             />
@@ -175,7 +175,7 @@ function ActiveModelSection({
           disabled={modelSelection.chatSaving || configuredEditable.length === 0}
           onClick={() => void onApply()}
         >
-          {t("models_apply_chat")}
+          {"应用对话模型"}
         </Button>
       </div>
     </section>
@@ -196,10 +196,10 @@ function VendorsSection({
   return (
     <section>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">{t("models_section_vendors")}</h3>
+        <h3 className="text-sm font-semibold">{"厂商凭据"}</h3>
         <Button type="button" size="sm" variant="outline" onClick={onAdd}>
           <Plus className="mr-1 h-4 w-4" />
-          {t("models_add_vendor")}
+          {"添加厂商"}
         </Button>
       </div>
       <ul className="space-y-2">
@@ -212,15 +212,17 @@ function VendorsSection({
               <KeyRound className="text-muted-foreground h-4 w-4 shrink-0" />
               <span className="font-medium">{t(providerLabelKey(provider.id))}</span>
               {!provider.editable ? (
-                <span className="text-muted-foreground text-xs">{t("models_readonly_vendor")}</span>
+                <span className="text-muted-foreground text-xs">
+                  {"此厂商暂不支持在控制台配置"}
+                </span>
               ) : null}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={provider.configured ? "default" : "secondary"}>
-                {provider.configured ? t("models_configured") : t("models_not_configured")}
+                {provider.configured ? "已配置 API Key" : "未配置"}
               </Badge>
               {provider.isActive ? (
-                <Badge className="bg-[#35A85B] text-white">{t("models_in_use")}</Badge>
+                <Badge className="bg-[#35A85B] text-white">{"使用中"}</Badge>
               ) : null}
               {provider.editable ? (
                 <Button
@@ -229,7 +231,7 @@ function VendorsSection({
                   variant="ghost"
                   className="h-8 w-8"
                   onClick={() => onEdit(provider)}
-                  aria-label={t("models_edit_vendor")}
+                  aria-label={"编辑凭据"}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -324,7 +326,7 @@ export function ModelsView({ state, onRefresh }: ModelsViewProps) {
   };
 
   return (
-    <ViewShell title={t("models_title")} description={t("models_desc")}>
+    <ViewShell title={"模型管理"} description={"配置各厂商 API Key，并选择当前对话使用的模型。"}>
       <ActiveModelSection
         configuredEditable={configuredEditable}
         modelOptions={modelOptions}
@@ -354,7 +356,9 @@ export function ModelsView({ state, onRefresh }: ModelsViewProps) {
         t={t}
       />
 
-      <p className="text-muted-foreground mt-6 text-xs">{t("models_edit_hint")}</p>
+      <p className="text-muted-foreground mt-6 text-xs">
+        {"凭据写入 src-tauri/resources/config.json，保存后立即生效，无需重启。"}
+      </p>
 
       <VendorCredentialDialog
         key={`${editingProvider?.id ?? "new"}-${vendorOpen ? "open" : "closed"}`}

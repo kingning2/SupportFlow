@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import {
   listAgentSessions,
@@ -19,7 +18,6 @@ interface SessionPanelProps {
 }
 
 export function SessionPanel({ open, sessionId, onClose, onNewChat }: SessionPanelProps) {
-  const { t } = useTranslation("console");
   const [loading, setLoading] = useState(false);
   const [sessions, setSessions] = useState<AgentSessionSummary[]>([]);
 
@@ -59,7 +57,7 @@ export function SessionPanel({ open, sessionId, onClose, onNewChat }: SessionPan
     <>
       <aside className="session-panel">
         <div className="session-panel-header">
-          <span className="text-foreground text-sm font-semibold">{t("session_history")}</span>
+          <span className="text-foreground text-sm font-semibold">{"历史会话"}</span>
           <Button
             type="button"
             variant="ghost"
@@ -73,14 +71,14 @@ export function SessionPanel({ open, sessionId, onClose, onNewChat }: SessionPan
 
         <Button type="button" className="session-panel-new" onClick={onNewChat}>
           <Plus className="size-3.5" />
-          <span>{t("new_chat")}</span>
+          <span>{"新对话"}</span>
         </Button>
 
         <div className="session-list">
           {loading ? (
-            <p className="session-empty">{t("session_loading")}</p>
+            <p className="session-empty">{"加载会话列表…"}</p>
           ) : sessions.length === 0 ? (
-            <p className="session-empty">{t("session_list_hint")}</p>
+            <p className="session-empty">{"暂无历史会话，发送消息或新建对话后会出现在这里。"}</p>
           ) : (
             sessions.map((session) => (
               <div
@@ -92,7 +90,7 @@ export function SessionPanel({ open, sessionId, onClose, onNewChat }: SessionPan
                     : "text-muted-foreground"
                 )}
               >
-                <p className="truncate font-medium">{session.title || t("untitled_session")}</p>
+                <p className="truncate font-medium">{session.title || "新对话"}</p>
                 <p className="truncate font-mono text-xs opacity-70">{session.id}</p>
               </div>
             ))

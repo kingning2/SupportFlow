@@ -71,7 +71,7 @@ export function ConsoleHeader({
         onClick={toggleLanguage}
       >
         <Globe className="size-3.5" />
-        <span>{currentLanguage === Language.Cn ? t("switch_to_en") : t("switch_to_cn")}</span>
+        <span>{currentLanguage === Language.Cn ? "EN" : "中文"}</span>
       </Button>
 
       <Button type="button" variant="ghost" size="icon-sm" onClick={onToggleTheme}>

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Brain, FileText, Moon } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import {
   listAgentMemory,
@@ -13,7 +12,6 @@ import { ViewShell } from "../shared/console-brand";
 import { Button } from "@supportflow/ui/button";
 
 export function MemoryView() {
-  const { t } = useTranslation("console");
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<AgentMemoryItem[]>([]);
   const [activeTab, setActiveTab] = useState<"files" | "dreams">("files");
@@ -60,7 +58,7 @@ export function MemoryView() {
   };
 
   return (
-    <ViewShell title={t("memory_title")} description={t("memory_desc")}>
+    <ViewShell title={"记忆管理"} description={"查看 Agent 记忆文件和内容"}>
       <div className="mx-auto w-full max-w-4xl">
         <div className="mb-6 flex items-center justify-between gap-3">
           <div className="flex items-center rounded-lg bg-slate-100 p-0.5 dark:bg-white/10">
@@ -72,7 +70,7 @@ export function MemoryView() {
               onClick={() => setActiveTab("files")}
             >
               <FileText className="mr-1.5 size-3.5" />
-              {t("memory_tab_files")}
+              {"记忆文件"}
             </Button>
             <Button
               type="button"
@@ -82,7 +80,7 @@ export function MemoryView() {
               onClick={() => setActiveTab("dreams")}
             >
               <Moon className="mr-1.5 size-3.5" />
-              {t("memory_tab_dreams")}
+              {"梦境日记"}
             </Button>
           </div>
         </div>
@@ -94,7 +92,7 @@ export function MemoryView() {
             </div>
             <div className="max-h-[60vh] overflow-y-auto p-4">
               <pre className="text-sm whitespace-pre-wrap text-slate-700 dark:text-slate-200">
-                {activeContent || t("memory_empty")}
+                {activeContent || "暂无记忆内容"}
               </pre>
             </div>
             <div className="border-t border-slate-200 p-3 dark:border-white/10">
@@ -104,7 +102,7 @@ export function MemoryView() {
                 variant="outline"
                 onClick={() => setActiveFilename(null)}
               >
-                {t("memory_back")}
+                {"返回列表"}
               </Button>
             </div>
           </div>
@@ -113,9 +111,9 @@ export function MemoryView() {
             <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-purple-50 dark:bg-purple-900/20">
               <Brain className="size-7 text-purple-400" />
             </div>
-            <p className="font-medium text-slate-500 dark:text-slate-400">{t("memory_title")}</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400">{"记忆管理"}</p>
             <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">
-              {loading ? t("memory_loading_desc") : t("memory_empty")}
+              {loading ? "记忆文件将显示在此处" : "暂无记忆内容"}
             </p>
           </div>
         ) : (
@@ -123,18 +121,10 @@ export function MemoryView() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10">
-                  <th className="px-4 py-3 text-left text-xs text-slate-500">
-                    {t("memory_col_name")}
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs text-slate-500">
-                    {t("memory_col_type")}
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs text-slate-500">
-                    {t("memory_col_size")}
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs text-slate-500">
-                    {t("memory_col_updated")}
-                  </th>
+                  <th className="px-4 py-3 text-left text-xs text-slate-500">{"文件名"}</th>
+                  <th className="px-4 py-3 text-left text-xs text-slate-500">{"类型"}</th>
+                  <th className="px-4 py-3 text-left text-xs text-slate-500">{"大小"}</th>
+                  <th className="px-4 py-3 text-left text-xs text-slate-500">{"更新时间"}</th>
                 </tr>
               </thead>
               <tbody>

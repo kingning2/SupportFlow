@@ -3,7 +3,6 @@
 import { Modal } from "antd";
 import { Copy } from "lucide-react";
 import { useCallback, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 import {
   getLicenseStatus,
@@ -38,7 +37,6 @@ function useLicenseStatus() {
 
 /** 订阅激活弹窗 */
 export function LicenseActivationModal({ open, onOpenChange }: LicenseModalProps) {
-  const { t } = useTranslation("title_bar");
   const { status, error, setError, loadStatus, setStatus } = useLicenseStatus();
   const [activating, setActivating] = useState(false);
 
@@ -66,7 +64,7 @@ export function LicenseActivationModal({ open, onOpenChange }: LicenseModalProps
   return (
     <Modal
       open={open}
-      title={t("license_activation_title")}
+      title={"订阅激活"}
       onCancel={handleClose}
       afterOpenChange={(visible) => {
         if (visible) void loadStatus();
@@ -74,7 +72,7 @@ export function LicenseActivationModal({ open, onOpenChange }: LicenseModalProps
       destroyOnHidden
       footer={[
         <Button key="cancel" type="button" variant="outline" onClick={handleClose}>
-          {t("license_modal_cancel")}
+          {"取消"}
         </Button>,
         <Button
           key="apply"
@@ -82,12 +80,12 @@ export function LicenseActivationModal({ open, onOpenChange }: LicenseModalProps
           disabled={activating}
           onClick={() => void handleApplyActivation()}
         >
-          {activating ? t("license_activation_applying") : t("license_activation_apply")}
+          {activating ? "激活中…" : "激活"}
         </Button>
       ]}
     >
       <p className="text-muted-foreground mb-3 text-sm">
-        {isLicensed ? t("license_activation_active") : t("license_activation_hint")}
+        {isLicensed ? "已激活，可正常使用" : "粘贴管理员提供的激活码后点击激活"}
       </p>
       {error ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
     </Modal>
@@ -96,7 +94,6 @@ export function LicenseActivationModal({ open, onOpenChange }: LicenseModalProps
 
 /** 机器码复制弹窗 */
 export function LicenseMachineCodeModal({ open, onOpenChange }: LicenseModalProps) {
-  const { t } = useTranslation("title_bar");
   const { status, error, setError, loadStatus } = useLicenseStatus();
   const [machineCopied, setMachineCopied] = useState(false);
 
@@ -116,7 +113,7 @@ export function LicenseMachineCodeModal({ open, onOpenChange }: LicenseModalProp
     setError(null);
     try {
       if (typeof window === "undefined" || !navigator?.clipboard?.writeText) {
-        setError(t("license_machine_code_clipboard_unavailable"));
+        setError("无法访问剪贴板");
         return;
       }
       await navigator.clipboard.writeText(machineCode);
@@ -126,12 +123,12 @@ export function LicenseMachineCodeModal({ open, onOpenChange }: LicenseModalProp
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
     }
-  }, [machineCode, setError, t]);
+  }, [machineCode, setError]);
 
   return (
     <Modal
       open={open}
-      title={t("license_machine_code_label")}
+      title={"机器码"}
       onCancel={handleClose}
       afterOpenChange={(visible) => {
         if (visible) void loadStatus();
@@ -139,7 +136,7 @@ export function LicenseMachineCodeModal({ open, onOpenChange }: LicenseModalProp
       destroyOnHidden
       footer={[
         <Button key="cancel" type="button" variant="outline" onClick={handleClose}>
-          {t("license_modal_cancel")}
+          {"取消"}
         </Button>,
         <Button
           key="copy"
@@ -148,11 +145,11 @@ export function LicenseMachineCodeModal({ open, onOpenChange }: LicenseModalProp
           onClick={() => void handleCopyMachineCode()}
         >
           <Copy className="mr-1.5 size-3.5" />
-          {machineCopied ? t("license_machine_code_copied") : t("license_machine_code_copy")}
+          {machineCopied ? "已复制" : "复制机器码"}
         </Button>
       ]}
     >
-      <p className="text-muted-foreground mb-3 text-sm">{t("license_machine_code_hint")}</p>
+      <p className="text-muted-foreground mb-3 text-sm">{"复制机器码发给管理员"}</p>
       <Input className="font-mono text-xs" value={machineCode} readOnly />
       {error ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
     </Modal>

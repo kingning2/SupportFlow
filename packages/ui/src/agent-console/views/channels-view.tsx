@@ -23,8 +23,8 @@ function ChannelsEmptyState({ t }: { t: ReturnType<typeof useTranslation>["t"] }
       <div className="bg-info/10 mb-4 flex size-16 items-center justify-center rounded-2xl">
         <Radio className="text-info size-7" />
       </div>
-      <p className="text-muted-foreground font-medium">{t("channels_empty")}</p>
-      <p className="text-muted-foreground mt-1 text-sm">{t("channels_empty_desc")}</p>
+      <p className="text-muted-foreground font-medium">{"暂未接入任何通道"}</p>
+      <p className="text-muted-foreground mt-1 text-sm">{"点击右上角「接入通道」按钮开始配置"}</p>
     </div>
   );
 }
@@ -60,7 +60,7 @@ function ChannelsHeader({
           onClick={onOpenAdd}
         >
           <Plus className="size-3.5" />
-          {t("channels_add")}
+          {"接入通道"}
         </Button>
       ) : null}
     </div>
@@ -71,7 +71,7 @@ function ChannelsLoading({ t }: { t: ReturnType<typeof useTranslation>["t"] }) {
   return (
     <div className="text-muted-foreground flex items-center justify-center gap-2 py-8 text-sm">
       <Loader2 className="size-4 animate-spin" />
-      <span>{t("channels_loading")}</span>
+      <span>{"加载通道配置…"}</span>
     </div>
   );
 }
@@ -87,16 +87,20 @@ function ChannelsError({
 }) {
   return (
     <div className="bg-warning/10 text-warning-foreground border-warning/30 rounded-xl border p-4 text-sm">
-      <p className="font-medium">{t("channels_python_unreachable_title")}</p>
+      <p className="font-medium">{"通道 sidecar 未就绪"}</p>
       <p className="mt-2 text-xs opacity-90">{loadError}</p>
-      <p className="mt-3 text-xs opacity-80">{t("channels_python_unreachable_hint")}</p>
+      <p className="mt-3 text-xs opacity-80">
+        {
+          "请先运行 pnpm run build:channel-sidecar 生成 PyInstaller sidecar，开发态也可直接使用 channel_agent 源码。"
+        }
+      </p>
       <Button
         type="button"
         variant="outline"
         className="border-warning/40 mt-4 text-xs"
         onClick={() => void load()}
       >
-        {t("channels_retry")}
+        {"重试"}
       </Button>
     </div>
   );
@@ -194,7 +198,7 @@ export function ChannelsView() {
       setCatalog(await fetchChannels());
     } catch (error) {
       setCatalog([]);
-      setLoadError(error instanceof Error ? error.message : t("channels_load_failed"));
+      setLoadError(error instanceof Error ? error.message : "加载通道列表失败");
     } finally {
       setLoading(false);
     }
@@ -218,7 +222,7 @@ export function ChannelsView() {
 
   const handleDisconnect = useCallback(
     async (name: string) => {
-      if (!window.confirm(t("channels_disconnect_confirm"))) {
+      if (!window.confirm("确认断开该通道？配置将保留但通道会停止运行。")) {
         return;
       }
       try {
@@ -242,7 +246,7 @@ export function ChannelsView() {
   if (devChannel && !loading && !loadError && catalog.length > 0 && !devChannelRow) {
     return (
       <div className="flex h-full min-h-0 flex-col items-center justify-center p-6 text-sm text-red-500">
-        <p>{t("channels_dev_unknown", { channel: devChannel })}</p>
+        <p>{`未知通道「${devChannel}」，请检查 NEXT_PUBLIC_DEV_CHANNEL / 启动脚本。`}</p>
       </div>
     );
   }

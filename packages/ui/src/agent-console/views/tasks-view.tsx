@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Clock3 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { listAgentTasks, type AgentTaskSummary } from "@supportflow/shared/tauri-bridge/cmd/agent";
 import { ViewShell } from "../shared/console-brand";
 
 export function TasksView() {
-  const { t } = useTranslation("console");
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<AgentTaskSummary[]>([]);
 
@@ -37,16 +35,16 @@ export function TasksView() {
   }, []);
 
   return (
-    <ViewShell title={t("tasks_title")} description={t("tasks_desc")}>
+    <ViewShell title={"定时任务"} description={"查看和管理定时任务"}>
       <div className="mx-auto w-full max-w-4xl">
         {loading || tasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 py-20 dark:border-white/10">
             <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-900/20">
               <Clock3 className="size-7 text-rose-400" />
             </div>
-            <p className="font-medium text-slate-500 dark:text-slate-400">{t("tasks_title")}</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400">{"定时任务"}</p>
             <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">
-              {loading ? t("tasks_loading") : t("tasks_empty")}
+              {loading ? "加载定时任务中..." : "暂无定时任务"}
             </p>
           </div>
         ) : (
@@ -63,7 +61,7 @@ export function TasksView() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {t("tasks_next_run")}: {task.nextRunAt ?? "—"}
+                  {"下次执行"}: {task.nextRunAt ?? "—"}
                 </p>
               </div>
             ))}

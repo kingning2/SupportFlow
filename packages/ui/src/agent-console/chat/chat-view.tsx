@@ -4,7 +4,6 @@ import { ChatComposer } from "../chat/chat-composer";
 import { ChatThread } from "../chat/chat-thread";
 import { useAgentChat } from "../hooks/use-agent-chat";
 import type { AgentConsoleState } from "@supportflow/shared/contracts";
-import { useTranslation } from "react-i18next";
 
 interface ChatViewProps {
   sessionId?: string;
@@ -13,7 +12,6 @@ interface ChatViewProps {
 }
 
 export function ChatView({ sessionId, consoleState, onNewSession }: ChatViewProps) {
-  const { t } = useTranslation("console");
   const { messages, isStreaming, sendMessage, cancel, clearContext, resetMessages } =
     useAgentChat(sessionId);
 
@@ -29,7 +27,7 @@ export function ChatView({ sessionId, consoleState, onNewSession }: ChatViewProp
     <div className="flex h-full min-h-0 flex-col">
       {apiKeyMissing ? (
         <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-800 dark:text-amber-200">
-          {t("api_key_not_configured")}
+          {"当前模型厂商未配置 API Key。请编辑 src-tauri/resources/config.json 后重启应用。"}
           {consoleState?.workspaceDir ? (
             <span className="mt-1 block font-mono text-xs opacity-80">
               {consoleState.workspaceDir}

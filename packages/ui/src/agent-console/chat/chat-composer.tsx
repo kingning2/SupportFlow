@@ -2,7 +2,6 @@
 
 import type { FormEvent } from "react";
 import { Eraser, MessageSquarePlus } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import {
   PromptInput,
@@ -29,8 +28,6 @@ export function ChatComposer({
   onClearContext,
   onNewChat
 }: ChatComposerProps) {
-  const { t } = useTranslation("console");
-
   const handleSubmit = async (message: { text: string }, event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const text = message.text.trim();
@@ -44,14 +41,14 @@ export function ChatComposer({
     <div className="composer-shell shrink-0 px-4 py-3">
       <PromptInput className="mx-auto max-w-3xl" onSubmit={handleSubmit}>
         <PromptInputBody>
-          <PromptInputTextarea placeholder={t("input_placeholder")} />
+          <PromptInputTextarea placeholder={"输入消息，或输入 / 使用指令"} />
         </PromptInputBody>
         <PromptInputFooter>
           <PromptInputTools>
-            <PromptInputButton tooltip={t("tip_new_chat")} onClick={onNewChat}>
+            <PromptInputButton tooltip={"新建对话"} onClick={onNewChat}>
               <MessageSquarePlus className="size-4" />
             </PromptInputButton>
-            <PromptInputButton tooltip={t("tip_clear_context")} onClick={onClearContext}>
+            <PromptInputButton tooltip={"清除上下文"} onClick={onClearContext}>
               <Eraser className="size-4" />
             </PromptInputButton>
           </PromptInputTools>

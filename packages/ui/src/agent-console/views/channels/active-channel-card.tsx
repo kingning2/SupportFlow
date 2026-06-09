@@ -41,7 +41,7 @@ function ChannelStatusBadge({
     return (
       <>
         <span className="bg-success size-2 rounded-full" />
-        <span className="text-success text-xs">{t("channels_connected")}</span>
+        <span className="text-success text-xs">{"已接入"}</span>
       </>
     );
   }
@@ -50,9 +50,9 @@ function ChannelStatusBadge({
     <>
       <span className="size-2 animate-pulse rounded-full bg-amber-400" />
       {loginStatus === "scanned" ? (
-        <span className="text-success text-xs">{t("weixin_scan_scanned")}</span>
+        <span className="text-success text-xs">{"已扫码，请在手机上确认"}</span>
       ) : (
-        <span className="text-xs text-amber-500">{t("weixin_scan_waiting")}</span>
+        <span className="text-xs text-amber-500">{"等待扫码…"}</span>
       )}
     </>
   );
@@ -94,7 +94,7 @@ export function ActiveChannelCard({
       setTimeout(() => setStatusMsg(null), 2500);
       onRefresh();
     } catch {
-      setStatusMsg(t("channels_save_error"));
+      setStatusMsg("保存失败");
       setStatusError(true);
       setTimeout(() => setStatusMsg(null), 2500);
     } finally {
@@ -128,7 +128,7 @@ export function ActiveChannelCard({
           className="h-auto px-3 py-1.5 text-xs"
           onClick={() => onDisconnect(channel.name)}
         >
-          {t("channels_disconnect")}
+          {"断开"}
         </Button>
       </div>
 
@@ -152,7 +152,7 @@ export function ActiveChannelCard({
               {statusMsg}
             </span>
             <Button type="button" disabled={saving} onClick={() => void handleSave()}>
-              {saving ? t("channels_saving") : t("channels_save")}
+              {saving ? "保存中…" : "保存配置"}
             </Button>
           </div>
         </div>

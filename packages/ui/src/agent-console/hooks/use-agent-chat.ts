@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 import {
   cancelAgentMessage,
@@ -27,7 +26,6 @@ function createUserMessage(text: string): ChatMessage {
 }
 
 export function useAgentChat(sessionId: string | undefined) {
-  const { t } = useTranslation("console");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const activeRequestIdRef = useRef<string | null>(null);
@@ -87,14 +85,14 @@ export function useAgentChat(sessionId: string | undefined) {
             reasoning: "",
             reasoningStreaming: false,
             toolSteps: [],
-            content: t("send_failed"),
+            content: "发送失败，请检查 src-tauri/resources/config.json 与 API Key。",
             streaming: false,
             cancelled: false
           }
         ]);
       }
     },
-    [isStreaming, sessionId, t]
+    [isStreaming, sessionId]
   );
 
   const cancel = useCallback(() => {

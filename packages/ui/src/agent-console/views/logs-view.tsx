@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Copy, Terminal } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import {
   readAgentLogs,
@@ -51,7 +50,6 @@ function levelClass(level: LogLevel | null) {
 }
 
 export function LogsView() {
-  const { t } = useTranslation("console");
   const [raw, setRaw] = useState("");
   const [loading, setLoading] = useState(true);
   const [enabledLevels, setEnabledLevels] = useState<Record<LogLevel, boolean>>({
@@ -169,7 +167,7 @@ export function LogsView() {
   };
 
   return (
-    <ViewShell title={t("logs_title")} description={t("logs_desc")}>
+    <ViewShell title={"日志"} description={"实时日志输出 (run.log)"}>
       <div className="mx-auto h-full w-full max-w-5xl">
         <div className="bg-surface-2 border-border overflow-hidden rounded-xl border shadow-lg">
           <div className="bg-surface-1 border-border flex items-center gap-2 border-b px-4 py-2.5">
@@ -185,7 +183,7 @@ export function LogsView() {
                 onClick={() => void copySelected()}
               >
                 <Copy className="mr-1 size-3.5" />
-                {t("logs_copy_selection")}
+                {"复制选中"}
               </Button>
               <Button
                 type="button"
@@ -195,7 +193,7 @@ export function LogsView() {
                 onClick={() => void copyAll()}
               >
                 <Copy className="mr-1 size-3.5" />
-                {t("logs_copy_all")}
+                {"复制全部"}
               </Button>
             </div>
             <div className="mr-2 flex items-center gap-3">
@@ -214,7 +212,7 @@ export function LogsView() {
                 </label>
               ))}
             </div>
-            <span className="text-muted-foreground text-xs">{t("logs_live")}</span>
+            <span className="text-muted-foreground text-xs">{"实时"}</span>
           </div>
           <div
             id="log-output"
@@ -227,9 +225,9 @@ export function LogsView() {
             }}
           >
             {loading ? (
-              <p className="text-muted-foreground">{t("logs_loading")}</p>
+              <p className="text-muted-foreground">{"加载日志中..."}</p>
             ) : lines.length === 0 ? (
-              <p className="text-muted-foreground">{t("logs_empty")}</p>
+              <p className="text-muted-foreground">{"暂无日志输出"}</p>
             ) : (
               lines.map((line, idx) => (
                 <span key={`${idx}-${line.text}`} className={`${levelClass(line.level)} block`}>
