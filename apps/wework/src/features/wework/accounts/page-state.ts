@@ -21,8 +21,6 @@ import type { WeworkAccountConfig, WeworkSavedAccount } from "@/features/wework/
 import type { PageActions } from "@/features/wework/accounts/page-types";
 import type { WeworkConnectionStatus } from "@/features/wework/types/wework-conversation";
 
-type Translate = (key: string, options?: Record<string, unknown>) => string;
-
 export interface PageState {
   accounts: WeworkSavedAccount[];
   accountsLoaded: boolean;
@@ -95,9 +93,8 @@ export function usePageState(params: {
   channelLoading: boolean;
   connectionStatus: WeworkConnectionStatus;
   onChannelUpdated?: () => void;
-  t: Translate;
 }) {
-  const { actions, channel, channelError, channelLoading, connectionStatus, onChannelUpdated, t } =
+  const { actions, channel, channelError, channelLoading, connectionStatus, onChannelUpdated } =
     params;
   const [accounts, setAccounts] = useState<WeworkSavedAccount[]>([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
@@ -113,7 +110,7 @@ export function usePageState(params: {
 
   const backendReady = !channelLoading && !channelError;
   const backendErrorMessage =
-    channelError === "channels_load_failed" ? t("channels_load_failed") : channelError;
+    channelError === "channels_load_failed" ? "加载通道失败" : channelError;
   const activeAccountId =
     channelLoading || channelError || !channel?.active ? null : storedActiveAccountId;
   const channelActive =
@@ -301,7 +298,7 @@ export function usePageState(params: {
   }, [actions, notifyChannelUpdated]);
 
   const handleDisconnect = useCallback(async () => {
-    if (!window.confirm(t("channels_disconnect_confirm"))) {
+    if (!window.confirm("确认断开当前连接吗？")) {
       return;
     }
     setDisconnecting(true);
@@ -310,11 +307,11 @@ export function usePageState(params: {
     } finally {
       setDisconnecting(false);
     }
-  }, [performDisconnect, t]);
+  }, [performDisconnect]);
 
   const handleDeleteAccount = useCallback(
     (id: string) => {
-      if (!window.confirm(t("wework_account_delete_confirm"))) {
+      if (!window.confirm("确认删除这个账号记录吗？")) {
         return;
       }
       void (async () => {
@@ -327,7 +324,7 @@ export function usePageState(params: {
         setMenuOpenId(null);
       })();
     },
-    [accounts, activeAccountId, t]
+    [accounts, activeAccountId]
   );
 
   const handleSwitchOpenChange = useCallback(

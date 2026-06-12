@@ -9,8 +9,6 @@ import { Button } from "@supportflow/ui/button";
 import { AccountAvatar } from "@/features/wework/accounts/avatar";
 import type { WeworkSavedAccount } from "@/features/wework/accounts/types";
 
-type Translate = (key: string, options?: Record<string, unknown>) => string;
-
 interface AccountListProps {
   accounts: WeworkSavedAccount[];
   activeAccountId: string | null;
@@ -24,7 +22,6 @@ interface AccountListProps {
   onDisconnect: () => void;
   onMenuToggle: (id: string) => void;
   switching: boolean;
-  t: Translate;
 }
 
 interface AccountListItemProps extends AccountListProps {
@@ -44,7 +41,6 @@ function renderConnectionAction(params: {
   onAccountClick: (account: WeworkSavedAccount) => void;
   onDisconnect: () => void;
   rowBusy: boolean;
-  t: Translate;
 }) {
   const {
     account,
@@ -54,8 +50,7 @@ function renderConnectionAction(params: {
     isConnecting,
     onAccountClick,
     onDisconnect,
-    rowBusy,
-    t
+    rowBusy
   } = params;
 
   if (isActive) {
@@ -70,7 +65,7 @@ function renderConnectionAction(params: {
           onDisconnect();
         }}
       >
-        {disconnecting ? t("channels_connecting") : t("channels_disconnect")}
+        {disconnecting ? "处理中" : "断开"}
       </Button>
     );
   }
@@ -85,7 +80,7 @@ function renderConnectionAction(params: {
         onAccountClick(account);
       }}
     >
-      {isConnecting ? <Loader2 className="size-3.5 animate-spin" /> : t("wework_account_connect")}
+      {isConnecting ? <Loader2 className="size-3.5 animate-spin" /> : "连接"}
     </Button>
   );
 }
@@ -102,8 +97,7 @@ function AccountListItem({
   onDeleteAccount,
   onDisconnect,
   onMenuToggle,
-  switching,
-  t
+  switching
 }: AccountListItemProps) {
   const isActive = channelActive && activeAccountId === account.id;
   const isConnecting = connectingId === account.id;
@@ -141,20 +135,18 @@ function AccountListItem({
             </span>
             {isActive ? (
               <span className="bg-success/10 text-success shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium">
-                {t("wework_account_connected")}
+                已连接
               </span>
             ) : null}
           </div>
           <p className="text-muted-foreground mt-0.5 truncate font-mono text-xs">{path}</p>
           {account.lastConnectedAt ? (
             <p className="text-muted-foreground mt-1 text-[10px]">
-              {t("wework_account_last_connected", {
-                time: new Date(account.lastConnectedAt).toLocaleString()
-              })}
+              {`最近连接：${new Date(account.lastConnectedAt).toLocaleString()}`}
             </p>
           ) : null}
           <p className="text-muted-foreground mt-1 text-[10px]">
-            {account.contactsSynced ? t("wework_contacts_synced") : t("wework_contacts_not_synced")}
+            {account.contactsSynced ? "联系人已同步" : "联系人未同步"}
           </p>
         </div>
         <div className="relative flex shrink-0 items-center gap-1">
@@ -166,8 +158,7 @@ function AccountListItem({
             isConnecting,
             onAccountClick,
             onDisconnect,
-            rowBusy,
-            t
+            rowBusy
           })}
           <Button
             type="button"
@@ -193,7 +184,7 @@ function AccountListItem({
                 }}
               >
                 <Trash2 className="size-3.5" />
-                {t("wework_account_delete")}
+                删除
               </Button>
             </div>
           ) : null}

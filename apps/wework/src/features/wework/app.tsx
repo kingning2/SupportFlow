@@ -31,7 +31,6 @@ import { ConfigPlaceholder } from "./views/config-placeholder";
 import { Knowledge } from "./views/knowledge";
 import { Skills } from "./views/skills";
 
-// ── Context ──────────────────────────────────────────────
 export interface WeworkConsoleContextValue {
   lang: string;
   actions: PageActions;
@@ -52,7 +51,6 @@ export function useWeworkConsoleContext(): WeworkConsoleContextValue {
   return ctx;
 }
 
-// ── Layout ───────────────────────────────────────────────
 export interface AppProps {
   lang: string;
   actions: PageActions;
@@ -64,7 +62,6 @@ const DEFAULT_OPEN_GROUPS: Record<string, boolean> = {
   wework: true
 };
 
-/** 企微控制台壳布局：侧边栏 + 顶部标题 + Outlet 渲染子路由 */
 export function App({ lang, actions }: AppProps) {
   const { channel, channelLoading, channelError, connectionStatus, refreshChannel } =
     useWeworkChannel(actions);
@@ -75,14 +72,12 @@ export function App({ lang, actions }: AppProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 从 URL pathname 推导当前激活路由
   const activeRoute: WeworkConsoleRoute = useMemo(() => {
     const segments = location.pathname.replace(/^\/+/, "").split("/");
     const last = segments[segments.length - 1] || "";
     return isWeworkConsoleRoute(last) ? last : WeworkConsoleRoute.Inbox;
   }, [location.pathname]);
 
-  // 持久化到 localStorage 以便 session 恢复
   useEffect(() => {
     localStorage.setItem(LocalCacheKey.WeworkConsoleRoute, activeRoute);
   }, [activeRoute]);
@@ -131,7 +126,7 @@ export function App({ lang, actions }: AppProps) {
           <Header activeRoute={activeRoute} />
           {connectionStatus !== "ready" && activeRoute === WeworkConsoleRoute.Inbox ? (
             <div className="bg-warning/10 border-warning/20 mx-3 mt-3 shrink-0 rounded-xl border px-3 py-2 text-xs">
-              {"请先在「账号与通道」完成企微接入，再使用对话收件箱。"}
+              请先在“账号与通道”中完成企业微信接入，再使用对话收件箱。
             </div>
           ) : null}
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -142,8 +137,6 @@ export function App({ lang, actions }: AppProps) {
     </WeworkConsoleContext.Provider>
   );
 }
-
-// ── 子路由组件（消费 Context） ──────────────────────────────
 
 export function InboxRoute() {
   const { connectionStatus } = useWeworkConsoleContext();
@@ -184,9 +177,9 @@ export function SkillsRoute() {
 }
 
 export function McpRoute() {
-  return <ConfigPlaceholder labelKey={WEWORK_ROUTE_PAGE_LABEL[WeworkConsoleRoute.Mcp]} />;
+  return <ConfigPlaceholder title={WEWORK_ROUTE_PAGE_LABEL[WeworkConsoleRoute.Mcp]} />;
 }
 
 export function AiConfigRoute() {
-  return <ConfigPlaceholder labelKey={WEWORK_ROUTE_PAGE_LABEL[WeworkConsoleRoute.AiConfig]} />;
+  return <ConfigPlaceholder title={WEWORK_ROUTE_PAGE_LABEL[WeworkConsoleRoute.AiConfig]} />;
 }

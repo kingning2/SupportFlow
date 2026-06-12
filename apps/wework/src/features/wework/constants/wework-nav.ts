@@ -12,47 +12,47 @@ import {
 export interface WeworkNavItem {
   route: WeworkConsoleRoute;
   icon: LucideIcon;
-  labelKey: string;
+  label: string;
 }
 
 export interface WeworkNavGroup {
   id: "workspace" | "agent" | "wework";
-  labelKey: string;
+  label: string;
   items: WeworkNavItem[];
 }
 
 export const WEWORK_NAV_GROUPS: WeworkNavGroup[] = [
   {
     id: "workspace",
-    labelKey: "wework_nav_workspace",
-    items: [{ route: WeworkConsoleRoute.Inbox, icon: MessageSquare, labelKey: "wework_menu_inbox" }]
+    label: "工作台",
+    items: [{ route: WeworkConsoleRoute.Inbox, icon: MessageSquare, label: "对话" }]
   },
   {
     id: "agent",
-    labelKey: "wework_nav_agent",
+    label: "智能体",
     items: [
-      { route: WeworkConsoleRoute.Knowledge, icon: BookOpen, labelKey: "menu_knowledge" },
-      { route: WeworkConsoleRoute.Skills, icon: Zap, labelKey: "menu_skills" },
-      { route: WeworkConsoleRoute.Mcp, icon: Plug, labelKey: "wework_menu_mcp" },
+      { route: WeworkConsoleRoute.Knowledge, icon: BookOpen, label: "知识库" },
+      { route: WeworkConsoleRoute.Skills, icon: Zap, label: "技能" },
+      { route: WeworkConsoleRoute.Mcp, icon: Plug, label: "MCP" },
       {
         route: WeworkConsoleRoute.AiConfig,
         icon: SlidersHorizontal,
-        labelKey: "wework_menu_ai_config"
+        label: "AI 配置"
       }
     ]
   },
   {
     id: "wework",
-    labelKey: "wework_nav_channel",
-    items: [{ route: WeworkConsoleRoute.Account, icon: Building2, labelKey: "wework_menu_account" }]
+    label: "企微",
+    items: [{ route: WeworkConsoleRoute.Account, icon: Building2, label: "账号与通道" }]
   }
 ];
 
 export const WEWORK_ROUTE_PAGE_LABEL: Record<WeworkConsoleRoute, string> = {
-  [WeworkConsoleRoute.Inbox]: "wework_menu_inbox",
-  [WeworkConsoleRoute.Knowledge]: "menu_knowledge",
-  [WeworkConsoleRoute.Skills]: "menu_skills",
-  [WeworkConsoleRoute.Mcp]: "wework_menu_mcp",
-  [WeworkConsoleRoute.AiConfig]: "wework_menu_ai_config",
-  [WeworkConsoleRoute.Account]: "wework_menu_account"
+  [WeworkConsoleRoute.Inbox]: "对话",
+  [WeworkConsoleRoute.Knowledge]: "知识库",
+  [WeworkConsoleRoute.Skills]: "技能",
+  [WeworkConsoleRoute.Mcp]: "MCP",
+  [WeworkConsoleRoute.AiConfig]: "AI 配置",
+  [WeworkConsoleRoute.Account]: "账号与通道"
 };

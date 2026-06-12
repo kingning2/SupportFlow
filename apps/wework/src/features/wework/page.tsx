@@ -1,20 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
 
-import {
-  channelAction,
-  channelLangFromI18n,
-  fetchChannelConsoleApi,
-  fetchChannels
-} from "@supportflow/ui/app-shell";
+import { channelAction, fetchChannelConsoleApi, fetchChannels } from "@supportflow/ui/app-shell";
 
 import { App } from "@/features/wework/app";
 
 export function WeworkAppPage() {
-  const { i18n } = useTranslation("console");
-  const lang = channelLangFromI18n(i18n.language);
+  const lang = "zh";
 
   const actions = useMemo(
     () => ({

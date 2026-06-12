@@ -1,7 +1,6 @@
 "use client";
 
 import { Building2, Loader2, Plus, Radio } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { Button } from "@supportflow/ui/button";
 import { WeworkConnectPanel } from "@supportflow/ui/channel/wework-connect-panel";
@@ -15,8 +14,6 @@ import type { WeworkConnectionStatus } from "@/features/wework/types/wework-conv
 import type { PageHandlers, PageState } from "./page-state";
 import { usePageState } from "./page-state";
 import type { ChannelCatalogEntry } from "@supportflow/shared";
-
-type Translate = (key: string, options?: Record<string, unknown>) => string;
 
 export interface PageProps {
   lang: string;
@@ -91,14 +88,12 @@ function AccountsSection({
   channel,
   handlers,
   lang,
-  state,
-  t
+  state
 }: {
   channel: ChannelCatalogEntry | null;
   handlers: PageHandlers;
   lang: string;
   state: PageState;
-  t: Translate;
 }) {
   return (
     <>
@@ -109,13 +104,12 @@ function AccountsSection({
           onDisconnect={() => void handlers.handleDisconnect()}
           onSyncContacts={() => void handlers.handleSyncContacts()}
           syncingContacts={state.syncingContacts}
-          t={t}
         />
       ) : null}
 
       {state.accounts.length === 0 && !state.showNewForm ? (
         <p className="text-muted-foreground py-8 text-center text-sm">
-          {"暂无已保存账号，点击下方「新建连接」添加。"}
+          暂无已保存账号，点击下方“新建连接”添加。
         </p>
       ) : (
         <AccountList
@@ -133,7 +127,6 @@ function AccountsSection({
             handlers.setMenuOpenId((current) => (current === id ? null : id))
           }
           switching={state.switching}
-          t={t}
         />
       )}
 
@@ -141,7 +134,7 @@ function AccountsSection({
         <div className="border-channel/25 bg-card mt-4 rounded-xl border p-5 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
             <Radio className="text-channel size-4" />
-            <h2 className="text-foreground font-semibold">{"新建连接"}</h2>
+            <h2 className="text-foreground font-semibold">新建连接</h2>
           </div>
           <WeworkConnectPanel
             channel={channel}
@@ -165,46 +158,36 @@ export function Page({
   connectionStatus,
   onChannelUpdated
 }: PageProps) {
-  const { t } = useTranslation("console");
   const { handlers, state } = usePageState({
     actions,
     channel,
     channelError,
     channelLoading,
     connectionStatus,
-    onChannelUpdated,
-    t
+    onChannelUpdated
   });
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <PageHeader
-        title={"账号与通道"}
-        description={"保存常用企微配置，需要时手动连接；连接成功后会自动加入列表。"}
+        title="账号与通道"
+        description="保存常用企业微信配置，需要时手动连接；连接成功后会自动加入列表。"
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
         {!state.accountsLoaded || channelLoading ? (
-          <PageLoading text={"加载通道配置…"} />
+          <PageLoading text="加载通道配置中..." />
         ) : (
           <>
             <PageError
               backendErrorMessage={state.backendErrorMessage}
-              offlineText={
-                "无法连接通道服务，以下为本地已保存的账号；连接与切换需等服务就绪后再试。"
-              }
-              retryLabel={"重试"}
-              title={"通道 sidecar 未就绪"}
+              offlineText="当前无法连接通道服务，下方展示的是本地保存的账号；连接与切换请等服务恢复后再试。"
+              retryLabel="重试"
+              title="通道 sidecar 未就绪"
               onRetry={handlers.onRetry}
             />
 
-            <AccountsSection
-              channel={channel}
-              handlers={handlers}
-              lang={lang}
-              state={state}
-              t={t}
-            />
+            <AccountsSection channel={channel} handlers={handlers} lang={lang} state={state} />
           </>
         )}
       </div>
@@ -215,7 +198,6 @@ export function Page({
         onOpenChange={handlers.handleSwitchOpenChange}
         switching={state.switching}
         switchTarget={state.switchTarget}
-        t={t}
       />
 
       <div className="shrink-0 border-t border-[hsl(var(--border))] bg-white px-6 py-4">
@@ -227,7 +209,7 @@ export function Page({
           onClick={() => handlers.setShowNewForm(true)}
         >
           <Plus className="size-4" />
-          {"新建连接"}
+          新建连接
         </Button>
       </div>
     </div>

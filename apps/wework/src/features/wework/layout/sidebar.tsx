@@ -3,7 +3,6 @@
 import { Collapse, Menu } from "antd";
 import type { MenuItemType } from "antd/es/menu/interface";
 import { Building2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { cn } from "@supportflow/shared";
 import { WeworkConsoleRoute } from "@supportflow/shared/tauri-bridge/enums";
@@ -21,14 +20,14 @@ export interface SidebarProps {
   onToggleGroup: (groupId: string) => void;
 }
 
-function connectionLabelKey(status: WeworkConnectionStatus): string {
+function connectionLabel(status: WeworkConnectionStatus): string {
   switch (status) {
     case "ready":
-      return "wework_status_ready";
+      return "已连接";
     case "connecting":
-      return "wework_status_connecting";
+      return "连接中";
     default:
-      return "wework_status_disconnected";
+      return "未连接";
   }
 }
 
@@ -40,7 +39,6 @@ export function Sidebar({
   openGroups,
   onToggleGroup
 }: SidebarProps) {
-  const { t } = useTranslation("console");
   const showAccount = connectionStatus === "ready" && connectedAccountName;
   const activeGroupKeys = WEWORK_NAV_GROUPS.filter((group) => openGroups[group.id]).map(
     (group) => group.id
@@ -81,7 +79,7 @@ export function Sidebar({
                     connectionStatus === "connecting" ? "bg-warning" : "bg-muted-foreground/40"
                   )}
                 />
-                {t(connectionLabelKey(connectionStatus))}
+                {connectionLabel(connectionStatus)}
               </p>
             </div>
           </div>
@@ -106,7 +104,7 @@ export function Sidebar({
             key: group.id,
             label: (
               <span className="text-muted-foreground text-[10px] font-semibold tracking-[0.18em] uppercase">
-                {t(group.labelKey)}
+                {group.label}
               </span>
             ),
             children: (
@@ -118,7 +116,7 @@ export function Sidebar({
                   return {
                     key: item.route,
                     icon: <Icon className="size-4 shrink-0 opacity-80" />,
-                    label: <span className="truncate">{t(item.labelKey)}</span>
+                    label: <span className="truncate">{item.label}</span>
                   } satisfies MenuItemType;
                 })}
                 className="sidebar-menu border-none bg-transparent"
