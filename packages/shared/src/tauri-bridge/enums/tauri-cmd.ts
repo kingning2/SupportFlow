@@ -1,6 +1,5 @@
 /** Tauri invoke 命令名（与 Rust `generate_handler!` 注册名一致） */
 export enum TauriCmd {
-  GetAppSession = "get_app_session",
   LogFe = "log_fe",
   LogFeReq = "log_fe_req",
   OpenModalWindow = "open_modal_window",

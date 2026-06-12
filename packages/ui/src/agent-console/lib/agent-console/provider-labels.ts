@@ -1,31 +1,30 @@
-/** Maps `config.json` `bot_type` id → i18n key under `console.provider_*`. */
-const PROVIDER_LABEL_KEYS: Record<string, string> = {
-  deepseek: "provider_deepseek",
-  openai: "provider_openai",
-  chatgpt: "provider_openai",
-  chatgptonazure: "provider_azure",
-  azure: "provider_azure",
-  claude: "provider_claude",
-  claudeapi: "provider_claude",
-  gemini: "provider_gemini",
-  zhipuai: "provider_zhipu",
-  moonshot: "provider_moonshot",
-  doubao: "provider_doubao",
-  dashscope: "provider_dashscope",
-  minimax: "provider_minimax",
-  linkai: "provider_linkai",
-  custom: "provider_custom",
-  baidu: "provider_baidu",
-  qianfan: "provider_qianfan",
-  xunfei: "provider_xunfei",
-  modelscope: "provider_modelscope"
+const PROVIDER_LABELS: Record<string, string> = {
+  deepseek: "DeepSeek",
+  openai: "OpenAI",
+  chatgpt: "OpenAI",
+  chatgptonazure: "Azure OpenAI",
+  azure: "Azure OpenAI",
+  claude: "Claude",
+  claudeapi: "Claude",
+  gemini: "Gemini",
+  zhipuai: "智谱 AI",
+  moonshot: "Moonshot",
+  doubao: "豆包",
+  dashscope: "DashScope",
+  minimax: "MiniMax",
+  linkai: "LinkAI",
+  custom: "自定义",
+  baidu: "百度千帆",
+  qianfan: "百度千帆",
+  xunfei: "讯飞星火",
+  modelscope: "ModelScope"
 };
 
-export function providerLabelKey(botType: string): string {
-  const direct = PROVIDER_LABEL_KEYS[botType];
+export function providerLabel(botType: string): string {
+  const direct = PROVIDER_LABELS[botType];
   if (direct) {
     return direct;
   }
   const lower = botType.toLowerCase();
-  return PROVIDER_LABEL_KEYS[lower] ?? "provider_unknown";
+  return PROVIDER_LABELS[lower] ?? botType;
 }

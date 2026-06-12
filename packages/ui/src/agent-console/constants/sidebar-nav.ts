@@ -1,6 +1,6 @@
 import {
   ConsoleView,
-  channelLabelKey,
+  channelLabel,
   type ChannelCatalogEntryId
 } from "@supportflow/shared/tauri-bridge/enums";
 import {
@@ -25,12 +25,12 @@ export enum SidebarGroupId {
 export interface SidebarNavItem {
   view: ConsoleView;
   icon: LucideIcon;
-  labelKey: string;
+  label: string;
 }
 
 export interface SidebarNavGroup {
   id: SidebarGroupId;
-  labelKey: string;
+  label: string;
   items: SidebarNavItem[];
 }
 
@@ -38,85 +38,82 @@ function channelNavItem(devChannel: ChannelCatalogEntryId): SidebarNavItem {
   return {
     view: ConsoleView.Channels,
     icon: Radio,
-    labelKey: channelLabelKey(devChannel)
+    label: channelLabel(devChannel)
   };
 }
 
-/** Sidebar groups; pass `devChannel` from `getDevChannel()` to lock a single channel entry. */
 export function getSidebarNavGroups(devChannel: ChannelCatalogEntryId | null): SidebarNavGroup[] {
   const channelItem: SidebarNavItem = devChannel
     ? channelNavItem(devChannel)
-    : { view: ConsoleView.Channels, icon: Radio, labelKey: "menu_channels" };
+    : { view: ConsoleView.Channels, icon: Radio, label: "通道" };
 
   return [
     {
       id: SidebarGroupId.Chat,
-      labelKey: "nav_chat",
-      items: [{ view: ConsoleView.Chat, icon: MessageSquare, labelKey: "menu_chat" }]
+      label: "对话",
+      items: [{ view: ConsoleView.Chat, icon: MessageSquare, label: "聊天" }]
     },
     {
       id: SidebarGroupId.Manage,
-      labelKey: "nav_manage",
+      label: "管理",
       items: [
-        { view: ConsoleView.Config, icon: SlidersHorizontal, labelKey: "menu_config" },
-        { view: ConsoleView.Models, icon: Cpu, labelKey: "menu_models" },
-        { view: ConsoleView.Skills, icon: Zap, labelKey: "menu_skills" },
-        { view: ConsoleView.Memory, icon: Brain, labelKey: "menu_memory" },
-        { view: ConsoleView.Knowledge, icon: BookOpen, labelKey: "menu_knowledge" },
+        { view: ConsoleView.Config, icon: SlidersHorizontal, label: "配置" },
+        { view: ConsoleView.Models, icon: Cpu, label: "模型" },
+        { view: ConsoleView.Skills, icon: Zap, label: "技能" },
+        { view: ConsoleView.Memory, icon: Brain, label: "记忆" },
+        { view: ConsoleView.Knowledge, icon: BookOpen, label: "知识库" },
         channelItem,
-        { view: ConsoleView.Tasks, icon: Clock, labelKey: "menu_tasks" }
+        { view: ConsoleView.Tasks, icon: Clock, label: "任务" }
       ]
     },
     {
       id: SidebarGroupId.Monitor,
-      labelKey: "nav_monitor",
-      items: [{ view: ConsoleView.Logs, icon: Terminal, labelKey: "menu_logs" }]
+      label: "监控",
+      items: [{ view: ConsoleView.Logs, icon: Terminal, label: "日志" }]
     }
   ];
 }
 
-/** Default (all channels) navigation — use `getSidebarNavGroups(null)` in new code. */
 export const SIDEBAR_NAV_GROUPS = getSidebarNavGroups(null);
 
 export const CONSOLE_VIEW_GROUP_LABEL: Partial<Record<ConsoleView, string>> = {
-  [ConsoleView.Chat]: "nav_chat",
-  [ConsoleView.Config]: "nav_manage",
-  [ConsoleView.Models]: "nav_manage",
-  [ConsoleView.Skills]: "nav_manage",
-  [ConsoleView.Memory]: "nav_manage",
-  [ConsoleView.Knowledge]: "nav_manage",
-  [ConsoleView.Channels]: "nav_manage",
-  [ConsoleView.Tasks]: "nav_manage",
-  [ConsoleView.Logs]: "nav_monitor"
+  [ConsoleView.Chat]: "对话",
+  [ConsoleView.Config]: "管理",
+  [ConsoleView.Models]: "管理",
+  [ConsoleView.Skills]: "管理",
+  [ConsoleView.Memory]: "管理",
+  [ConsoleView.Knowledge]: "管理",
+  [ConsoleView.Channels]: "管理",
+  [ConsoleView.Tasks]: "管理",
+  [ConsoleView.Logs]: "监控"
 };
 
 export const CONSOLE_VIEW_PAGE_LABEL: Record<ConsoleView, string> = {
-  [ConsoleView.Chat]: "menu_chat",
-  [ConsoleView.Config]: "menu_config",
-  [ConsoleView.Models]: "menu_models",
-  [ConsoleView.Skills]: "menu_skills",
-  [ConsoleView.Memory]: "menu_memory",
-  [ConsoleView.Knowledge]: "menu_knowledge",
-  [ConsoleView.Channels]: "menu_channels",
-  [ConsoleView.Tasks]: "menu_tasks",
-  [ConsoleView.Logs]: "menu_logs"
+  [ConsoleView.Chat]: "聊天",
+  [ConsoleView.Config]: "配置",
+  [ConsoleView.Models]: "模型",
+  [ConsoleView.Skills]: "技能",
+  [ConsoleView.Memory]: "记忆",
+  [ConsoleView.Knowledge]: "知识库",
+  [ConsoleView.Channels]: "通道",
+  [ConsoleView.Tasks]: "任务",
+  [ConsoleView.Logs]: "日志"
 };
 
-export function getBreadcrumbKeys(
+export function getBreadcrumbLabels(
   view: ConsoleView,
   devChannel: ChannelCatalogEntryId | null = null
 ) {
-  const pageKey =
+  const pageLabel =
     view === ConsoleView.Channels && devChannel
-      ? channelLabelKey(devChannel)
+      ? channelLabel(devChannel)
       : CONSOLE_VIEW_PAGE_LABEL[view];
   return {
-    groupKey: CONSOLE_VIEW_GROUP_LABEL[view] ?? "nav_chat",
-    pageKey
+    groupLabel: CONSOLE_VIEW_GROUP_LABEL[view] ?? "对话",
+    pageLabel
   };
 }
 
-/** Placeholder views not yet wired to Rust IPC. */
 export const PLACEHOLDER_CONSOLE_VIEWS = new Set<ConsoleView>([]);
 
 export const CONSOLE_BRAND = {

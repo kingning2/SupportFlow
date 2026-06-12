@@ -20,8 +20,6 @@
     "@reduxjs/toolkit": "^2.11.2",
     "@tauri-apps/api": "^2.10.1",
     "clsx": "^2.1.1",
-    "i18next": "^26.2.0",
-    "react-i18next": "^17.0.8",
     "react-redux": "^9.2.0",
     "tailwind-merge": "^3.6.0"
   },

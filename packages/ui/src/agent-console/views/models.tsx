@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { KeyRound, Pencil, Plus } from "lucide-react";
 
 import {
@@ -20,7 +19,7 @@ import {
   SelectValue
 } from "@supportflow/ui/select";
 
-import { providerLabelKey } from "../lib/agent-console/provider-labels";
+import { providerLabel } from "../lib/agent-console/provider-labels";
 import { ViewShell } from "../shared/console-brand";
 import { VendorCredentials } from "../views/vendor-credentials";
 
@@ -90,7 +89,6 @@ function ActiveModelSection({
   resolvedChatProviderId,
   resolvedCustomModel,
   state,
-  t,
   useCustomModel
 }: {
   configuredEditable: ModelProviderDetail[];
@@ -104,23 +102,22 @@ function ActiveModelSection({
   resolvedChatProviderId: string;
   resolvedCustomModel: string;
   state: AgentConsoleState | null;
-  t: ReturnType<typeof useTranslation>["t"];
   useCustomModel: boolean;
 }) {
   return (
     <section className="mb-6 rounded-xl border border-slate-200 p-4 dark:border-white/10">
-      <h3 className="mb-4 text-sm font-semibold">{"当前对话模型"}</h3>
+      <h3 className="mb-4 text-sm font-semibold">当前对话模型</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <span className="text-sm font-medium">{"厂商"}</span>
+          <span className="text-sm font-medium">厂商</span>
           <Select value={resolvedChatProviderId} onValueChange={onProviderChange}>
             <SelectTrigger>
-              <SelectValue placeholder={"选择厂商"} />
+              <SelectValue placeholder="选择厂商" />
             </SelectTrigger>
             <SelectContent>
               {configuredEditable.map((provider) => (
                 <SelectItem key={provider.id} value={provider.id}>
-                  {t(providerLabelKey(provider.id))}
+                  {providerLabel(provider.id)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -128,7 +125,7 @@ function ActiveModelSection({
         </div>
 
         <div className="space-y-2">
-          <span className="text-sm font-medium">{"模型 ID"}</span>
+          <span className="text-sm font-medium">模型 ID</span>
           {modelOptions.length > 0 ? (
             <Select
               value={useCustomModel ? "__custom__" : resolvedChatModel}
@@ -143,7 +140,7 @@ function ActiveModelSection({
                     {model}
                   </SelectItem>
                 ))}
-                <SelectItem value="__custom__">{"自定义模型名"}</SelectItem>
+                <SelectItem value="__custom__">自定义模型名</SelectItem>
               </SelectContent>
             </Select>
           ) : (
@@ -157,7 +154,7 @@ function ActiveModelSection({
           {useCustomModel && modelOptions.length > 0 ? (
             <Input
               className="font-mono text-sm"
-              placeholder={"自定义模型名"}
+              placeholder="自定义模型名"
               value={resolvedCustomModel}
               onChange={(event) => onCustomModelChange(event.target.value)}
             />
@@ -175,7 +172,7 @@ function ActiveModelSection({
           disabled={modelSelection.chatSaving || configuredEditable.length === 0}
           onClick={() => void onApply()}
         >
-          {"应用对话模型"}
+          应用对话模型
         </Button>
       </div>
     </section>
@@ -185,21 +182,19 @@ function ActiveModelSection({
 function VendorsSection({
   details,
   onAdd,
-  onEdit,
-  t
+  onEdit
 }: {
   details: ModelProviderDetail[];
   onAdd: () => void;
   onEdit: (provider: ModelProviderDetail) => void;
-  t: ReturnType<typeof useTranslation>["t"];
 }) {
   return (
     <section>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">{"厂商凭据"}</h3>
+        <h3 className="text-sm font-semibold">厂商凭据</h3>
         <Button type="button" size="sm" variant="outline" onClick={onAdd}>
           <Plus className="mr-1 h-4 w-4" />
-          {"添加厂商"}
+          添加厂商
         </Button>
       </div>
       <ul className="space-y-2">
@@ -210,20 +205,16 @@ function VendorsSection({
           >
             <div className="flex min-w-0 items-center gap-2">
               <KeyRound className="text-muted-foreground h-4 w-4 shrink-0" />
-              <span className="font-medium">{t(providerLabelKey(provider.id))}</span>
+              <span className="font-medium">{providerLabel(provider.id)}</span>
               {!provider.editable ? (
-                <span className="text-muted-foreground text-xs">
-                  {"此厂商暂不支持在控制台配置"}
-                </span>
+                <span className="text-muted-foreground text-xs">当前厂商暂不支持在控制台配置</span>
               ) : null}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={provider.configured ? "default" : "secondary"}>
                 {provider.configured ? "已配置 API Key" : "未配置"}
               </Badge>
-              {provider.isActive ? (
-                <Badge className="bg-[#35A85B] text-white">{"使用中"}</Badge>
-              ) : null}
+              {provider.isActive ? <Badge className="bg-[#35A85B] text-white">使用中</Badge> : null}
               {provider.editable ? (
                 <Button
                   type="button"
@@ -231,7 +222,7 @@ function VendorsSection({
                   variant="ghost"
                   className="h-8 w-8"
                   onClick={() => onEdit(provider)}
-                  aria-label={"编辑凭据"}
+                  aria-label="编辑凭据"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -245,7 +236,6 @@ function VendorsSection({
 }
 
 export function Models({ state, onRefresh }: ModelsProps) {
-  const { t } = useTranslation("console");
   const details = state?.providerDetails ?? [];
   const activeDetail = useMemo(
     () =>
@@ -326,7 +316,7 @@ export function Models({ state, onRefresh }: ModelsProps) {
   };
 
   return (
-    <ViewShell title={"模型管理"} description={"配置各厂商 API Key，并选择当前对话使用的模型。"}>
+    <ViewShell title="模型管理" description="配置各厂商 API Key，并选择当前对话使用的模型。">
       <ActiveModelSection
         configuredEditable={configuredEditable}
         modelOptions={modelOptions}
@@ -339,7 +329,6 @@ export function Models({ state, onRefresh }: ModelsProps) {
         resolvedChatProviderId={resolvedChatProviderId}
         resolvedCustomModel={resolvedCustomModel}
         state={state}
-        t={t}
         useCustomModel={useCustomModel}
       />
 
@@ -353,11 +342,10 @@ export function Models({ state, onRefresh }: ModelsProps) {
           setEditingProvider(provider);
           setVendorOpen(true);
         }}
-        t={t}
       />
 
       <p className="text-muted-foreground mt-6 text-xs">
-        {"凭据写入 src-tauri/resources/config.json，保存后立即生效，无需重启。"}
+        凭据会写入 `src-tauri/resources/config.json`，保存后立即生效，无需重启。
       </p>
 
       <VendorCredentials

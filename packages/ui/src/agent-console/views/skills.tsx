@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Download, Eye, FileCode2, FolderTree, RefreshCw } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import {
   getAgentSkillDetail,
@@ -28,61 +27,24 @@ interface SkillsProps {
   onRefresh: (next: AgentConsoleState | null) => void;
 }
 
-interface SkillsCopy {
-  detailDesc: string;
-  detailLabel: string;
-  detailLoadingText: string;
-  detailTitle: string;
-  filePathLabel: string;
-  installButtonLabel: string;
-  installDesc: string;
-  installPlaceholder: string;
-  installSuccessLabel: string;
-  installTitle: string;
-  modelDisabledLabel: string;
-  modelEnabledLabel: string;
-  sourceLabel: string;
-  baseDirLabel: string;
-}
-
-function useSkillsCopy(t: ReturnType<typeof useTranslation>["t"]): SkillsCopy {
-  return useMemo(
-    () => ({
-      baseDirLabel: t("skills_detail_base_dir", { defaultValue: "Base directory" }),
-      detailDesc: t("skills_detail_desc", {
-        defaultValue: "Inspect where this skill comes from and how it is registered."
-      }),
-      detailLabel: t("skills_view_detail", { defaultValue: "View details" }),
-      detailLoadingText: t("skills_detail_loading", {
-        defaultValue: "Loading skill details..."
-      }),
-      detailTitle: t("skills_detail_title", { defaultValue: "Skill details" }),
-      filePathLabel: t("skills_detail_file_path", { defaultValue: "Skill file" }),
-      installButtonLabel: t("skills_install_action", { defaultValue: "Install" }),
-      installDesc: t("skills_install_desc", {
-        defaultValue: "Supports Skill Hub names, GitHub owner/repo, .zip URLs, and local paths."
-      }),
-      installPlaceholder: t("skills_install_placeholder", {
-        defaultValue: "e.g. supportflow/notion-skill or https://example.com/skill.zip"
-      }),
-      installSuccessLabel: t("skills_install_success", {
-        defaultValue: "Installed: {{names}}"
-      }),
-      installTitle: t("skills_install_title", { defaultValue: "Install external skill" }),
-      modelDisabledLabel: t("skills_detail_model_disabled", {
-        defaultValue: "Model invocation disabled"
-      }),
-      modelEnabledLabel: t("skills_detail_model_enabled", {
-        defaultValue: "Model invocation allowed"
-      }),
-      sourceLabel: t("skills_detail_source", { defaultValue: "Source" })
-    }),
-    [t]
-  );
-}
+const COPY = {
+  baseDirLabel: "基础目录",
+  detailDesc: "查看技能来源、注册位置和当前状态。",
+  detailLabel: "查看详情",
+  detailLoadingText: "正在加载技能详情...",
+  detailTitle: "技能详情",
+  filePathLabel: "技能文件",
+  installButtonLabel: "安装",
+  installDesc: "支持 Skill Hub 名称、GitHub owner/repo、zip 链接和本地路径。",
+  installPlaceholder: "例如：supportflow/notion-skill 或 https://example.com/skill.zip",
+  installTitle: "安装外部技能",
+  installSuccessPrefix: "安装成功：",
+  modelDisabledLabel: "已禁用模型调用",
+  modelEnabledLabel: "允许模型调用",
+  sourceLabel: "来源"
+} as const;
 
 function SkillInstallSection({
-  copy,
   installError,
   installing,
   installSource,
@@ -90,7 +52,6 @@ function SkillInstallSection({
   onChange,
   onInstall
 }: {
-  copy: SkillsCopy;
   installError: string | null;
   installing: boolean;
   installSource: string;
@@ -101,14 +62,14 @@ function SkillInstallSection({
   return (
     <section className="mb-6 rounded-xl border border-slate-200 p-4 dark:border-white/10">
       <div className="mb-3">
-        <h3 className="text-sm font-semibold">{copy.installTitle}</h3>
-        <p className="text-muted-foreground mt-1 text-sm">{copy.installDesc}</p>
+        <h3 className="text-sm font-semibold">{COPY.installTitle}</h3>
+        <p className="text-muted-foreground mt-1 text-sm">{COPY.installDesc}</p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
         <Input
           value={installSource}
           onChange={(event) => onChange(event.target.value)}
-          placeholder={copy.installPlaceholder}
+          placeholder={COPY.installPlaceholder}
           className="font-mono text-sm"
         />
         <Button
@@ -117,7 +78,7 @@ function SkillInstallSection({
           disabled={installing || installSource.trim().length === 0}
         >
           <Download className="mr-2 size-4" />
-          {copy.installButtonLabel}
+          {COPY.installButtonLabel}
         </Button>
       </div>
       {installError ? <p className="mt-3 text-sm text-red-500">{installError}</p> : null}
@@ -131,21 +92,19 @@ function SkillInstallSection({
 function SkillsListSection({
   detailLabel,
   onOpenDetail,
-  skills,
-  t
+  skills
 }: {
   detailLabel: string;
   onOpenDetail: (name: string) => Promise<void>;
   skills: AgentConsoleState["skills"];
-  t: ReturnType<typeof useTranslation>["t"];
 }) {
   return (
     <section>
-      <h3 className="mb-3 text-sm font-semibold">{"技能"}</h3>
+      <h3 className="mb-3 text-sm font-semibold">技能</h3>
       <ul className="space-y-2">
         {(skills ?? []).length === 0 ? (
           <li className="text-muted-foreground text-sm">
-            {"暂无技能，可在工作区 skills/ 目录添加。"}
+            暂无技能，可在工作区 `skills/` 目录下添加。
           </li>
         ) : (
           skills?.map((skill) => (
@@ -182,16 +141,10 @@ function SkillsListSection({
   );
 }
 
-function ToolsListSection({
-  tools,
-  t
-}: {
-  tools: AgentConsoleState["tools"];
-  t: ReturnType<typeof useTranslation>["t"];
-}) {
+function ToolsListSection({ tools }: { tools: AgentConsoleState["tools"] }) {
   return (
     <section>
-      <h3 className="mb-3 text-sm font-semibold">{"工具"}</h3>
+      <h3 className="mb-3 text-sm font-semibold">工具</h3>
       <ul className="space-y-2">
         {(tools ?? []).map((tool) => (
           <li
@@ -211,32 +164,28 @@ function ToolsListSection({
 }
 
 function SkillDetailDialog({
-  copy,
   detailError,
   detailLoading,
   detailOpen,
   onOpenChange,
-  selectedSkill,
-  t
+  selectedSkill
 }: {
-  copy: SkillsCopy;
   detailError: string | null;
   detailLoading: boolean;
   detailOpen: boolean;
   onOpenChange: (open: boolean) => void;
   selectedSkill: SkillDetail | null;
-  t: ReturnType<typeof useTranslation>["t"];
 }) {
   return (
     <Dialog open={detailOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{selectedSkill?.name ?? copy.detailTitle}</DialogTitle>
-          <DialogDescription>{selectedSkill?.description ?? copy.detailDesc}</DialogDescription>
+          <DialogTitle>{selectedSkill?.name ?? COPY.detailTitle}</DialogTitle>
+          <DialogDescription>{selectedSkill?.description ?? COPY.detailDesc}</DialogDescription>
         </DialogHeader>
 
         {detailLoading ? (
-          <div className="text-muted-foreground py-6 text-sm">{copy.detailLoadingText}</div>
+          <div className="text-muted-foreground py-6 text-sm">{COPY.detailLoadingText}</div>
         ) : null}
         {!detailLoading && detailError ? (
           <div className="py-6 text-sm text-red-500">{detailError}</div>
@@ -249,8 +198,8 @@ function SkillDetailDialog({
               </Badge>
               <Badge variant="outline">
                 {selectedSkill.disableModelInvocation
-                  ? copy.modelDisabledLabel
-                  : copy.modelEnabledLabel}
+                  ? COPY.modelDisabledLabel
+                  : COPY.modelEnabledLabel}
               </Badge>
             </div>
 
@@ -258,7 +207,7 @@ function SkillDetailDialog({
               <div className="rounded-lg border border-slate-200 p-3 dark:border-white/10">
                 <div className="mb-1 flex items-center gap-2 text-sm font-medium">
                   <FolderTree className="size-4" />
-                  {copy.baseDirLabel}
+                  {COPY.baseDirLabel}
                 </div>
                 <p className="text-muted-foreground font-mono text-xs break-all">
                   {selectedSkill.baseDir}
@@ -268,7 +217,7 @@ function SkillDetailDialog({
               <div className="rounded-lg border border-slate-200 p-3 dark:border-white/10">
                 <div className="mb-1 flex items-center gap-2 text-sm font-medium">
                   <FileCode2 className="size-4" />
-                  {copy.filePathLabel}
+                  {COPY.filePathLabel}
                 </div>
                 <p className="text-muted-foreground font-mono text-xs break-all">
                   {selectedSkill.filePath}
@@ -276,7 +225,7 @@ function SkillDetailDialog({
               </div>
 
               <div className="rounded-lg border border-slate-200 p-3 dark:border-white/10">
-                <div className="mb-1 text-sm font-medium">{copy.sourceLabel}</div>
+                <div className="mb-1 text-sm font-medium">{COPY.sourceLabel}</div>
                 <p className="text-muted-foreground font-mono text-xs">{selectedSkill.source}</p>
               </div>
             </div>
@@ -288,8 +237,6 @@ function SkillDetailDialog({
 }
 
 export function Skills({ state, onRefresh }: SkillsProps) {
-  const { t } = useTranslation("console");
-  const copy = useSkillsCopy(t);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
@@ -338,7 +285,7 @@ export function Skills({ state, onRefresh }: SkillsProps) {
       const result = await installAgentSkill({ source });
       await refreshSkillsState();
       setInstallSuccess(
-        copy.installSuccessLabel.replace("{{names}}", result.installed_names.join(", ") || source)
+        `${COPY.installSuccessPrefix}${result.installed_names.join(", ") || source}`
       );
       setInstallSource("");
     } catch (error) {
@@ -350,11 +297,10 @@ export function Skills({ state, onRefresh }: SkillsProps) {
 
   return (
     <ViewShell
-      title={"技能与工具"}
-      description={"当前进程内已注册的工具与技能（通过 Tauri invoke 读取）。"}
+      title="技能与工具"
+      description="查看当前已注册的工具与技能，并支持安装新的外部技能。"
     >
       <SkillInstallSection
-        copy={copy}
         installError={installError}
         installing={installing}
         installSource={installSource}
@@ -366,22 +312,20 @@ export function Skills({ state, onRefresh }: SkillsProps) {
       <div className="mb-4 flex justify-end">
         <Button type="button" variant="outline" size="sm" onClick={() => void refreshSkillsState()}>
           <RefreshCw className="mr-2 size-3.5" />
-          {"刷新"}
+          刷新
         </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SkillsListSection
-          detailLabel={copy.detailLabel}
+          detailLabel={COPY.detailLabel}
           onOpenDetail={handleOpenDetail}
           skills={state?.skills ?? []}
-          t={t}
         />
-        <ToolsListSection tools={state?.tools ?? []} t={t} />
+        <ToolsListSection tools={state?.tools ?? []} />
       </div>
 
       <SkillDetailDialog
-        copy={copy}
         detailError={detailError}
         detailLoading={detailLoading}
         detailOpen={detailOpen}
@@ -393,7 +337,6 @@ export function Skills({ state, onRefresh }: SkillsProps) {
           }
         }}
         selectedSkill={selectedSkill}
-        t={t}
       />
     </ViewShell>
   );

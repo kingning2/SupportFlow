@@ -419,11 +419,12 @@ pub struct AgentChannelField {
 #[allow(dead_code)]
 pub struct AgentChannelDetail {
     pub name: String,
-    pub label_key: String,
+    #[serde(alias = "labelKey")]
+    pub label: String,
     pub active: bool,
     pub fields: Vec<AgentChannelField>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub hint_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", alias = "hintKey")]
+    pub hint: Option<String>,
 }
 
 #[typeshare]

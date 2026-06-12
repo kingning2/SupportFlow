@@ -30,10 +30,10 @@ export interface AgentChannelField {
 
 export interface AgentChannelDetail {
   name: string;
-  labelKey: string;
+  label: string;
   active: boolean;
   fields: AgentChannelField[];
-  hintKey?: string;
+  hint?: string;
 }
 
 export interface AgentChannelSummary {
@@ -47,7 +47,6 @@ export interface AgentClearProviderRequest {
 }
 
 export interface ModelProviderItem {
-  /** `config.json` `bot_type` id (e.g. `deepseek`, `openai`). */
   id: string;
   configured: boolean;
   isActive: boolean;
@@ -238,7 +237,6 @@ export interface AgentSetChatModelRequest {
   model?: string;
 }
 
-/** SSE-style chunk emitted during `agent_send_message` (`agent/stream-chunk`). */
 export interface AgentStreamChunk {
   requestId: string;
   type: string;
@@ -262,10 +260,6 @@ export interface AgentUpdateProviderRequest {
   apiKey?: string;
   apiBase?: string;
   apiBaseSet?: boolean;
-}
-
-export interface AppSession {
-  currentLanguage: string;
 }
 
 export interface InstallSkillResult {

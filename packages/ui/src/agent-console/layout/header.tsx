@@ -1,15 +1,11 @@
 "use client";
 
-import { ChevronRight, ExternalLink, Globe, History, Menu, Moon, Sun } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { ChevronRight, ExternalLink, History, Menu, Moon, Sun } from "lucide-react";
 
-import { CONSOLE_BRAND, getBreadcrumbKeys } from "../constants/sidebar-nav";
+import { CONSOLE_BRAND, getBreadcrumbLabels } from "../constants/sidebar-nav";
 import { Button } from "@supportflow/ui/button";
 import type { ConsoleView, ChannelCatalogEntryId } from "@supportflow/shared/tauri-bridge/enums";
-import { Language } from "@supportflow/shared/tauri-bridge/enums";
 import type { ConsoleTheme } from "../lib/agent-console/theme-sync";
-import { useAppDispatch, useAppSelector } from "@supportflow/shared/desktop-shell/store/hooks";
-import { changeCurrentLanguageAction } from "@supportflow/shared/desktop-shell/store/modules/app";
 
 interface HeaderProps {
   activeView: ConsoleView;
@@ -28,16 +24,7 @@ export function Header({
   onToggleSessions,
   onToggleMobileSidebar
 }: HeaderProps) {
-  const { t, i18n } = useTranslation("console");
-  const dispatch = useAppDispatch();
-  const currentLanguage = useAppSelector((state) => state.app.currentLanguage);
-  const { groupKey, pageKey } = getBreadcrumbKeys(activeView, devChannel);
-
-  const toggleLanguage = () => {
-    const next = currentLanguage === Language.Cn ? Language.En : Language.Cn;
-    dispatch(changeCurrentLanguageAction(next));
-    void i18n.changeLanguage(next);
-  };
+  const { groupLabel, pageLabel } = getBreadcrumbLabels(activeView, devChannel);
 
   return (
     <header className="bg-background border-border z-10 flex h-14 shrink-0 items-center gap-3 border-b px-4">
@@ -56,23 +43,12 @@ export function Header({
       </Button>
 
       <div className="hidden min-w-0 items-center gap-2 text-sm lg:flex">
-        <span className="text-muted-foreground truncate">{t(groupKey)}</span>
+        <span className="text-muted-foreground truncate">{groupLabel}</span>
         <ChevronRight className="text-muted-foreground/60 size-2.5" />
-        <span className="text-foreground truncate font-medium">{t(pageKey)}</span>
+        <span className="text-foreground truncate font-medium">{pageLabel}</span>
       </div>
 
       <div className="flex-1" />
-
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="text-muted-foreground gap-1.5"
-        onClick={toggleLanguage}
-      >
-        <Globe className="size-3.5" />
-        <span>{currentLanguage === Language.Cn ? "EN" : "中文"}</span>
-      </Button>
 
       <Button type="button" variant="ghost" size="icon-sm" onClick={onToggleTheme}>
         {theme === "dark" ? (

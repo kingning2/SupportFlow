@@ -1,11 +1,9 @@
-//! 前后端 IPC 契约类型（`typeshare` → TypeScript）。
-//!
-//! 实现分布在各模块；本模块 re-export 便于 typeshare 扫描。
+//! 前后端 IPC 合约类型，由 `typeshare` 扫描生成 TypeScript。
 
 pub use crate::context::channel::{
     ChannelConversationSummaryDto, ChannelInboxMessagePayload, ChannelInboxSnapshotDto,
     ChannelMessageDto,
 };
 pub use crate::events::payloads::{
-    AgentConsoleState, AgentRunFinished, AgentStreamChunk, AppSession, SkillItem, ToolItem,
+    AgentConsoleState, AgentRunFinished, AgentStreamChunk, SkillItem, ToolItem,
 };

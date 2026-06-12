@@ -1,16 +1,11 @@
-﻿"use client";
+"use client";
 
 import { ChevronRight } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { cn } from "@supportflow/shared";
 import type { ConsoleView } from "@supportflow/shared/tauri-bridge/enums";
 import { Button } from "@supportflow/ui/button";
-import {
-  getSidebarNavGroups,
-  type SidebarGroupId,
-  type SidebarNavGroup
-} from "../constants/sidebar-nav";
+import type { SidebarGroupId, SidebarNavGroup } from "../constants/sidebar-nav";
 
 interface SidebarProps {
   navGroups: SidebarNavGroup[];
@@ -31,8 +26,6 @@ export function Sidebar({
   mobileOpen,
   onCloseMobile
 }: SidebarProps) {
-  const { t } = useTranslation("console");
-
   return (
     <>
       <aside
@@ -47,7 +40,7 @@ export function Sidebar({
           </div>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold text-white">SupportFlow</span>
-            <span className="text-xs text-[hsl(var(--text-tertiary))]">{"控制台"}</span>
+            <span className="text-xs text-[hsl(var(--text-tertiary))]">控制台</span>
           </div>
         </div>
 
@@ -65,7 +58,7 @@ export function Sidebar({
                 onClick={() => onToggleGroup(group.id)}
               >
                 <ChevronRight className="chevron size-2.5 transition-transform" />
-                <span>{t(group.labelKey)}</span>
+                <span>{group.label}</span>
               </Button>
               <div className="menu-group-items pl-2">
                 {group.items.map((item) => {
@@ -86,7 +79,7 @@ export function Sidebar({
                       }}
                     >
                       <Icon className="item-icon size-4 shrink-0" />
-                      <span>{t(item.labelKey)}</span>
+                      <span>{item.label}</span>
                     </Button>
                   );
                 })}

@@ -2,29 +2,27 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2, Plus, Radio } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import {
   channelAction,
-  channelLangFromI18n,
   fetchChannels,
   type ChannelCatalogEntry
 } from "@supportflow/shared/tauri-bridge/cmd/channel-python-channels";
-import { channelLabelKey } from "@supportflow/shared/tauri-bridge/enums";
+import { channelLabel } from "@supportflow/shared/tauri-bridge/enums";
 import { Button } from "@supportflow/ui/button";
 
 import { getDevChannel } from "../lib/agent-console/dev-channel";
 import { ActiveChannelCard } from "../views/channels/active-channel-card";
 import { ChannelAddPanel } from "../views/channels/channel-add-panel";
 
-function ChannelsEmptyState({ t }: { t: ReturnType<typeof useTranslation>["t"] }) {
+function ChannelsEmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20">
       <div className="bg-info/10 mb-4 flex size-16 items-center justify-center rounded-2xl">
         <Radio className="text-info size-7" />
       </div>
-      <p className="text-muted-foreground font-medium">{"暂未接入任何通道"}</p>
-      <p className="text-muted-foreground mt-1 text-sm">{"点击右上角「接入通道」按钮开始配置"}</p>
+      <p className="text-muted-foreground font-medium">暂未接入任何通道</p>
+      <p className="text-muted-foreground mt-1 text-sm">点击右上角“接入通道”开始配置。</p>
     </div>
   );
 }
@@ -34,23 +32,21 @@ function ChannelsHeader({
   devChannel,
   loadError,
   onOpenAdd,
-  pageDescKey,
-  pageTitleKey,
-  t
+  pageDescription,
+  pageTitle
 }: {
   addOpen: boolean;
   devChannel: string | null;
   loadError: string | null;
   onOpenAdd: () => void;
-  pageDescKey: string;
-  pageTitleKey: string;
-  t: ReturnType<typeof useTranslation>["t"];
+  pageDescription: string;
+  pageTitle: string;
 }) {
   return (
     <div className="mb-6 flex items-center justify-between">
       <div>
-        <h2 className="text-foreground text-xl font-bold">{t(pageTitleKey)}</h2>
-        <p className="text-muted-foreground mt-1 text-sm">{t(pageDescKey)}</p>
+        <h2 className="text-foreground text-xl font-bold">{pageTitle}</h2>
+        <p className="text-muted-foreground mt-1 text-sm">{pageDescription}</p>
       </div>
       {!devChannel && !addOpen ? (
         <Button
@@ -60,39 +56,30 @@ function ChannelsHeader({
           onClick={onOpenAdd}
         >
           <Plus className="size-3.5" />
-          {"接入通道"}
+          接入通道
         </Button>
       ) : null}
     </div>
   );
 }
 
-function ChannelsLoading({ t }: { t: ReturnType<typeof useTranslation>["t"] }) {
+function ChannelsLoading() {
   return (
     <div className="text-muted-foreground flex items-center justify-center gap-2 py-8 text-sm">
       <Loader2 className="size-4 animate-spin" />
-      <span>{"加载通道配置…"}</span>
+      <span>加载通道配置中...</span>
     </div>
   );
 }
 
-function ChannelsError({
-  load,
-  loadError,
-  t
-}: {
-  load: () => Promise<void>;
-  loadError: string;
-  t: ReturnType<typeof useTranslation>["t"];
-}) {
+function ChannelsError({ load, loadError }: { load: () => Promise<void>; loadError: string }) {
   return (
     <div className="bg-warning/10 text-warning-foreground border-warning/30 rounded-xl border p-4 text-sm">
-      <p className="font-medium">{"通道 sidecar 未就绪"}</p>
+      <p className="font-medium">通道 sidecar 未就绪</p>
       <p className="mt-2 text-xs opacity-90">{loadError}</p>
       <p className="mt-3 text-xs opacity-80">
-        {
-          "请先运行 pnpm run build:channel-sidecar 生成 PyInstaller sidecar，开发态也可直接使用 channel_agent 源码。"
-        }
+        请先运行 `pnpm run build:channel-sidecar` 生成 sidecar，开发态也可直接使用 `channel_agent`
+        源码。
       </p>
       <Button
         type="button"
@@ -100,7 +87,7 @@ function ChannelsError({
         className="border-warning/40 mt-4 text-xs"
         onClick={() => void load()}
       >
-        {"重试"}
+        重试
       </Button>
     </div>
   );
@@ -113,11 +100,9 @@ function ChannelsContent({
   devChannel,
   handleConnected,
   handleDisconnect,
-  lang,
   load,
   onCloseAdd,
-  showEmptyState,
-  t
+  showEmptyState
 }: {
   activeChannels: ChannelCatalogEntry[];
   addOpen: boolean;
@@ -125,11 +110,9 @@ function ChannelsContent({
   devChannel: string | null;
   handleConnected: () => Promise<void>;
   handleDisconnect: (name: string) => Promise<void>;
-  lang: string;
   load: () => Promise<void>;
   onCloseAdd: () => void;
   showEmptyState: boolean;
-  t: ReturnType<typeof useTranslation>["t"];
 }) {
   const showGrid = !((addOpen || devChannel) && activeChannels.length === 0);
   const showFixedAddPanel = Boolean(
@@ -141,13 +124,13 @@ function ChannelsContent({
       {showGrid ? (
         <div className="grid gap-4">
           {showEmptyState ? (
-            <ChannelsEmptyState t={t} />
+            <ChannelsEmptyState />
           ) : (
             activeChannels.map((channel) => (
               <ActiveChannelCard
                 key={channel.name}
                 channel={channel}
-                lang={lang}
+                lang="zh"
                 onRefresh={() => void load()}
                 onDisconnect={(name) => void handleDisconnect(name)}
               />
@@ -160,7 +143,7 @@ function ChannelsContent({
         <ChannelAddPanel
           key={devChannel}
           catalog={catalog}
-          lang={lang}
+          lang="zh"
           fixedChannel={devChannel}
           onClose={onCloseAdd}
           onConnected={() => void handleConnected()}
@@ -170,7 +153,7 @@ function ChannelsContent({
       {addOpen && !devChannel ? (
         <ChannelAddPanel
           catalog={catalog}
-          lang={lang}
+          lang="zh"
           onClose={onCloseAdd}
           onConnected={() => void handleConnected()}
         />
@@ -180,16 +163,16 @@ function ChannelsContent({
 }
 
 export function Channels() {
-  const { t, i18n } = useTranslation("console");
-  const lang = channelLangFromI18n(i18n.language);
   const devChannel = useMemo(() => getDevChannel(), []);
   const [loading, setLoading] = useState(true);
   const [catalog, setCatalog] = useState<ChannelCatalogEntry[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(() => devChannel !== null);
 
-  const pageTitleKey = devChannel ? channelLabelKey(devChannel) : "channels_title";
-  const pageDescKey = devChannel ? "channels_dev_desc" : "channels_desc";
+  const pageTitle = devChannel ? channelLabel(devChannel) : "通道";
+  const pageDescription = devChannel
+    ? "当前只展示开发指定通道。"
+    : "管理本地已接入的通道连接与配置。";
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -202,7 +185,7 @@ export function Channels() {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -222,7 +205,7 @@ export function Channels() {
 
   const handleDisconnect = useCallback(
     async (name: string) => {
-      if (!window.confirm("确认断开该通道？配置将保留但通道会停止运行。")) {
+      if (!window.confirm("确认断开该通道吗？配置会保留，但通道将停止运行。")) {
         return;
       }
       try {
@@ -235,7 +218,7 @@ export function Channels() {
         // noop
       }
     },
-    [devChannel, load, t]
+    [devChannel, load]
   );
 
   const handleConnected = useCallback(async () => {
@@ -246,7 +229,7 @@ export function Channels() {
   if (devChannel && !loading && !loadError && catalog.length > 0 && !devChannelRow) {
     return (
       <div className="flex h-full min-h-0 flex-col items-center justify-center p-6 text-sm text-red-500">
-        <p>{`未知通道「${devChannel}」，请检查 NEXT_PUBLIC_DEV_CHANNEL / 启动脚本。`}</p>
+        <p>{`未知通道“${devChannel}”，请检查 NEXT_PUBLIC_DEV_CHANNEL 或启动脚本。`}</p>
       </div>
     );
   }
@@ -260,13 +243,12 @@ export function Channels() {
             devChannel={devChannel}
             loadError={loadError}
             onOpenAdd={() => setAddOpen(true)}
-            pageDescKey={pageDescKey}
-            pageTitleKey={pageTitleKey}
-            t={t}
+            pageDescription={pageDescription}
+            pageTitle={pageTitle}
           />
 
-          {loading ? <ChannelsLoading t={t} /> : null}
-          {!loading && loadError ? <ChannelsError load={load} loadError={loadError} t={t} /> : null}
+          {loading ? <ChannelsLoading /> : null}
+          {!loading && loadError ? <ChannelsError load={load} loadError={loadError} /> : null}
           {!loading && !loadError ? (
             <ChannelsContent
               activeChannels={activeChannels}
@@ -275,11 +257,9 @@ export function Channels() {
               devChannel={devChannel}
               handleConnected={handleConnected}
               handleDisconnect={handleDisconnect}
-              lang={lang}
               load={load}
               onCloseAdd={() => setAddOpen(false)}
               showEmptyState={showEmptyState}
-              t={t}
             />
           ) : null}
         </div>

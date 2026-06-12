@@ -1,7 +1,6 @@
 "use client";
 
 import { BookOpen, Clock, Code, FolderOpen, Globe, Zap } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { EXAMPLE_PROMPTS } from "../constants/example-prompts";
 import { ConsoleBrandMark } from "../shared/console-brand";
@@ -22,17 +21,15 @@ interface WelcomeScreenProps {
 }
 
 export function WelcomeScreen({ onSelectPrompt }: WelcomeScreenProps) {
-  const { t } = useTranslation("console");
-
   return (
     <div
       className="flex h-full flex-col items-center justify-center px-6 pb-16"
       style={{ paddingTop: "6vh" }}
     >
       <ConsoleBrandMark className="mb-6 size-16" />
-      <h1 className="text-foreground mb-3 text-2xl font-bold">{"SupportFlow"}</h1>
+      <h1 className="text-foreground mb-3 text-2xl font-bold">SupportFlow</h1>
       <p className="text-muted-foreground mb-10 max-w-lg text-center leading-relaxed">
-        {"我可以帮你解答问题、管理计算机、创造和执行技能，并通过长期记忆和知识库不断成长"}
+        我可以帮你梳理问题、修改代码、管理知识、使用技能工具，并持续积累上下文。
       </p>
 
       <div className="grid w-full max-w-2xl grid-cols-2 gap-3 sm:grid-cols-3">
@@ -46,7 +43,7 @@ export function WelcomeScreen({ onSelectPrompt }: WelcomeScreenProps) {
               className={cn(
                 "example-card group bg-card h-auto cursor-pointer rounded-xl p-4 text-left transition-all duration-200 hover:shadow-md"
               )}
-              onClick={() => onSelectPrompt(t(item.promptKey))}
+              onClick={() => onSelectPrompt(item.prompt)}
             >
               <div className="mb-2 flex items-center gap-2">
                 <div
@@ -57,9 +54,9 @@ export function WelcomeScreen({ onSelectPrompt }: WelcomeScreenProps) {
                 >
                   <Icon className={cn("size-3.5", item.iconColorClassName)} />
                 </div>
-                <span className="text-foreground text-sm font-medium">{t(item.titleKey)}</span>
+                <span className="text-foreground text-sm font-medium">{item.title}</span>
               </div>
-              <p className="text-muted-foreground text-sm leading-relaxed">{t(item.textKey)}</p>
+              <p className="text-muted-foreground text-sm leading-relaxed">{item.text}</p>
             </Button>
           );
         })}

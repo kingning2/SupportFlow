@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 import {
   clearAgentProvider,
@@ -25,7 +24,7 @@ import {
   SelectValue
 } from "@supportflow/ui/select";
 import type { ModelProviderDetail } from "@supportflow/shared/contracts";
-import { providerLabelKey } from "../lib/agent-console/provider-labels";
+import { providerLabel } from "../lib/agent-console/provider-labels";
 
 type VendorCredentialsProps = {
   open: boolean;
@@ -42,7 +41,6 @@ export function VendorCredentials({
   onOpenChange,
   onSaved
 }: VendorCredentialsProps) {
-  const { t } = useTranslation("console");
   const [selectedId, setSelectedId] = useState(provider?.id ?? "");
   const [apiKey, setApiKey] = useState("");
   const [apiBaseDraft, setApiBaseDraft] = useState("");
@@ -92,7 +90,7 @@ export function VendorCredentials({
     if (!active) {
       return;
     }
-    if (!window.confirm(`${"清除厂商凭据？"}\n${"将删除该厂商的 API Key 与 Base URL。"}`)) {
+    if (!window.confirm("清除厂商凭据？\n这会删除当前厂商的 API Key 和 Base URL。")) {
       return;
     }
     setSaving(true);
@@ -102,7 +100,7 @@ export function VendorCredentials({
       onOpenChange(false);
       await onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "保存失败，请检查 Key 或网络权限。");
+      setError(err instanceof Error ? err.message : "清除失败，请稍后再试。");
     } finally {
       setSaving(false);
     }
@@ -113,21 +111,21 @@ export function VendorCredentials({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{provider ? "编辑凭据" : "添加厂商"}</DialogTitle>
-          <DialogDescription className="font-mono text-xs">{active?.id ?? "—"}</DialogDescription>
+          <DialogDescription className="font-mono text-xs">{active?.id ?? "-"}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {isPickerMode ? (
             <div className="space-y-2">
-              <span className="text-sm font-medium">{"选择厂商"}</span>
+              <span className="text-sm font-medium">选择厂商</span>
               <Select value={selectedId} onValueChange={setSelectedId}>
                 <SelectTrigger>
-                  <SelectValue placeholder={"选择厂商"} />
+                  <SelectValue placeholder="选择厂商" />
                 </SelectTrigger>
                 <SelectContent>
                   {pickableProviders.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {t(providerLabelKey(p.id))}
+                      {providerLabel(p.id)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -137,7 +135,7 @@ export function VendorCredentials({
 
           <div className="space-y-2">
             <label htmlFor="vendor-api-key" className="text-sm font-medium">
-              {"API Key"}
+              API Key
             </label>
             <Input
               id="vendor-api-key"
@@ -152,7 +150,7 @@ export function VendorCredentials({
           {active?.hasApiBase ? (
             <div className="space-y-2">
               <label htmlFor="vendor-api-base" className="text-sm font-medium">
-                {"API Base"}
+                API Base
               </label>
               <Input
                 id="vendor-api-base"
@@ -174,7 +172,7 @@ export function VendorCredentials({
             disabled={saving || !active?.configured}
             onClick={() => void handleClear()}
           >
-            {"清除凭据"}
+            清除凭据
           </Button>
           <div className="flex gap-2">
             <Button
@@ -183,10 +181,10 @@ export function VendorCredentials({
               disabled={saving}
               onClick={() => onOpenChange(false)}
             >
-              {"取消"}
+              取消
             </Button>
             <Button type="button" disabled={saving || !active} onClick={() => void handleSave()}>
-              {"保存"}
+              保存
             </Button>
           </div>
         </DialogFooter>

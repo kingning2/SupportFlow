@@ -5,7 +5,7 @@ export type ChannelCatalogEntryId = (typeof CHANNEL_IDS)[number];
 
 const CHANNEL_ID_SET = new Set<string>(CHANNEL_IDS);
 
-/** CLI / npm script aliases → canonical channel id. */
+/** CLI / npm script aliases to canonical channel id. */
 export const DEV_CHANNEL_ALIASES: Record<string, ChannelCatalogEntryId> = {
   wework: "wework"
 };
@@ -30,6 +30,11 @@ export function resolveDevChannel(raw: string | undefined | null): ChannelCatalo
   return null;
 }
 
-export function channelLabelKey(channelId: ChannelCatalogEntryId): string {
-  return `channel_label_${channelId}`;
+export function channelLabel(channelId: ChannelCatalogEntryId): string {
+  switch (channelId) {
+    case "wework":
+      return "企业微信";
+    default:
+      return channelId;
+  }
 }

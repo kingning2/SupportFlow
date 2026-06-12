@@ -13,11 +13,8 @@ mod events;
 #[cfg(feature = "desktop")]
 mod utils;
 
-/// LLM Provider 协议层（`crates/models`）。
 pub use models;
-/// Agent 工具引擎（`src/services/agent`）。
 pub use services::agent;
-/// Bot / AgentBridge 业务（`src/services/bridge`）。
 pub use services::bridge;
 
 #[cfg(feature = "desktop")]
@@ -34,7 +31,6 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
-        .manage(context::session::SessionStore::load_from_disk())
         .manage(context::channel::ChannelStatusStore::default())
         .setup(|app| {
             let runtime = std::sync::Arc::new(context::agent_runtime::AgentRuntime::initialize(
@@ -59,7 +55,6 @@ pub fn run() {
             cmd::license::license_get_status,
             cmd::license::license_apply_activation,
             cmd::license::license_pick_and_apply_activation_key,
-            cmd::session::get_app_session,
             cmd::log::log_fe,
             cmd::log::log_fe_req,
             cmd::window::open_modal_window,

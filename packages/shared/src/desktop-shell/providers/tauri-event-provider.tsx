@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useMemo } from "react";
 
-import { CrossWebviewSyncSubscriptions } from "../events/cross-webview-sync";
 import type {
   TauriEventHandler,
   TauriEventScope
@@ -16,9 +15,9 @@ import {
 } from "@supportflow/shared/tauri-bridge/tauri-event";
 
 export type TauriEventApi = {
-  /** 前端 → Rust / 全局广播 */
+  /** 前端 -> Rust / 全局广播 */
   emit: typeof tauriEmit;
-  /** 前端 → 指定 Webview */
+  /** 前端 -> 指定 Webview */
   emitTo: typeof tauriEmitTo;
   /** 监听全局事件（跨 Webview） */
   on: <T>(event: string, handler: TauriEventHandler<T>) => () => void;
@@ -45,12 +44,7 @@ export default function TauriEventProvider({ children }: { children: React.React
     []
   );
 
-  return (
-    <TauriEventContext.Provider value={api}>
-      <CrossWebviewSyncSubscriptions />
-      {children}
-    </TauriEventContext.Provider>
-  );
+  return <TauriEventContext.Provider value={api}>{children}</TauriEventContext.Provider>;
 }
 
 export function useTauriEventApi(): TauriEventApi {

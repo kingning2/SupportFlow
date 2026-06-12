@@ -4,13 +4,6 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
-#[typeshare]
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct AppSession {
-    pub current_language: String,
-}
-
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModalLifecyclePayload {
@@ -62,7 +55,6 @@ pub struct SkillDetail {
     pub disable_model_invocation: bool,
 }
 
-/// Channel lifecycle push from Python sidecar (`channel/status-changed`).
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelStatusChangedPayload {
@@ -91,7 +83,6 @@ pub struct ToolItem {
     pub is_mcp: bool,
 }
 
-/// SSE-style chunk emitted during `agent_send_message` (`agent/stream-chunk`).
 #[typeshare]
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -140,7 +131,6 @@ pub struct AgentLogStreamPayload {
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ModelProviderItem {
-    /// `config.json` `bot_type` id (e.g. `deepseek`, `openai`).
     pub id: String,
     pub configured: bool,
     pub is_active: bool,

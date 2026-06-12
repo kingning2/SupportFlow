@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { Chat } from "../chat/chat";
 import {
+  CONSOLE_VIEW_PAGE_LABEL,
   getSidebarNavGroups,
   PLACEHOLDER_CONSOLE_VIEWS,
   SidebarGroupId
@@ -118,14 +119,7 @@ export function AgentConsoleApp() {
       return <Logs />;
     }
     if (PLACEHOLDER_CONSOLE_VIEWS.has(activeView)) {
-      const pageKey = {
-        [ConsoleView.Memory]: "menu_memory",
-        [ConsoleView.Knowledge]: "menu_knowledge",
-        [ConsoleView.Channels]: "menu_channels",
-        [ConsoleView.Tasks]: "menu_tasks",
-        [ConsoleView.Logs]: "menu_logs"
-      }[activeView];
-      return <PlaceholderView viewKey={pageKey} />;
+      return <PlaceholderView title={CONSOLE_VIEW_PAGE_LABEL[activeView]} />;
     }
     return null;
   }, [activeView, handleNewSession, setState, state]);
@@ -134,7 +128,7 @@ export function AgentConsoleApp() {
     return (
       <TooltipProvider>
         <div className="agent-console flex flex-1 items-center justify-center text-sm text-slate-500">
-          {"正在加载 Agent…"}
+          正在加载 Agent...
         </div>
       </TooltipProvider>
     );
@@ -144,7 +138,7 @@ export function AgentConsoleApp() {
     return (
       <TooltipProvider>
         <div className="agent-console flex flex-1 flex-col items-center justify-center gap-2 p-6 text-sm text-red-500">
-          <p>{"无法初始化 Agent"}</p>
+          <p>无法初始化 Agent</p>
           <p className="text-muted-foreground max-w-md text-center text-xs">{error}</p>
         </div>
       </TooltipProvider>

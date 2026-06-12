@@ -115,10 +115,10 @@ export interface AgentChannelField {
 
 export interface AgentChannelDetail {
   name: string;
-  labelKey: string;
+  label: string;
   active: boolean;
   fields: AgentChannelField[];
-  hintKey?: string;
+  hint?: string;
 }
 
 export interface AgentChannelActionRequest {
@@ -215,7 +215,6 @@ export function uploadAgentKnowledge(files: AgentKnowledgeUploadFile[], category
   });
 }
 
-/** Trigger native file picker in Rust (via tauri dialog), Rust reads files directly from disk and ingests (markitdown first). */
 export function pickAndUploadKnowledge(category?: string) {
   return invokeWrapper<AgentKnowledgeUploadResult>(TauriCmd.AgentPickAndUploadKnowledge, {
     body: { category }
@@ -226,14 +225,12 @@ export function listAgentChannels() {
   return invokeWrapper<AgentChannelSummary[]>(TauriCmd.AgentListChannels);
 }
 
-/** @deprecated Use `fetchChannels` from `@/cmd/channel-python-channels` (Python proxy). */
 export function getAgentChannelCatalog() {
   return invokeWrapper<{ status: string; channels: AgentChannelDetail[] }>(
     TauriCmd.AgentGetChannelCatalog
   );
 }
 
-/** @deprecated Use `channelAction` from `@/cmd/channel-python-channels` (Python proxy). */
 export function agentChannelAction(body: AgentChannelActionRequest) {
   return invokeWrapper<AgentChannelActionResponse & { status: string }>(
     TauriCmd.AgentChannelAction,

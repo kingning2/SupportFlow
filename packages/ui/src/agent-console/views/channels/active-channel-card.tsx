@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import {
   channelAction,
-  channelLoginStatus,
   localizeChannelText,
   type ChannelCatalogEntry
 } from "@supportflow/shared/tauri-bridge/cmd/channel-python-channels";
@@ -18,7 +16,6 @@ import {
   type ChannelFieldDrafts
 } from "./channel-fields";
 import { CHANNEL_ICON_MAP, channelColorClasses } from "./channel-theme";
-import { WxQrPanel } from "./wx-qr-panel";
 import { Button } from "@supportflow/ui/button";
 
 interface ActiveChannelCardProps {
@@ -28,32 +25,11 @@ interface ActiveChannelCardProps {
   onDisconnect: (name: string) => void;
 }
 
-function ChannelStatusBadge({
-  loginStatus,
-  waitingForWxLogin,
-  t
-}: {
-  loginStatus: string | null | undefined;
-  waitingForWxLogin: boolean;
-  t: ReturnType<typeof useTranslation>["t"];
-}) {
-  if (!waitingForWxLogin) {
-    return (
-      <>
-        <span className="bg-success size-2 rounded-full" />
-        <span className="text-success text-xs">{"已接入"}</span>
-      </>
-    );
-  }
-
+function ChannelStatusBadge() {
   return (
     <>
-      <span className="size-2 animate-pulse rounded-full bg-amber-400" />
-      {loginStatus === "scanned" ? (
-        <span className="text-success text-xs">{"已扫码，请在手机上确认"}</span>
-      ) : (
-        <span className="text-xs text-amber-500">{"等待扫码…"}</span>
-      )}
+      <span className="bg-success size-2 rounded-full" />
+      <span className="text-success text-xs">已接入</span>
     </>
   );
 }
@@ -64,21 +40,17 @@ export function ActiveChannelCard({
   onRefresh,
   onDisconnect
 }: ActiveChannelCardProps) {
-  const { t } = useTranslation("console");
   const [drafts, setDrafts] = useState<ChannelFieldDrafts>(() => draftsFromChannel(channel));
   const [saving, setSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [statusError, setStatusError] = useState(false);
 
-  const loginStatus = channelLoginStatus(channel);
   const colors = channelColorClasses(channel.color);
   const Icon = CHANNEL_ICON_MAP[channel.icon ?? ""] ?? MessageCircle;
   const label = localizeChannelText(channel.label, lang);
 
-  const wxWaiting = channel.name === "wx" && Boolean(loginStatus && loginStatus !== "logged_in");
   const hasFields = channel.fields.length > 0;
-
-  const showSaveBlock = hasFields && !wxWaiting;
+  const showSaveBlock = hasFields;
 
   const handleSave = async () => {
     setSaving(true);
@@ -88,8 +60,7 @@ export function ActiveChannelCard({
         channel: channel.name,
         config: buildConfigFromDrafts(channel, drafts)
       });
-      const key = data.restarted ? "channels_restarted" : "channels_saved";
-      setStatusMsg(t(key));
+      setStatusMsg(data.restarted ? "已保存并重启通道" : "配置已保存");
       setStatusError(false);
       setTimeout(() => setStatusMsg(null), 2500);
       onRefresh();
@@ -102,7 +73,7 @@ export function ActiveChannelCard({
     }
   };
 
-  const headerMb = hasFields || wxWaiting ? "mb-5" : "";
+  const headerMb = hasFields ? "mb-5" : "";
 
   return (
     <div
@@ -118,7 +89,7 @@ export function ActiveChannelCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="text-foreground font-semibold">{label}</span>
-            <ChannelStatusBadge loginStatus={loginStatus} waitingForWxLogin={wxWaiting} t={t} />
+            <ChannelStatusBadge />
           </div>
           <p className="text-muted-foreground mt-0.5 font-mono text-xs">{channel.name}</p>
         </div>
@@ -128,11 +99,10 @@ export function ActiveChannelCard({
           className="h-auto px-3 py-1.5 text-xs"
           onClick={() => onDisconnect(channel.name)}
         >
-          {"断开"}
+          断开
         </Button>
       </div>
 
-      {wxWaiting ? <WxQrPanel onLoggedIn={onRefresh} /> : null}
       {showSaveBlock ? (
         <div className="space-y-4">
           {channel.hint ? <ChannelHint hint={channel.hint} lang={lang} /> : null}
@@ -152,7 +122,7 @@ export function ActiveChannelCard({
               {statusMsg}
             </span>
             <Button type="button" disabled={saving} onClick={() => void handleSave()}>
-              {saving ? "保存中…" : "保存配置"}
+              {saving ? "保存中..." : "保存配置"}
             </Button>
           </div>
         </div>

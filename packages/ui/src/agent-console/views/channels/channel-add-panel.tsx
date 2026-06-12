@@ -1,20 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ChevronDown, Loader2, Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 
 import {
   channelAction,
   localizeChannelText,
   type ChannelCatalogEntry
 } from "@supportflow/shared/tauri-bridge/cmd/channel-python-channels";
-import { ChannelHint } from "./channel-hint";
-import {
-  buildConfigFromDrafts,
-  ChannelFields,
-  draftsFromChannel,
-  type ChannelFieldDrafts
-} from "./channel-fields";
+import { draftsFromChannel, type ChannelFieldDrafts } from "./channel-fields";
 import { WeworkConnectPanel } from "./wework-connect-panel";
 import { Button } from "@supportflow/ui/button";
 
@@ -94,28 +88,6 @@ export function ChannelAddPanel({
     );
   }
 
-  const submitConnect = async () => {
-    if (!ch) {
-      return;
-    }
-    setConnecting(true);
-    try {
-      await channelAction({
-        action: "connect",
-        channel: ch.name,
-        config: buildConfigFromDrafts(ch, drafts)
-      });
-      onConnected();
-      onClose();
-    } catch {
-      // keep panel open
-    } finally {
-      setConnecting(false);
-    }
-  };
-
-  const showActions = ch && selectedChannel === "wx";
-  const showWxPanel = selectedChannel === "wx" && ch;
   const showWeworkPanel = selectedChannel === "wework" && ch;
 
   const selectLabel =
@@ -181,18 +153,6 @@ export function ChannelAddPanel({
       )}
 
       <div className="space-y-4">
-        {showWxPanel ? (
-          <>
-            {ch.hint ? <ChannelHint hint={ch.hint} lang={lang} /> : null}
-            <ChannelFields
-              channelName="wx"
-              fields={ch.fields}
-              lang={lang}
-              drafts={drafts}
-              onChange={setDrafts}
-            />
-          </>
-        ) : null}
         {showWeworkPanel ? (
           <WeworkConnectPanel
             channel={ch}
@@ -213,29 +173,6 @@ export function ChannelAddPanel({
           />
         ) : null}
       </div>
-
-      {showActions ? (
-        <div className="mt-4 flex items-center justify-end gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>
-            {"取消"}
-          </Button>
-          <Button
-            type="button"
-            disabled={connecting}
-            className="flex items-center"
-            onClick={() => void submitConnect()}
-          >
-            {connecting ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                {"接入中…"}
-              </>
-            ) : (
-              "接入"
-            )}
-          </Button>
-        </div>
-      ) : null}
     </div>
   );
 }

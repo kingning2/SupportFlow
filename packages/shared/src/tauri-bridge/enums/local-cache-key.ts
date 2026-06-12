@@ -1,5 +1,4 @@
-﻿export enum LocalCacheKey {
-  Language = "language",
+export enum LocalCacheKey {
   /** SupportFlow web console session id */
   AgentSessionId = "agent_session_id",
   ConsoleTheme = "console_theme",

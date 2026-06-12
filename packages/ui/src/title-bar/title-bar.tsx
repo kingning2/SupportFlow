@@ -3,10 +3,8 @@
 import { Dropdown, type MenuProps } from "antd";
 import {
   ArrowUpCircle,
-  Check,
   CircleHelp,
   Copy,
-  Globe,
   Headphones,
   Info,
   KeyRound,
@@ -17,18 +15,14 @@ import {
   X,
   type LucideIcon
 } from "lucide-react";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 
 import { cn } from "@supportflow/shared";
-import { useAppDispatch, useAppSelector } from "@supportflow/shared/desktop-shell/store/hooks";
-import { changeCurrentLanguageAction } from "@supportflow/shared/desktop-shell/store/modules/app";
-import type { Language } from "@supportflow/shared/tauri-bridge/enums";
 import { mainWindow } from "@supportflow/shared/tauri-bridge/window/main-window";
 import { Button } from "@supportflow/ui/button";
 
 import { LicenseActivationModal, LicenseMachineCodeModal } from "./license-modals";
 
-/** 通道 flavor 可选品牌色；未传时使用默认控制台标题栏样式 */
 export type TitleBarAccent = {
   logoGradient: string;
   title: string;
@@ -48,14 +42,13 @@ type MoreMenuItem = {
 };
 
 const MORE_MENU_ITEMS: MoreMenuItem[] = [
-  { id: "feedback", label: "反饋", Icon: Mail },
-  { id: "contact_support", label: "聯絡支援", Icon: Headphones },
-  { id: "online_help", label: "在線幫助", Icon: CircleHelp },
-  { id: "check_updates", label: "檢查更新", Icon: ArrowUpCircle },
-  { id: "about", label: "關於", Icon: Info }
+  { id: "feedback", label: "反馈", Icon: Mail },
+  { id: "contact_support", label: "联系支持", Icon: Headphones },
+  { id: "online_help", label: "在线帮助", Icon: CircleHelp },
+  { id: "check_updates", label: "检查更新", Icon: ArrowUpCircle },
+  { id: "about", label: "关于", Icon: Info }
 ];
 
-/** 整栏可拖；仅排除按钮/菜单等可交互控件（由控件区 stopPropagation 兜底） */
 function handleTitleBarMouseDown(e: React.MouseEvent<HTMLDivElement>) {
   if (e.buttons !== 1) return;
   const target = e.target as HTMLElement;
@@ -69,17 +62,6 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
   const title = accent?.title ?? "SupportFlow";
   const logoText = accent?.logoText ?? "T";
   const logoGradient = accent?.logoGradient ?? "from-[#2b7fff] to-[#155dfc]";
-  const dispatch = useAppDispatch();
-  const currentLanguage = useAppSelector((state) => state.app.currentLanguage);
-  const supportLanguages = useAppSelector((state) => state.app.supportLanguages);
-
-  const switchLanguage = useCallback(
-    async (next: Language) => {
-      if (next === currentLanguage) return;
-      dispatch(changeCurrentLanguageAction(next));
-    },
-    [currentLanguage, dispatch]
-  );
 
   const controlBtnClass = cn(accent?.controlClassName ?? "text-muted-foreground", "shrink-0");
   const [activationOpen, setActivationOpen] = useState(false);
@@ -88,48 +70,26 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
   const menuItems = useMemo<MenuProps["items"]>(
     () => [
       {
-        key: "language",
-        label: "語言",
-        icon: <Globe className="size-4 shrink-0 opacity-80" aria-hidden />,
-        children: supportLanguages.map((opt) => ({
-          key: opt.value,
-          label: (
-            <span className="flex items-center gap-2">
-              <span className="flex size-4 shrink-0 items-center justify-center">
-                {currentLanguage === opt.value ? (
-                  <Check className="text-primary size-4" aria-hidden />
-                ) : null}
-              </span>
-              {opt.label}
-            </span>
-          ),
-          onClick: () => {
-            void switchLanguage(opt.value);
-          }
-        }))
-      },
-      { type: "divider" as const },
-      {
         key: "license_activation",
-        label: "訂閱激活",
+        label: "订阅激活",
         icon: <KeyRound className="size-4 shrink-0" aria-hidden />,
         onClick: () => setActivationOpen(true)
       },
       {
         key: "license_machine_code",
-        label: "機器碼",
+        label: "机器码",
         icon: <Copy className="size-4 shrink-0" aria-hidden />,
         onClick: () => setMachineCodeOpen(true)
       },
       { type: "divider" as const },
       ...MORE_MENU_ITEMS.map(({ id, label, Icon }) => ({
         key: id,
-        label: label,
+        label,
         icon: <Icon className="size-4 shrink-0" aria-hidden />,
         disabled: true
       }))
     ],
-    [supportLanguages, currentLanguage, switchLanguage]
+    []
   );
 
   return (
@@ -171,7 +131,7 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
               variant="ghost"
               size="icon"
               className={controlBtnClass}
-              aria-label={"選單"}
+              aria-label="菜单"
             >
               <Menu className="size-4" />
             </Button>
@@ -185,7 +145,7 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
             variant="ghost"
             size="icon"
             className={controlBtnClass}
-            aria-label={"最小化"}
+            aria-label="最小化"
             onClick={() => void mainWindow.minimize()}
           >
             <Minus className="size-4" />
@@ -195,7 +155,7 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
             variant="ghost"
             size="icon"
             className={controlBtnClass}
-            aria-label={"最大化"}
+            aria-label="最大化"
             onClick={() => void mainWindow.toggleMaximize()}
           >
             <Square className="size-3.5" />
@@ -210,7 +170,7 @@ const TitleBar = memo((props: { height?: number; accent?: TitleBarAccent }) => {
                 ? "hover:bg-red-500/10 hover:text-red-600"
                 : "hover:bg-destructive/10 hover:text-destructive"
             )}
-            aria-label={"關閉"}
+            aria-label="关闭"
             onClick={() => void mainWindow.close()}
           >
             <X className="size-4" />

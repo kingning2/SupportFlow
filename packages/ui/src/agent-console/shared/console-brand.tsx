@@ -1,7 +1,6 @@
 "use client";
 
 import { Bot } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { cn } from "@supportflow/shared";
 
@@ -50,17 +49,12 @@ export function ViewShell({
   );
 }
 
-export function PlaceholderView({ viewKey }: { viewKey: string }) {
-  const { t } = useTranslation("console");
+export function PlaceholderView({ title, description }: { title: string; description?: string }) {
+  const text = description ?? "该功能暂未接入 Rust Agent，请先在对话、配置和技能页面中使用。";
 
   return (
-    <ViewShell
-      title={t(viewKey)}
-      description={"该功能尚未接入 Rust Agent，请先在「对话」「配置」「技能」页测试。"}
-    >
-      <div className="text-muted-foreground text-sm">
-        {"该功能尚未接入 Rust Agent，请先在「对话」「配置」「技能」页测试。"}
-      </div>
+    <ViewShell title={title} description={text}>
+      <div className="text-muted-foreground text-sm">{text}</div>
     </ViewShell>
   );
 }

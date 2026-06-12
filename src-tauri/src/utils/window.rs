@@ -1,17 +1,13 @@
-//! Modal 子窗口：单窗 `modal`、可预热隐藏、打开时 show、关闭 hide 复用。
-//!
-//! 主窗与 modal 各为独立 Webview（系统层多进程/线程渲染），预热在空闲时完成，
-//! 避免首次 `open` 阻塞主窗。
+//! Modal 子窗口管理：支持预热、打开、定位与隐藏复用。
 
 use tauri::{
     AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, WebviewUrl, WebviewWindowBuilder,
     WindowEvent,
 };
 
-use crate::context::session;
 use crate::events::{self, payloads::ModalOpenPanelPayload, MAIN_WINDOW_LABEL};
 
-/// 唯一 modal 子窗口 label（与 `src/config/windows.ts` 的 `DEFAULT_MODAL_LABEL` 一致）
+/// 唯一 modal 子窗口 label。
 pub const MODAL_WINDOW_LABEL: &str = "modal";
 
 const MODAL_PRELOAD_PATH: &str = "/modal-window";
@@ -94,7 +90,6 @@ fn emit_open_panel(
     .map_err(|e| e.to_string())
 }
 
-/// 将 modal 居中到主窗（父窗口）区域内，而非整块屏幕。
 fn center_modal_on_parent(
     app: &AppHandle,
     modal: &tauri::WebviewWindow,
@@ -173,12 +168,10 @@ fn create_modal_webview(
     }
 
     register_modal_destroy_listener(app, label);
-    session::push_session_to_webview(app, label)?;
-
     Ok(())
 }
 
-/// 主窗空闲时预热：后台创建隐藏 modal Webview，不触发蒙层。
+/// 预热 modal 窗口，避免首次打开卡顿。
 pub fn preload_modal_window(app: &AppHandle) -> Result<(), String> {
     create_modal_webview(
         app,
@@ -189,6 +182,7 @@ pub fn preload_modal_window(app: &AppHandle) -> Result<(), String> {
     )
 }
 
+/// 打开 modal 窗口并切换到指定面板。
 pub fn open_modal_window(
     app: &AppHandle,
     path: String,
@@ -214,9 +208,7 @@ pub fn open_modal_window(
     let was_visible = existing.is_visible().map_err(|e| e.to_string())?;
 
     apply_modal_geometry(app, &existing, &title, width, height)?;
-    session::push_session_to_webview(app, &label)?;
 
-    // 蒙层先于子窗 show：用户点击后立即盖住主窗，子窗在 CSS 就绪后再显示。
     if !was_visible {
         events::modal_opened(app, &label)?;
     }
@@ -231,7 +223,7 @@ pub fn open_modal_window(
     Ok(label)
 }
 
-/// 子窗内容就绪后由前端调用：仅 show + focus（蒙层已在 open 阶段触发）。
+/// 前端内容就绪后显示 modal。
 pub fn modal_window_ready(app: &AppHandle, label: &str) -> Result<(), String> {
     let window = app
         .get_webview_window(label)
@@ -244,6 +236,7 @@ pub fn modal_window_ready(app: &AppHandle, label: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// 隐藏 modal 窗口并同步关闭事件。
 pub fn close_modal_window(app: &AppHandle, label: &str) -> Result<(), String> {
     let window = app
         .get_webview_window(label)

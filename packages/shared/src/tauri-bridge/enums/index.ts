@@ -17,7 +17,7 @@ export {
 export {
   CHANNEL_IDS,
   DEV_CHANNEL_ALIASES,
-  channelLabelKey,
+  channelLabel,
   isChannelCatalogEntryId,
   resolveDevChannel,
   type ChannelCatalogEntryId
