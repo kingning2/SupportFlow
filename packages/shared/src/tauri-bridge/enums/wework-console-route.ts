@@ -3,6 +3,7 @@ export enum WeworkConsoleRoute {
   Inbox = "inbox",
   Knowledge = "knowledge",
   Skills = "skills",
+  AiChat = "ai_chat",
   Mcp = "mcp",
   AiConfig = "ai_config",
   Account = "account"

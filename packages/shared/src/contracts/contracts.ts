@@ -67,6 +67,7 @@ export interface ModelProviderDetail {
 
 export interface ToolItem {
   name: string;
+  label: string;
   description: string;
   isMcp: boolean;
 }

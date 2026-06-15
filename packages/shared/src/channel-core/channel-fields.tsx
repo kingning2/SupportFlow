@@ -1,13 +1,16 @@
 "use client";
 
+import { Input, Space, Switch, Typography } from "@douyinfe/semi-ui-19";
+
 import {
   channelFieldValueString,
-  cn,
   isChannelMaskedSecret,
   localizeChannelText,
   type ChannelField,
   type ChannelFieldDrafts
 } from "@supportflow/shared";
+
+const { Text } = Typography;
 
 interface ChannelFieldsProps {
   channelName: string;
@@ -19,7 +22,7 @@ interface ChannelFieldsProps {
 
 export function ChannelFields({ channelName, fields, lang, drafts, onChange }: ChannelFieldsProps) {
   return (
-    <div className="space-y-4">
+    <Space vertical spacing="medium" style={{ width: "100%" }}>
       {fields.map((field) => {
         const fieldLabel = localizeChannelText(field.label, lang);
         const inputId = `ch-${channelName}-${field.key}`;
@@ -29,32 +32,21 @@ export function ChannelFields({ channelName, fields, lang, drafts, onChange }: C
         if (field.type === "bool" || field.type === "checkbox") {
           const checked = drafts.bools[field.key] ?? rawVal === "true";
           return (
-            <div key={field.key}>
-              <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-slate-700">
+            <Space key={field.key} vertical align="start" spacing="tight" style={{ width: "100%" }}>
+              <Text strong id={inputId}>
                 {fieldLabel}
-              </label>
-              <label className="relative inline-flex cursor-pointer items-center">
-                <input
-                  id={inputId}
-                  type="checkbox"
-                  className="peer sr-only"
-                  checked={checked}
-                  onChange={(e) =>
-                    onChange({
-                      ...drafts,
-                      bools: { ...drafts.bools, [field.key]: e.target.checked }
-                    })
-                  }
-                />
-                <div
-                  className={cn(
-                    "h-5 w-9 rounded-full bg-slate-200 after:absolute after:top-[2px] after:left-[2px]",
-                    "after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all",
-                    "peer-checked:bg-[var(--channel-primary,#35A85B)] peer-checked:after:translate-x-full"
-                  )}
-                />
-              </label>
-            </div>
+              </Text>
+              <Switch
+                aria-labelledby={inputId}
+                checked={checked}
+                onChange={(nextChecked) =>
+                  onChange({
+                    ...drafts,
+                    bools: { ...drafts.bools, [field.key]: nextChecked }
+                  })
+                }
+              />
+            </Space>
           );
         }
 
@@ -62,20 +54,20 @@ export function ChannelFields({ channelName, fields, lang, drafts, onChange }: C
         const value = isMasked ? rawVal : (drafts.strings[field.key] ?? rawVal);
 
         return (
-          <div key={field.key}>
-            <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-slate-700">
+          <Space key={field.key} vertical align="start" spacing="tight" style={{ width: "100%" }}>
+            <Text strong id={inputId}>
               {fieldLabel}
-            </label>
-            <input
+            </Text>
+            <Input
               id={inputId}
               type={inputType}
               value={value}
               placeholder={fieldLabel}
-              className={cn(
-                "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-sm",
-                "text-slate-800 transition-colors focus:border-[var(--channel-primary,#35A85B)] focus:ring-1 focus:ring-[var(--channel-primary,#35A85B)]/25 focus:outline-none",
-                isMasked && "cfg-key-masked"
-              )}
+              style={{
+                width: "100%",
+                fontFamily: "monospace",
+                ...(isMasked ? { WebkitTextSecurity: "disc" } : {})
+              }}
               onFocus={() => {
                 if (isMasked) {
                   onChange({
@@ -85,16 +77,16 @@ export function ChannelFields({ channelName, fields, lang, drafts, onChange }: C
                   });
                 }
               }}
-              onChange={(e) =>
+              onChange={(nextValue) =>
                 onChange({
                   ...drafts,
-                  strings: { ...drafts.strings, [field.key]: e.target.value }
+                  strings: { ...drafts.strings, [field.key]: String(nextValue) }
                 })
               }
             />
-          </div>
+          </Space>
         );
       })}
-    </div>
+    </Space>
   );
 }

@@ -16,6 +16,27 @@ export class InvokeError extends Error {
   }
 }
 
+type InvokeErrorListener = (error: InvokeError) => void;
+
+const invokeErrorListeners = new Set<InvokeErrorListener>();
+
+export function subscribeInvokeErrors(listener: InvokeErrorListener): () => void {
+  invokeErrorListeners.add(listener);
+  return () => {
+    invokeErrorListeners.delete(listener);
+  };
+}
+
+function notifyInvokeError(error: InvokeError): void {
+  for (const listener of invokeErrorListeners) {
+    try {
+      listener(error);
+    } catch {
+      // ignore listener failures
+    }
+  }
+}
+
 export function isTauriRuntime(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
@@ -51,6 +72,8 @@ export const invokeWrapper = async <T>(
     return await invoke<T>(cmd, args, options);
   } catch (error) {
     void logInvokeFailure(cmd, error);
-    throw new InvokeError(cmd, error);
+    const err = new InvokeError(cmd, error);
+    notifyInvokeError(err);
+    throw err;
   }
 };
