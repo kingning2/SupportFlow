@@ -4,3 +4,4 @@ pub mod agent;
 pub mod bridge;
 #[cfg(feature = "desktop")]
 pub mod channel;
+pub mod workflow;

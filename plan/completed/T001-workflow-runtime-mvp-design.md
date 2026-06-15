@@ -4,7 +4,7 @@
 | ---------- | --------------- |
 | ID         | T001            |
 | Priority   | P0              |
-| Status     | pending         |
+| Status     | completed       |
 | Depends on | —               |
 | Blocks     | T002, T003      |
 | Milestone  | M1 Workflow MVP |
@@ -31,9 +31,9 @@
 
 ## Acceptance criteria
 
-- [ ] `plan/` 或 `docs/` 下有 workflow MVP 设计说明（含状态机图）
-- [ ] Rust 类型草稿（`WorkflowDefinition`、`WorkflowRun`、`NodeState`）已评审
-- [ ] 与 `AgentRuntime` 集成点列出（入口 IPC、事件名）
+- [x] `plan/` 或 `docs/` 下有 workflow MVP 设计说明（含状态机图）
+- [x] Rust 类型草稿（`WorkflowDefinition`、`WorkflowRun`、`NodeState`）已评审
+- [x] 与 `AgentRuntime` 集成点列出（入口 IPC、事件名）
 
 ## Key files (expected touch)
 

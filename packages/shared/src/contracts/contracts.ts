@@ -211,6 +211,13 @@ export interface AgentReadLogsResult {
   content: string;
 }
 
+export interface AgentReplyNodeConfig {
+  promptTemplate: string;
+  skillFilter?: string[];
+  clearHistory?: boolean;
+  outputKey?: string;
+}
+
 export interface AgentRunFinished {
   requestId: string;
   error?: string;
@@ -263,6 +270,21 @@ export interface AgentUpdateProviderRequest {
   apiBaseSet?: boolean;
 }
 
+export interface BranchNodeConfig {
+  /** 简单 MVP：按 context key 的布尔值选边；完整表达式 T003+。 */
+  conditionKey: string;
+}
+
+export interface DelayNodeConfig {
+  durationSecs?: number;
+  untilKey?: string;
+}
+
+export interface HumanAndsignNodeConfig {
+  prompt: string;
+  timeoutSecs?: number;
+}
+
 export interface InstallSkillResult {
   installed_names: string[];
   source: string;
@@ -274,6 +296,21 @@ export interface LicenseStatusDto {
   reason?: string;
 }
 
+export interface ToolCallNodeConfig {
+  toolName: string;
+  arguments?: Value;
+  outputKey?: string;
+}
+
+/** 节点类型相关配置（按 `kind` 选用对应字段）。 */
+export interface NodeConfig {
+  agentReply?: AgentReplyNodeConfig;
+  toolCall?: ToolCallNodeConfig;
+  humanAndsign?: HumanAndsignNodeConfig;
+  branch?: BranchNodeConfig;
+  delay?: DelayNodeConfig;
+}
+
 export interface SkillDetail {
   name: string;
   description: string;
@@ -282,4 +319,101 @@ export interface SkillDetail {
   filePath: string;
   baseDir: string;
   disableModelInvocation: boolean;
+}
+
+/** MVP 首批节点类型。 */
+export enum NodeKind {
+  AgentReply = "agent_reply",
+  ToolCall = "tool_call",
+  HumanAndsign = "human_andsign",
+  Branch = "branch",
+  Delay = "delay"
+}
+
+/** 节点单次执行状态（Step 内）。 */
+export enum StepStatus {
+  Queued = "queued",
+  Active = "active",
+  Suspended = "suspended",
+  Completed = "completed",
+  Failed = "failed"
+}
+
+/** 单步执行记录。 */
+export interface StepRecord {
+  id: string;
+  nodeId: string;
+  nodeKind: NodeKind;
+  status: StepStatus;
+  startedAt: string;
+  finishedAt?: string;
+  input?: Value;
+  output?: Value;
+  error?: string;
+}
+
+/** 有向边；`condition` 为 `Some` 时表示分支出边（与 `branch` 节点配合）。 */
+export interface Transition {
+  from: string;
+  to: string;
+  condition?: string;
+  label?: string;
+}
+
+/** Run 级变量表（分支、节点输出、渠道元数据）。 */
+export interface WorkflowContext {
+  vars?: Record<string, Value>;
+}
+
+/** 图节点。 */
+export interface WorkflowNode {
+  id: string;
+  kind: NodeKind;
+  label?: string;
+  config: NodeConfig;
+}
+
+/** 工作流定义：静态节点图。 */
+export interface WorkflowDefinition {
+  id: string;
+  name: string;
+  version: number;
+  entryNodeId: string;
+  nodes: WorkflowNode[];
+  transitions: Transition[];
+}
+
+/** Run 级执行状态。 */
+export enum RunStatus {
+  Pending = "pending",
+  Running = "running",
+  WaitingHuman = "waiting_human",
+  Paused = "paused",
+  Succeeded = "succeeded",
+  Failed = "failed",
+  Cancelled = "cancelled"
+}
+
+/** 一次工作流执行实例。 */
+export interface WorkflowRun {
+  id: string;
+  definitionId: string;
+  status: RunStatus;
+  currentNodeId?: string;
+  context: WorkflowContext;
+  steps: StepRecord[];
+  createdAt: string;
+  updatedAt: string;
+  sessionId?: string;
+  error?: string;
+}
+
+/** 节点在 Run 内的瞬时状态（executor 内部使用，可选持久化）。 */
+export enum NodeState {
+  Idle = "idle",
+  Queued = "queued",
+  Active = "active",
+  Suspended = "suspended",
+  Completed = "completed",
+  Failed = "failed"
 }
