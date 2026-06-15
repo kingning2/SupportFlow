@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@supportflow/shared";
+import { Avatar } from "@douyinfe/semi-ui-19";
 
 /** 从名称取 1–2 个展示用缩写（支持中英文） */
 export function accountInitials(name: string): string {
@@ -37,10 +37,10 @@ export interface AccountAvatarProps {
   className?: string;
 }
 
-const SIZE_CLASS = {
-  sm: "size-8 text-xs",
-  md: "size-10 text-sm",
-  lg: "size-12 text-base"
+const SIZE_MAP = {
+  sm: "small",
+  md: "medium",
+  lg: "large"
 } as const;
 
 export function AccountAvatar({ name, size = "md", className }: AccountAvatarProps) {
@@ -48,16 +48,8 @@ export function AccountAvatar({ name, size = "md", className }: AccountAvatarPro
   const style = accountAvatarStyle(name);
 
   return (
-    <div
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-full font-semibold select-none",
-        SIZE_CLASS[size],
-        className
-      )}
-      style={style}
-      aria-hidden
-    >
+    <Avatar className={className} size={SIZE_MAP[size]} style={style}>
       {initials}
-    </div>
+    </Avatar>
   );
 }

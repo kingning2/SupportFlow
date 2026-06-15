@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import "./index.css";
-import "antd/dist/reset.css";
 import "@supportflow/ui/design-system";
 import "@supportflow/ui/design-system/flavors/wework";
 import "@/features/wework/styles/wework-console.css";
@@ -12,9 +11,11 @@ import { App } from "./App";
 import { WeworkAppPage } from "./features/wework/page";
 import {
   AccountRoute,
+  AiChatRoute,
   AiConfigRoute,
   InboxRoute,
   KnowledgeRoute,
+  LicenseRoute,
   McpRoute,
   SkillsRoute
 } from "./features/wework/app";
@@ -30,9 +31,11 @@ const router = createBrowserRouter([
           { path: "inbox", element: <InboxRoute /> },
           { path: "knowledge", element: <KnowledgeRoute /> },
           { path: "skills", element: <SkillsRoute /> },
+          { path: "ai_chat", element: <AiChatRoute /> },
           { path: "account", element: <AccountRoute /> },
           { path: "mcp", element: <McpRoute /> },
-          { path: "ai_config", element: <AiConfigRoute /> }
+          { path: "ai_config", element: <AiConfigRoute /> },
+          { path: "license", element: <LicenseRoute /> }
         ]
       }
     ]

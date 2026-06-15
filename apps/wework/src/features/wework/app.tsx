@@ -1,17 +1,9 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Banner, Layout } from "@douyinfe/semi-ui-19";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
-import type { ChannelCatalogEntry } from "@supportflow/shared";
 import {
   isWeworkConsoleRoute,
   LocalCacheKey,
@@ -20,36 +12,25 @@ import {
 
 import { Page } from "./accounts/page";
 import type { PageActions } from "./accounts/page-types";
-import { WEWORK_ROUTE_PAGE_LABEL } from "./constants/wework-nav";
 import { useActiveWeworkAccount } from "./hooks/use-active-wework-account";
 import { useWeworkChannel } from "./hooks/use-wework-channel";
 import { Inbox } from "./inbox/inbox";
 import { Header } from "./layout/header";
 import { Sidebar } from "./layout/sidebar";
-import type { WeworkConnectionStatus } from "./types/wework-conversation";
-import { ConfigPlaceholder } from "./views/config-placeholder";
+import { WeworkPageSingle, WeworkPageSingleBody } from "./layout/workspace-layout";
+import {
+  WeworkConsoleContext,
+  useWeworkConsoleContext,
+  type WeworkConsoleContextValue
+} from "./wework-console-context";
+import { AiChat } from "./views/ai-chat";
+import { AiConfig } from "./views/ai-config";
 import { Knowledge } from "./views/knowledge";
+import { McpPage } from "./views/mcp";
 import { Skills } from "./views/skills";
+import { LicenseLockOverlay, LicenseLockedPage } from "@supportflow/ui/license";
 
-export interface WeworkConsoleContextValue {
-  lang: string;
-  actions: PageActions;
-  channel: ChannelCatalogEntry | null;
-  channelLoading: boolean;
-  channelError: string | null;
-  connectionStatus: WeworkConnectionStatus;
-  onChannelUpdated: () => void;
-}
-
-const WeworkConsoleContext = createContext<WeworkConsoleContextValue | null>(null);
-
-export function useWeworkConsoleContext(): WeworkConsoleContextValue {
-  const ctx = useContext(WeworkConsoleContext);
-  if (!ctx) {
-    throw new Error("useWeworkConsoleContext must be used within <WeworkConsoleLayout />");
-  }
-  return ctx;
-}
+const { Content } = Layout;
 
 export interface AppProps {
   lang: string;
@@ -113,7 +94,7 @@ export function App({ lang, actions }: AppProps) {
 
   return (
     <WeworkConsoleContext.Provider value={ctxValue}>
-      <div className="shell flex h-full min-h-0 flex-1 overflow-hidden">
+      <Layout className="shell wework-semi-layout h-full min-h-0 flex-1 overflow-hidden">
         <Sidebar
           activeRoute={activeRoute}
           onNavigate={handleNavigate}
@@ -122,18 +103,46 @@ export function App({ lang, actions }: AppProps) {
           openGroups={openGroups}
           onToggleGroup={toggleGroup}
         />
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--wework-canvas)]">
-          <Header activeRoute={activeRoute} />
-          {connectionStatus !== "ready" && activeRoute === WeworkConsoleRoute.Inbox ? (
-            <div className="bg-warning/10 border-warning/20 mx-3 mt-3 shrink-0 rounded-xl border px-3 py-2 text-xs">
-              请先在“账号与通道”中完成企业微信接入，再使用对话收件箱。
-            </div>
-          ) : null}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            <Outlet />
-          </div>
-        </div>
-      </div>
+        <Layout
+          style={{
+            minHeight: 0,
+            minWidth: 0,
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden"
+          }}
+        >
+          <LicenseLockOverlay enabled={activeRoute === WeworkConsoleRoute.Account}>
+            <Layout
+              style={{
+                height: "100%",
+                minHeight: 0,
+                minWidth: 0,
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                background: "var(--main-window-bg)"
+              }}
+            >
+              <Header activeRoute={activeRoute} />
+              {connectionStatus !== "ready" && activeRoute === WeworkConsoleRoute.Inbox ? (
+                <Banner
+                  fullMode={false}
+                  bordered
+                  type="warning"
+                  closeIcon={null}
+                  description="请先在「账号与通道」中完成企业微信接入，再使用对话收件箱。"
+                />
+              ) : null}
+              <Content className="wework-semi-content min-h-0 flex-1 overflow-hidden p-0">
+                <Outlet />
+              </Content>
+            </Layout>
+          </LicenseLockOverlay>
+        </Layout>
+      </Layout>
     </WeworkConsoleContext.Provider>
   );
 }
@@ -154,7 +163,7 @@ export function AccountRoute() {
     onChannelUpdated
   } = useWeworkConsoleContext();
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
+    <WeworkPageSingle>
       <Page
         lang={lang}
         actions={actions}
@@ -164,7 +173,7 @@ export function AccountRoute() {
         connectionStatus={connectionStatus}
         onChannelUpdated={onChannelUpdated}
       />
-    </div>
+    </WeworkPageSingle>
   );
 }
 
@@ -173,13 +182,47 @@ export function KnowledgeRoute() {
 }
 
 export function SkillsRoute() {
-  return <Skills />;
+  return (
+    <WeworkPageSingle>
+      <WeworkPageSingleBody>
+        <Skills />
+      </WeworkPageSingleBody>
+    </WeworkPageSingle>
+  );
 }
 
 export function McpRoute() {
-  return <ConfigPlaceholder title={WEWORK_ROUTE_PAGE_LABEL[WeworkConsoleRoute.Mcp]} />;
+  return (
+    <WeworkPageSingle>
+      <WeworkPageSingleBody>
+        <McpPage />
+      </WeworkPageSingleBody>
+    </WeworkPageSingle>
+  );
 }
 
 export function AiConfigRoute() {
-  return <ConfigPlaceholder title={WEWORK_ROUTE_PAGE_LABEL[WeworkConsoleRoute.AiConfig]} />;
+  return (
+    <WeworkPageSingle>
+      <WeworkPageSingleBody style={{ padding: 0 }}>
+        <AiConfig />
+      </WeworkPageSingleBody>
+    </WeworkPageSingle>
+  );
+}
+
+export function AiChatRoute() {
+  return (
+    <WeworkPageSingle>
+      <WeworkPageSingleBody
+        style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}
+      >
+        <AiChat />
+      </WeworkPageSingleBody>
+    </WeworkPageSingle>
+  );
+}
+
+export function LicenseRoute() {
+  return <LicenseLockedPage />;
 }

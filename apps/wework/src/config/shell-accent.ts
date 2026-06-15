@@ -1,11 +1,11 @@
 import type { TitleBarAccent } from "@supportflow/ui/title-bar";
 
-/** 企微官网蓝白标题栏（仅浅色，无深色渐变） */
+/** 飞书式扁平标题栏 */
 export const weworkShellAccent: TitleBarAccent = {
-  logoGradient: "from-[#4A9AFF] to-[#267EF0]",
+  logoGradient: "from-[#3370FF] to-[#245BDB]",
   title: "SupportFlow · 企微",
-  barClassName: "border-b border-[#267EF0]/15 bg-[#F8FBFF]",
+  barClassName: "border-b border-[#dee0e3] bg-white",
   logoText: "企",
-  titleClassName: "text-[#1A2B4A]",
-  controlClassName: "text-[#267EF0]/85 hover:bg-[#267EF0]/10 hover:text-[#1A5FD9]"
+  titleClassName: "text-[#1f2329]",
+  controlClassName: "text-[#646a73] hover:bg-[#f5f6f7] hover:text-[#1f2329]"
 };

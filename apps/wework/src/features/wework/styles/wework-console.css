@@ -1,160 +1,243 @@
-/* 企微智能客服壳层（浅色系，与 data-flavor=wework 搭配） */
+/* 企微智能客服 — 飞书式布局（data-flavor=wework） */
 
 .shell {
-  --wework-sidebar-width: 13rem;
-  --wework-inbox-list-width: 18rem;
-  --wework-inbox-detail-width: 18rem;
-  --wework-canvas: color-mix(in srgb, hsl(var(--channel-primary-muted)) 34%, white);
+  --wework-sidebar-width: 220px;
+  --wework-list-panel-width: 17.5rem;
+  --wework-inbox-list-width: var(--wework-list-panel-width);
+  --wework-inbox-detail-width: 16rem;
 }
 
-.sidebar {
-  width: var(--wework-sidebar-width);
-  border-right: 1px solid hsl(var(--border) / 0.5);
-  background: linear-gradient(
-    180deg,
-    hsl(var(--background)) 0%,
-    color-mix(in srgb, hsl(var(--channel-primary-muted)) 20%, white) 100%
-  );
+/* —— semi-design-pro 风格侧栏 —— */
+.wework-semi-sider {
+  border-right: 1px solid var(--semi-color-border);
+  background: var(--semi-color-bg-1, #f7f8fa);
 }
 
-.inbox-shell {
-  background:
-    radial-gradient(circle at top left, hsl(var(--channel-primary-muted) / 0.72), transparent 34%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, hsl(var(--channel-primary-muted)) 24%, white) 0%,
-      color-mix(in srgb, hsl(var(--muted)) 28%, white) 100%
-    );
+.wework-semi-sider .semi-layout-sider-children {
+  height: 100%;
 }
 
-.inbox-list,
-.thread,
-.inbox-detail,
-.detail {
-  border: 1px solid hsl(var(--border) / 0.55);
-  box-shadow: 0 10px 30px rgb(15 23 42 / 0.04);
-}
-
-.inbox-list,
-.thread,
-.inbox-detail {
-  overflow: hidden;
-  border-radius: 1.25rem;
-  background: hsl(var(--card) / 0.84);
-  backdrop-filter: blur(18px);
-}
-
-.sidebar-collapse.ant-collapse {
+.wework-semi-nav.semi-navigation-vertical {
+  border-right: 0;
   background: transparent;
 }
 
-.sidebar-collapse.ant-collapse > .ant-collapse-item {
-  border: 0;
+.wework-sider-logo {
+  display: flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: linear-gradient(145deg, #3370ff 0%, #245bdb 100%);
 }
 
-.sidebar-collapse.ant-collapse > .ant-collapse-item > .ant-collapse-header {
-  padding: 0.35rem 0.45rem;
-  color: hsl(var(--muted-foreground));
+.wework-semi-layout {
+  display: flex;
+  flex-direction: row;
+  background: var(--main-window-bg, #ffffff);
+}
+
+.wework-semi-layout > .semi-layout {
+  min-width: 0;
+}
+
+.wework-semi-content.semi-layout-content {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
+  background: var(--main-window-bg, #ffffff);
 }
 
-.sidebar-collapse.ant-collapse
-  > .ant-collapse-item
-  > .ant-collapse-header
-  .ant-collapse-expand-icon {
-  color: hsl(var(--muted-foreground));
+/* —— 工作区：固定宽侧栏 + 主区 —— */
+.wework-workspace,
+.wework-workspace-split {
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  background: var(--wework-panel-bg, #ffffff);
 }
 
-.sidebar-collapse.ant-collapse > .ant-collapse-item > .ant-collapse-content {
-  border-top: 0;
-  background: transparent;
+.wework-list-panel.semi-layout-sider {
+  width: var(--wework-list-panel-width) !important;
+  min-width: var(--wework-list-panel-width);
+  max-width: var(--wework-list-panel-width);
+  flex-shrink: 0;
+  border-right: 1px solid var(--semi-color-border);
+  background: var(--wework-panel-bg, #ffffff);
 }
 
-.sidebar-collapse.ant-collapse
-  > .ant-collapse-item
-  > .ant-collapse-content
-  > .ant-collapse-content-box {
-  padding: 0 0 0 0.125rem;
+.wework-main-panel.semi-layout-content {
+  min-width: 0;
+  background: var(--wework-panel-bg, #ffffff);
 }
 
-.sidebar-menu.ant-menu {
-  background: transparent;
-  border-inline-end: 0;
-}
-
-.sidebar-menu.ant-menu .ant-menu-item {
+.wework-panel-header.semi-layout-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--semi-color-border);
+  background: var(--wework-panel-bg, #ffffff);
+  padding: 0 1rem;
+  min-height: 3rem;
   height: auto;
-  margin: 0;
-  padding: 0.5rem 0.7rem;
-  line-height: 1.2;
-  border-radius: 0.85rem;
-  color: hsl(var(--muted-foreground));
+  line-height: inherit;
 }
 
-.sidebar-menu.ant-menu .ant-menu-item:hover {
-  background: color-mix(in srgb, hsl(var(--channel-primary-muted)) 62%, white);
-  color: hsl(var(--foreground));
+.wework-panel-body.semi-layout-content {
+  background: var(--wework-panel-bg, #ffffff);
 }
 
-.sidebar-menu.ant-menu .ant-menu-item-selected {
-  background: color-mix(in srgb, hsl(var(--channel-primary-muted)) 74%, white);
-  color: hsl(var(--channel-primary));
-  font-weight: 500;
-  box-shadow: inset 0 0 0 1px hsl(var(--channel-primary) / 0.12);
+/* —— 收件箱 —— */
+.wework-inbox-shell {
+  background: var(--wework-canvas, #f5f6f7);
 }
 
-.sidebar-menu.ant-menu .ant-menu-item-selected::after {
-  display: none;
+.wework-inbox-list-sider.semi-layout-sider {
+  width: var(--wework-inbox-list-width) !important;
+  min-width: var(--wework-inbox-list-width);
+  max-width: var(--wework-inbox-list-width);
+  flex-shrink: 0;
+  border-right: 1px solid var(--semi-color-border);
+  background: var(--wework-panel-bg, #ffffff);
 }
 
-.inbox-list {
-  width: var(--wework-inbox-list-width);
+.wework-inbox-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  background: transparent;
 }
 
-.inbox-detail {
-  width: var(--wework-inbox-detail-width);
+.wework-inbox-list .semi-list-items {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 
-.conversation-row {
-  transition:
-    background-color 0.15s ease,
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+.wework-inbox-thread {
+  min-width: 0;
+  flex: 1;
+  background: var(--wework-panel-bg, #ffffff);
+  border-right: 1px solid var(--semi-color-border);
 }
 
-.conversation-row:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgb(15 23 42 / 0.04);
+.wework-inbox-detail.semi-layout-sider {
+  background: var(--wework-panel-bg, #ffffff);
 }
 
-.conversation-row.active {
-  background: color-mix(in srgb, hsl(var(--channel-primary-muted)) 78%, white);
-  box-shadow: inset 0 0 0 1px hsl(var(--channel-primary) / 0.12);
+.wework-inbox-detail--collapsed .semi-layout-sider-children {
+  display: flex;
 }
 
-.bubble {
-  max-width: min(28rem, 85%);
-  border-radius: 1rem;
-  padding: 0.625rem 0.85rem;
-  font-size: 0.875rem;
+/* —— 订阅锁 —— */
+.license-lock-shell {
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  align-self: stretch;
+}
+
+.license-lock-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgb(31 35 41 / 0.35);
+  backdrop-filter: blur(2px);
+}
+
+.license-lock-overlay .license-lock-trigger.semi-button {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: auto;
+  max-width: 20rem;
+  height: auto !important;
+  min-height: 0;
+  padding: 2rem 2.5rem;
+  border-radius: 0.5rem;
+  border: 2px dashed hsl(var(--destructive) / 0.4) !important;
+  background: hsl(var(--card)) !important;
+  box-shadow: 0 8px 24px rgb(31 35 41 / 0.12);
+  white-space: normal;
   line-height: 1.45;
-  box-shadow: 0 6px 20px rgb(15 23 42 / 0.04);
 }
 
-.bubble--customer {
-  background: hsl(0 0% 100%);
-  border: 1px solid hsl(var(--border));
-  color: hsl(222 47% 11%);
+.license-lock-overlay .license-lock-trigger.semi-button:hover,
+.license-lock-overlay .license-lock-trigger.semi-button:focus-visible {
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--destructive) / 0.55) !important;
+  color: inherit;
 }
 
-.bubble--assistant,
-.bubble--operator {
-  background: hsl(var(--channel-primary));
-  color: hsl(var(--channel-primary-foreground));
+.license-lock-trigger__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 0.5rem;
+  background: hsl(var(--destructive) / 0.12);
+  color: hsl(var(--destructive));
 }
 
-.bubble--system {
-  background: hsl(var(--muted));
+.license-lock-trigger__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  text-align: center;
+}
+
+.license-lock-trigger__hint {
+  font-size: 0.875rem;
   color: hsl(var(--muted-foreground));
-  font-size: 0.75rem;
+  text-align: center;
+}
+
+/* —— 单列内容页 —— */
+.wework-page-single {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--wework-panel-bg, #ffffff);
+}
+
+.wework-page-single__body {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 1rem 1.25rem;
+}
+
+/* —— AI 配置页 —— */
+.wework-ai-config {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wework-ai-config--loading,
+.wework-ai-config--error {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.wework-ai-config .agent-console-view-shell {
+  height: 100%;
 }

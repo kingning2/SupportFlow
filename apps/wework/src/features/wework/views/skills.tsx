@@ -6,9 +6,5 @@ import { useAgentConsoleState } from "@supportflow/ui/agent-console/hooks/use-ag
 export function Skills() {
   const { state, setState } = useAgentConsoleState();
 
-  return (
-    <div className="min-h-0 flex-1 overflow-y-auto p-6">
-      <SharedSkills state={state} onRefresh={setState} />
-    </div>
-  );
+  return <SharedSkills state={state} onRefresh={setState} />;
 }

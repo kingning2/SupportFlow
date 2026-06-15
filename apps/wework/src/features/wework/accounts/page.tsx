@@ -1,8 +1,18 @@
 "use client";
 
-import { Building2, Loader2, Plus, Radio } from "lucide-react";
+import {
+  Avatar,
+  Banner,
+  Button,
+  Card,
+  Empty,
+  Layout,
+  Space,
+  Spin,
+  Typography
+} from "@douyinfe/semi-ui-19";
+import { IconApartment, IconLink, IconPlus } from "@douyinfe/semi-icons";
 
-import { Button } from "@supportflow/ui/button";
 import { WeworkConnectPanel } from "@supportflow/ui/channel/wework-connect-panel";
 
 import { ActiveAccountCard } from "@/features/wework/accounts/active-account-card";
@@ -14,6 +24,9 @@ import type { WeworkConnectionStatus } from "@/features/wework/types/wework-conv
 import type { PageHandlers, PageState } from "./page-state";
 import { usePageState } from "./page-state";
 import type { ChannelCatalogEntry } from "@supportflow/shared";
+
+const { Header, Content, Footer } = Layout;
+const { Title, Text } = Typography;
 
 export interface PageProps {
   lang: string;
@@ -27,26 +40,28 @@ export interface PageProps {
 
 function PageHeader({ title, description }: { title: string; description: string }) {
   return (
-    <div className="shrink-0 border-b border-[hsl(var(--border))] px-6 py-5">
-      <div className="flex items-start gap-4">
-        <div className="bg-channel-muted flex size-11 shrink-0 items-center justify-center rounded-2xl">
-          <Building2 className="text-channel size-5" />
-        </div>
-        <div>
-          <h1 className="text-foreground text-lg font-bold">{title}</h1>
-          <p className="text-muted-foreground mt-0.5 text-sm">{description}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PageLoading({ text }: { text: string }) {
-  return (
-    <div className="text-muted-foreground flex items-center justify-center gap-2 py-16 text-sm">
-      <Loader2 className="size-4 animate-spin" />
-      <span>{text}</span>
-    </div>
+    <Header
+      className="wework-panel-header"
+      style={{ height: "auto", lineHeight: "inherit", padding: "20px 24px" }}
+    >
+      <Space align="start">
+        <Avatar
+          size="large"
+          style={{
+            background: "linear-gradient(145deg, #3370ff 0%, #245bdb 100%)",
+            color: "#fff"
+          }}
+        >
+          <IconApartment />
+        </Avatar>
+        <Space vertical align="start" spacing={4}>
+          <Title heading={4} style={{ margin: 0 }}>
+            {title}
+          </Title>
+          <Text type="tertiary">{description}</Text>
+        </Space>
+      </Space>
+    </Header>
   );
 }
 
@@ -68,19 +83,25 @@ function PageError({
   }
 
   return (
-    <div className="bg-warning/10 text-warning-foreground border-warning/30 mb-4 rounded-xl border p-4 text-sm">
-      <p className="font-medium">{title}</p>
-      <p className="mt-2 text-xs opacity-90">{backendErrorMessage}</p>
-      <p className="mt-2 text-xs opacity-80">{offlineText}</p>
-      <Button
-        type="button"
-        variant="outline"
-        className="border-warning/40 mt-4 text-xs"
-        onClick={onRetry}
-      >
-        {retryLabel}
-      </Button>
-    </div>
+    <Banner
+      fullMode={false}
+      bordered
+      type="warning"
+      closeIcon={null}
+      title={title}
+      description={
+        <Space vertical align="start" spacing="tight">
+          <Text size="small">{backendErrorMessage}</Text>
+          <Text type="tertiary" size="small">
+            {offlineText}
+          </Text>
+          <Button theme="light" type="warning" size="small" onClick={onRetry}>
+            {retryLabel}
+          </Button>
+        </Space>
+      }
+      style={{ marginBottom: 16 }}
+    />
   );
 }
 
@@ -108,9 +129,7 @@ function AccountsSection({
       ) : null}
 
       {state.accounts.length === 0 && !state.showNewForm ? (
-        <p className="text-muted-foreground py-8 text-center text-sm">
-          暂无已保存账号，点击下方“新建连接”添加。
-        </p>
+        <Empty description="暂无已保存账号，点击下方「新建连接」添加。" />
       ) : (
         <AccountList
           accounts={state.accounts}
@@ -131,11 +150,15 @@ function AccountsSection({
       )}
 
       {state.showNewForm && channel ? (
-        <div className="border-channel/25 bg-card mt-4 rounded-xl border p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <Radio className="text-channel size-4" />
-            <h2 className="text-foreground font-semibold">新建连接</h2>
-          </div>
+        <Card
+          style={{ marginTop: 16 }}
+          title={
+            <Space>
+              <IconLink />
+              <span>新建连接</span>
+            </Space>
+          }
+        >
           <WeworkConnectPanel
             channel={channel}
             lang={lang}
@@ -143,7 +166,7 @@ function AccountsSection({
             onCancel={() => handlers.setShowNewForm(false)}
             onConnect={handlers.handleNewConnect}
           />
-        </div>
+        </Card>
       ) : null}
     </>
   );
@@ -168,15 +191,15 @@ export function Page({
   });
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <Layout style={{ height: "100%", minHeight: 0 }}>
       <PageHeader
         title="账号与通道"
         description="保存常用企业微信配置，需要时手动连接；连接成功后会自动加入列表。"
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+      <Content style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "16px 24px" }}>
         {!state.accountsLoaded || channelLoading ? (
-          <PageLoading text="加载通道配置中..." />
+          <Spin tip="加载通道配置中..." style={{ display: "block", margin: "64px auto" }} />
         ) : (
           <>
             <PageError
@@ -190,7 +213,7 @@ export function Page({
             <AccountsSection channel={channel} handlers={handlers} lang={lang} state={state} />
           </>
         )}
-      </div>
+      </Content>
 
       <AccountSwitchDialog
         activeAccountLabel={state.activeAccount?.label}
@@ -200,18 +223,21 @@ export function Page({
         switchTarget={state.switchTarget}
       />
 
-      <div className="shrink-0 border-t border-[hsl(var(--border))] bg-white px-6 py-4">
+      <Footer
+        className="wework-panel-header"
+        style={{ height: "auto", lineHeight: "inherit", padding: "16px 24px" }}
+      >
         <Button
-          type="button"
-          variant="outline"
+          block
+          theme="light"
+          type="primary"
+          icon={<IconPlus />}
           disabled={channelLoading || Boolean(channelError) || !channel || state.showNewForm}
-          className="border-channel/50 bg-channel-muted/40 text-channel hover:bg-channel-muted flex w-full items-center justify-center gap-2 border-dashed py-3 text-sm font-medium"
           onClick={() => handlers.setShowNewForm(true)}
         >
-          <Plus className="size-4" />
           新建连接
         </Button>
-      </div>
-    </div>
+      </Footer>
+    </Layout>
   );
 }
