@@ -4,7 +4,7 @@
 | ---------- | --------------- |
 | ID         | T003            |
 | Priority   | P0              |
-| Status     | pending         |
+| Status     | completed       |
 | Depends on | T001, T002      |
 | Blocks     | —               |
 | Milestone  | M1 Workflow MVP |
@@ -23,9 +23,9 @@
 
 ## Acceptance criteria
 
-- [ ] 硬编码 YAML/JSON 定义可跑通 3 步线性流程
-- [ ] 中断后可通过 `load_run` 继续或标记 failed
-- [ ] 前端或 CLI 能订阅到 step 事件
+- [x] 硬编码 YAML/JSON 定义可跑通 3 步线性流程
+- [x] 中断后可通过 `load_run` 继续或标记 failed
+- [x] 前端或 CLI 能订阅到 step 事件
 
 ## Key files
 

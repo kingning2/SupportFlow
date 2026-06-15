@@ -5,3 +5,4 @@ pub mod log;
 #[cfg(feature = "channel-wework")]
 pub mod wework_accounts;
 pub mod window;
+pub mod workflow_ipc;

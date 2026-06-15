@@ -110,6 +110,9 @@ pub fn run() {
             cmd::wework_accounts::wework_mark_contacts_synced,
             #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_contacts_synced,
+            cmd::workflow_ipc::workflow_start,
+            cmd::workflow_ipc::workflow_get_run,
+            cmd::workflow_ipc::workflow_resume,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

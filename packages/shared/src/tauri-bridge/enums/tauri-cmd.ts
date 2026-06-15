@@ -45,5 +45,8 @@ export enum TauriCmd {
   WeworkGetActiveAccountId = "wework_get_active_account_id",
   WeworkSetActiveAccountId = "wework_set_active_account_id",
   WeworkMarkContactsSynced = "wework_mark_contacts_synced",
-  WeworkContactsSynced = "wework_contacts_synced"
+  WeworkContactsSynced = "wework_contacts_synced",
+  WorkflowStart = "workflow_start",
+  WorkflowGetRun = "workflow_get_run",
+  WorkflowResume = "workflow_resume"
 }

@@ -10,6 +10,9 @@ pub const AGENT_STREAM_CHUNK: &str = "agent/stream-chunk";
 pub const AGENT_RUN_FINISHED: &str = "agent/run-finished";
 pub const AGENT_LOG_STREAM: &str = "agent/log-stream";
 pub const CHANNEL_STATUS_CHANGED: &str = "channel/status-changed";
+pub const WORKFLOW_STEP_STARTED: &str = "workflow/step-started";
+pub const WORKFLOW_STEP_FINISHED: &str = "workflow/step-finished";
+pub const WORKFLOW_RUN_FINISHED: &str = "workflow/run-finished";
 
 pub const FE_LOG: &str = "fe/log";
 pub const FE_LOG_REQ: &str = "fe/log-req";

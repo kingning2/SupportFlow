@@ -383,6 +383,14 @@ export interface WorkflowDefinition {
   transitions: Transition[];
 }
 
+export interface WorkflowGetRunRequest {
+  runId: string;
+}
+
+export interface WorkflowResumeRequest {
+  runId: string;
+}
+
 /** Run 级执行状态。 */
 export enum RunStatus {
   Pending = "pending",
@@ -406,6 +414,16 @@ export interface WorkflowRun {
   updatedAt: string;
   sessionId?: string;
   error?: string;
+}
+
+export interface WorkflowStartRequest {
+  definitionId: string;
+  input?: Value;
+  sessionId?: string;
+}
+
+export interface WorkflowStartResponse {
+  runId: string;
 }
 
 /** 节点在 Run 内的瞬时状态（executor 内部使用，可选持久化）。 */

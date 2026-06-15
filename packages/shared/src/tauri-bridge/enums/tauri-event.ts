@@ -9,5 +9,8 @@ export enum TauriEvent {
   AgentRunFinished = "agent/run-finished",
   AgentLogStream = "agent/log-stream",
   ChannelStatusChanged = "channel/status-changed",
-  ChannelInboxMessage = "channel/inbox-message"
+  ChannelInboxMessage = "channel/inbox-message",
+  WorkflowStepStarted = "workflow/step-started",
+  WorkflowStepFinished = "workflow/step-finished",
+  WorkflowRunFinished = "workflow/run-finished"
 }

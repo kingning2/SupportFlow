@@ -178,3 +178,33 @@ pub struct AgentConsoleState {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub request_timeout: Option<u32>,
 }
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowStepStartedPayload {
+    pub run_id: String,
+    pub step_id: String,
+    pub node_id: String,
+    pub node_type: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowStepFinishedPayload {
+    pub run_id: String,
+    pub step_id: String,
+    pub status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowRunFinishedPayload {
+    pub run_id: String,
+    pub status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
