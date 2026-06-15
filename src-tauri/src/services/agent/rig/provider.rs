@@ -1,7 +1,7 @@
 //! 从 `ModelsConfig` 解析 rig 提供商凭据。
 
-use crate::config::config::ModelsConfig;
 use crate::config::const_::BotType;
+use crate::config::ModelsConfig;
 
 /// LLM 提供商族，决定使用哪套 rig client。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

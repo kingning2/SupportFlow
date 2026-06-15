@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::config::config::ModelsConfig;
+use crate::config::ModelsConfig;
 use futures_util::StreamExt;
 use rig_core::agent::{AgentBuilder, FinalResponse, MultiTurnStreamItem};
 use rig_core::client::CompletionClient;
@@ -26,6 +26,18 @@ use super::hooks::RigStreamHook;
 use super::messages::{json_messages_to_rig, rig_messages_to_json};
 use super::provider::{resolve_credentials, ProviderCredentials, ProviderFamily};
 use super::tool_adapter::LegacyAgentToolAdapter;
+
+/// 各 Provider 运行路径的共享参数。
+struct ProviderRunArgs<'a> {
+    creds: &'a ProviderCredentials,
+    params: &'a RigRunParams<'a>,
+    dyn_tools: Vec<Box<dyn ToolDyn>>,
+    additional_params: Option<Value>,
+    temperature: f64,
+    max_turns: usize,
+    history: Vec<Message>,
+    hook: RigStreamHook,
+}
 
 /// rig 运行时单次执行参数。
 pub struct RigRunParams<'a> {
@@ -51,9 +63,8 @@ pub struct RigRunOutput {
 
 /// 使用 rig Agent 执行一轮带工具的多轮流式对话。
 pub async fn run_rig_stream(params: RigRunParams<'_>) -> Result<RigRunOutput, RunStreamError> {
-    let bot_type = resolve_bot_type(params.config).map_err(|e| RunStreamError::Other(e))?;
-    let creds =
-        resolve_credentials(params.config, bot_type).map_err(|e| RunStreamError::Other(e))?;
+    let bot_type = resolve_bot_type(params.config).map_err(RunStreamError::Other)?;
+    let creds = resolve_credentials(params.config, bot_type).map_err(RunStreamError::Other)?;
 
     let mut tools = params.tools.clone();
     if let Some(registry) = &params.mcp_registry {
@@ -76,67 +87,30 @@ pub async fn run_rig_stream(params: RigRunParams<'_>) -> Result<RigRunOutput, Ru
         files_to_send.clone(),
     );
 
-    params.on_event.as_ref().map(|cb| {
+    if let Some(cb) = params.on_event.as_ref() {
         cb(AgentEvent {
             event_type: "agent_start".into(),
             timestamp: now_ts(),
             data: json!({}),
-        })
-    });
+        });
+    }
+
+    let run_args = ProviderRunArgs {
+        creds: &creds,
+        params: &params,
+        dyn_tools,
+        additional_params,
+        temperature,
+        max_turns,
+        history,
+        hook,
+    };
 
     let final_response = match creds.family {
-        ProviderFamily::OpenAiCompat => {
-            run_with_openai_compat(
-                &creds,
-                &params,
-                dyn_tools,
-                additional_params,
-                temperature,
-                max_turns,
-                history,
-                hook,
-            )
-            .await?
-        }
-        ProviderFamily::Anthropic => {
-            run_with_anthropic(
-                &creds,
-                &params,
-                dyn_tools,
-                additional_params,
-                temperature,
-                max_turns,
-                history,
-                hook,
-            )
-            .await?
-        }
-        ProviderFamily::Gemini => {
-            run_with_gemini(
-                &creds,
-                &params,
-                dyn_tools,
-                additional_params,
-                temperature,
-                max_turns,
-                history,
-                hook,
-            )
-            .await?
-        }
-        ProviderFamily::Moonshot => {
-            run_with_moonshot(
-                &creds,
-                &params,
-                dyn_tools,
-                additional_params,
-                temperature,
-                max_turns,
-                history,
-                hook,
-            )
-            .await?
-        }
+        ProviderFamily::OpenAiCompat => run_with_openai_compat(run_args).await?,
+        ProviderFamily::Anthropic => run_with_anthropic(run_args).await?,
+        ProviderFamily::Gemini => run_with_gemini(run_args).await?,
+        ProviderFamily::Moonshot => run_with_moonshot(run_args).await?,
     };
 
     let cancelled = params.cancel.as_ref().is_some_and(|h| h.is_cancelled());
@@ -149,7 +123,7 @@ pub async fn run_rig_stream(params: RigRunParams<'_>) -> Result<RigRunOutput, Ru
 
     let updated_messages = final_response
         .history()
-        .map(|h| rig_messages_to_json(h))
+        .map(rig_messages_to_json)
         .unwrap_or_else(|| {
             let mut msgs = params.messages.clone();
             msgs.push(json!({
@@ -174,142 +148,108 @@ pub async fn run_rig_stream(params: RigRunParams<'_>) -> Result<RigRunOutput, Ru
 }
 
 async fn run_with_openai_compat(
-    creds: &ProviderCredentials,
-    params: &RigRunParams<'_>,
-    dyn_tools: Vec<Box<dyn ToolDyn>>,
-    additional_params: Option<Value>,
-    temperature: f64,
-    max_turns: usize,
-    history: Vec<Message>,
-    hook: RigStreamHook,
+    args: ProviderRunArgs<'_>,
 ) -> Result<FinalResponse, RunStreamError> {
     let client = openai::Client::builder()
-        .api_key(&creds.api_key)
-        .base_url(&creds.api_base)
+        .api_key(&args.creds.api_key)
+        .base_url(&args.creds.api_base)
         .build()
         .map_err(|e| RunStreamError::Other(format!("openai client: {e}")))?
         .completions_api();
-    let model = client.completion_model(&creds.model);
+    let model = client.completion_model(&args.creds.model);
     let agent = build_rig_agent(
         model,
-        &params.system_prompt,
-        dyn_tools,
-        additional_params,
-        temperature,
-        max_turns,
+        &args.params.system_prompt,
+        args.dyn_tools,
+        args.additional_params,
+        args.temperature,
+        args.max_turns,
     );
     consume_rig_stream(
         agent,
-        &params.user_message,
-        history,
-        max_turns,
-        hook,
-        params,
+        &args.params.user_message,
+        args.history,
+        args.max_turns,
+        args.hook,
+        args.params,
     )
     .await
 }
 
-async fn run_with_anthropic(
-    creds: &ProviderCredentials,
-    params: &RigRunParams<'_>,
-    dyn_tools: Vec<Box<dyn ToolDyn>>,
-    additional_params: Option<Value>,
-    temperature: f64,
-    max_turns: usize,
-    history: Vec<Message>,
-    hook: RigStreamHook,
-) -> Result<FinalResponse, RunStreamError> {
+async fn run_with_anthropic(args: ProviderRunArgs<'_>) -> Result<FinalResponse, RunStreamError> {
     let client = anthropic::Client::builder()
-        .api_key(&creds.api_key)
-        .base_url(&creds.api_base)
+        .api_key(&args.creds.api_key)
+        .base_url(&args.creds.api_base)
         .build()
         .map_err(|e| RunStreamError::Other(format!("anthropic client: {e}")))?;
-    let model = client.completion_model(&creds.model);
+    let model = client.completion_model(&args.creds.model);
     let agent = build_rig_agent(
         model,
-        &params.system_prompt,
-        dyn_tools,
-        additional_params,
-        temperature,
-        max_turns,
+        &args.params.system_prompt,
+        args.dyn_tools,
+        args.additional_params,
+        args.temperature,
+        args.max_turns,
     );
     consume_rig_stream(
         agent,
-        &params.user_message,
-        history,
-        max_turns,
-        hook,
-        params,
+        &args.params.user_message,
+        args.history,
+        args.max_turns,
+        args.hook,
+        args.params,
     )
     .await
 }
 
-async fn run_with_gemini(
-    creds: &ProviderCredentials,
-    params: &RigRunParams<'_>,
-    dyn_tools: Vec<Box<dyn ToolDyn>>,
-    additional_params: Option<Value>,
-    temperature: f64,
-    max_turns: usize,
-    history: Vec<Message>,
-    hook: RigStreamHook,
-) -> Result<FinalResponse, RunStreamError> {
+async fn run_with_gemini(args: ProviderRunArgs<'_>) -> Result<FinalResponse, RunStreamError> {
     let client = gemini::Client::builder()
-        .api_key(&creds.api_key)
-        .base_url(&creds.api_base)
+        .api_key(&args.creds.api_key)
+        .base_url(&args.creds.api_base)
         .build()
         .map_err(|e| RunStreamError::Other(format!("gemini client: {e}")))?;
-    let model = client.completion_model(&creds.model);
+    let model = client.completion_model(&args.creds.model);
     let agent = build_rig_agent(
         model,
-        &params.system_prompt,
-        dyn_tools,
-        additional_params,
-        temperature,
-        max_turns,
+        &args.params.system_prompt,
+        args.dyn_tools,
+        args.additional_params,
+        args.temperature,
+        args.max_turns,
     );
     consume_rig_stream(
         agent,
-        &params.user_message,
-        history,
-        max_turns,
-        hook,
-        params,
+        &args.params.user_message,
+        args.history,
+        args.max_turns,
+        args.hook,
+        args.params,
     )
     .await
 }
 
-async fn run_with_moonshot(
-    creds: &ProviderCredentials,
-    params: &RigRunParams<'_>,
-    dyn_tools: Vec<Box<dyn ToolDyn>>,
-    additional_params: Option<Value>,
-    temperature: f64,
-    max_turns: usize,
-    history: Vec<Message>,
-    hook: RigStreamHook,
-) -> Result<FinalResponse, RunStreamError> {
+async fn run_with_moonshot(args: ProviderRunArgs<'_>) -> Result<FinalResponse, RunStreamError> {
     let client = moonshot::Client::builder()
-        .api_key(&creds.api_key)
-        .base_url(&creds.api_base)
+        .api_key(&args.creds.api_key)
+        .base_url(&args.creds.api_base)
         .build()
         .map_err(|e| RunStreamError::Other(format!("moonshot client: {e}")))?;
-    let model = client.completion_model(&creds.model);
+    let model = client.completion_model(&args.creds.model);
     let agent = build_rig_agent(
         model,
-        &params.system_prompt,
-        dyn_tools,
-        additional_params,
-        temperature,
-        max_turns,
+        &args.params.system_prompt,
+        args.dyn_tools,
+        args.additional_params,
+        args.temperature,
+        args.max_turns,
     );
     consume_rig_stream(
         agent,
-        &params.user_message,
-        history,
-        max_turns,
-        hook,
-        params,
+        &args.params.user_message,
+        args.history,
+        args.max_turns,
+        args.hook,
+        args.params,
     )
     .await
 }

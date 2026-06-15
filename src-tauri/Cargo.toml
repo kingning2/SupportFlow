@@ -88,8 +88,6 @@ walkdir = "2"
 chromiumoxide = { version = "0.7", default-features = false, features = ["tokio-runtime"] }
 anyhow = "1"
 rig-core = "0.38.2"
-bytes = "1"
-tiktoken-rs = "0.6"
 # cli (`sf`)
 clap = { version = "4", features = ["derive"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

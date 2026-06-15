@@ -4,8 +4,8 @@ use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::config::config::ModelsConfig;
 use crate::config::const_::BotType;
+use crate::config::ModelsConfig;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ProviderMeta {

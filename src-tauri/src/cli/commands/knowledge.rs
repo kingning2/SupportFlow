@@ -82,12 +82,12 @@ fn tree() -> Result<String> {
         return Ok("Knowledge base directory not found.".into());
     }
     let mut lines = vec![format!("\n  {}\n", dir.display())];
-    append_tree(&dir, &dir, "  ", &mut lines)?;
+    append_tree(&dir, "  ", &mut lines)?;
     lines.push(String::new());
     Ok(lines.join("\n"))
 }
 
-fn append_tree(root: &Path, current: &Path, indent: &str, lines: &mut Vec<String>) -> Result<()> {
+fn append_tree(current: &Path, indent: &str, lines: &mut Vec<String>) -> Result<()> {
     let mut entries: Vec<_> = crate::io::read_dir(current)?
         .filter_map(|e| e.ok())
         .filter(|e| {
@@ -106,7 +106,7 @@ fn append_tree(root: &Path, current: &Path, indent: &str, lines: &mut Vec<String
         if path.is_dir() {
             lines.push(format!("{indent}{branch}{name}/"));
             let sub_indent = format!("{indent}{}   ", if is_last { " " } else { "│" });
-            append_tree(root, &path, &sub_indent, lines)?;
+            append_tree(&path, &sub_indent, lines)?;
         } else if name.ends_with(".md") {
             lines.push(format!("{indent}{branch}{name}"));
         }

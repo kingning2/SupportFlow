@@ -3,9 +3,9 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::bridge::{load_dotenv_into_process, sync_config_to_dotenv, BridgeRuntime};
 use crate::config::ModelsConfig;
 use crate::services::agent::McpToolLoader;
+use crate::services::bridge::{load_dotenv_into_process, sync_config_to_dotenv, BridgeRuntime};
 use anyhow::Result;
 
 use crate::cli::paths;

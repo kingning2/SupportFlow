@@ -1,7 +1,7 @@
 //! Model provider catalog for console UI (read-only; mirrors supported `BotType`s).
 
-use crate::config::config::ModelsConfig;
 use crate::config::const_::BotType;
+use crate::config::ModelsConfig;
 
 #[derive(Debug, Clone)]
 pub struct ModelProviderDescriptor {

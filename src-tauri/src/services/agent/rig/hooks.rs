@@ -151,19 +151,19 @@ where
         }
     }
 
-    fn on_stream_completion_response_finish(
+    async fn on_stream_completion_response_finish(
         &self,
         _prompt: &Message,
         _response: &M::StreamingResponse,
-    ) -> impl std::future::Future<Output = HookAction> + Send {
-        async { HookAction::cont() }
+    ) -> HookAction {
+        HookAction::cont()
     }
 
-    fn on_completion_response(
+    async fn on_completion_response(
         &self,
         _prompt: &Message,
         _response: &CompletionResponse<M::Response>,
-    ) -> impl std::future::Future<Output = HookAction> + rig_core::wasm_compat::WasmCompatSend {
-        async { HookAction::cont() }
+    ) -> HookAction {
+        HookAction::cont()
     }
 }

@@ -96,7 +96,7 @@ fn list_remote(page: u32) -> Result<()> {
         println!("No skills available on Skill Hub.");
         return Ok(());
     }
-    let total_pages = std::cmp::max(1, (total + REMOTE_PAGE_SIZE - 1) / REMOTE_PAGE_SIZE);
+    let total_pages = std::cmp::max(1, total.div_ceil(REMOTE_PAGE_SIZE));
     let page = page.min(total_pages);
     let installed: std::collections::HashSet<_> = load_skills_config(&paths::resolve_workspace()?)
         .keys()
@@ -401,7 +401,7 @@ fn info(name: &str) -> Result<()> {
     bail!("skill '{name}' not found");
 }
 
-fn print_skill_table<'a>(entries: Vec<&'a SkillConfigEntry>, title: &str) {
+fn print_skill_table(entries: Vec<&SkillConfigEntry>, title: &str) {
     println!("\n  {title} ({})\n", entries.len());
     for e in entries {
         let status = if e.enabled { "on " } else { "off" };
