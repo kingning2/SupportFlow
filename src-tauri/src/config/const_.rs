@@ -35,6 +35,8 @@ pub enum BotType {
     #[serde(alias = "minimax")]
     Minimax,
     Deepseek,
+    #[serde(alias = "ollama")]
+    Ollama,
     Custom,
     Modelscope,
     Doubao,
@@ -57,6 +59,7 @@ impl BotType {
     pub const MOONSHOT: &'static str = "moonshot";
     pub const MINIMAX: &'static str = "minimax";
     pub const DEEPSEEK: &'static str = "deepseek";
+    pub const OLLAMA: &'static str = "ollama";
     pub const CUSTOM: &'static str = "custom";
     pub const MODELSCOPE: &'static str = "modelscope";
     pub const DOUBAO: &'static str = "doubao";
@@ -91,6 +94,7 @@ impl BotType {
             Self::Moonshot => Self::MOONSHOT,
             Self::Minimax => Self::MINIMAX,
             Self::Deepseek => Self::DEEPSEEK,
+            Self::Ollama => Self::OLLAMA,
             Self::Custom => Self::CUSTOM,
             Self::Modelscope => Self::MODELSCOPE,
             Self::Doubao => Self::DOUBAO,
@@ -118,6 +122,7 @@ impl FromStr for BotType {
             "moonshot" => Ok(Self::Moonshot),
             "minimax" => Ok(Self::Minimax),
             "deepseek" => Ok(Self::Deepseek),
+            "ollama" => Ok(Self::Ollama),
             "custom" => Ok(Self::Custom),
             "modelscope" => Ok(Self::Modelscope),
             "doubao" => Ok(Self::Doubao),

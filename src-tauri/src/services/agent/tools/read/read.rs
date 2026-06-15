@@ -79,7 +79,7 @@ pub struct ReadTool {
 impl ReadTool {
     pub fn new(config: WorkspaceToolConfig) -> Self {
         let description = format!(
-            "Read or inspect file contents. For text/PDF files, returns content (truncated to {DEFAULT_MAX_LINES} lines or {}KB). For images/videos/audio, returns metadata only (file info, size, type). Use offset/limit for large text files.",
+            "读取或检查文件内容。文本/PDF 返回内容（默认截断至 {DEFAULT_MAX_LINES} 行或 {}KB）；图片/音视频等返回元数据。大文件可用 offset/limit 分段读取。",
             DEFAULT_MAX_BYTES / 1024
         );
         Self {

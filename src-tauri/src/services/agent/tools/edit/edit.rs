@@ -27,7 +27,7 @@ impl AgentTool for EditTool {
     }
 
     fn description(&self) -> &str {
-        "Edit a file by replacing exact text, or append to end if oldText is empty. For append: use empty oldText. For replace: oldText must match exactly (including whitespace)."
+        "通过精确匹配替换编辑文件；oldText 为空时追加到文件末尾。替换时 oldText 须与原文完全一致（含空白）。"
     }
 
     fn input_schema(&self) -> Value {

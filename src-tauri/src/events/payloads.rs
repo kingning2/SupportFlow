@@ -79,6 +79,7 @@ pub struct ChannelStatusChangedPayload {
 #[serde(rename_all = "camelCase")]
 pub struct ToolItem {
     pub name: String,
+    pub label: String,
     pub description: String,
     pub is_mcp: bool,
 }

@@ -258,8 +258,7 @@ impl AgentTool for VisionTool {
     }
 
     fn description(&self) -> &str {
-        "Analyze a local image or image URL (jpg/jpeg/png) using Vision API. \
-         Can describe content, extract text, identify objects, colors, etc."
+        "分析本地图片或图片 URL（jpg/jpeg/png），可描述内容、提取文字、识别物体与颜色等。"
     }
 
     fn input_schema(&self) -> Value {

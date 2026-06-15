@@ -290,4 +290,19 @@ impl LicenseStore {
                 .unwrap_or_else(|| "LICENSE_LOCKED".to_string()))
         }
     }
+
+    /// 仅在企微通道 `connect` 时校验订阅；其余 IPC 不拦截。
+    pub fn require_valid_for_wework_connect(
+        &self,
+        action: &str,
+        channel: &str,
+    ) -> Result<(), String> {
+        if action.trim().eq_ignore_ascii_case("connect")
+            && channel.trim().eq_ignore_ascii_case("wework")
+        {
+            self.require_valid()
+        } else {
+            Ok(())
+        }
+    }
 }

@@ -12,6 +12,7 @@ use tauri::AppHandle;
 use crate::events::payloads::{
     AgentConsoleState, ModelProviderDetail, ModelProviderItem, SkillDetail, SkillItem, ToolItem,
 };
+use crate::services::agent::tools::{tool_description_zh, tool_label};
 use crate::services::agent::workspace;
 use crate::services::agent::{AgentConsoleService, InstallSkillResult};
 
@@ -49,10 +50,14 @@ impl AgentRuntime {
                 let tools: Vec<ToolItem> = agent
                     .tools
                     .iter()
-                    .map(|t| ToolItem {
-                        name: t.name().to_string(),
-                        description: t.description().to_string(),
-                        is_mcp: t.is_mcp(),
+                    .map(|t| {
+                        let name = t.name().to_string();
+                        ToolItem {
+                            label: tool_label(&name).to_string(),
+                            description: tool_description_zh(&name, t.description()),
+                            name,
+                            is_mcp: t.is_mcp(),
+                        }
                     })
                     .collect();
                 let skills: Vec<SkillItem> = agent

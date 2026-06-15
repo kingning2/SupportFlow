@@ -75,9 +75,7 @@ impl AgentTool for EnvConfigTool {
     }
 
     fn description(&self) -> &str {
-        "Manage API keys and skill configurations securely. \
-         Actions: 'set' (add/update key), 'get' (view specific key), 'list' (show all configured keys), 'delete' (remove key). \
-         Values are automatically masked for security. Changes take effect immediately via hot reload."
+        "安全管理 API 密钥与技能配置。操作：set（设置）、get（查看）、list（列出）、delete（删除）。值自动脱敏，修改后立即热重载生效。"
     }
 
     fn input_schema(&self) -> Value {

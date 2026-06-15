@@ -75,6 +75,8 @@ pub struct ModelsConfig {
     pub dashscope_api_key: Option<String>,
     pub minimax_api_key: Option<String>,
     pub linkai_api_key: Option<String>,
+    pub ollama_api_key: Option<String>,
+    pub ollama_api_base: Option<String>,
     pub use_linkai: Option<bool>,
     pub temperature: Option<f32>,
     pub top_p: Option<f32>,

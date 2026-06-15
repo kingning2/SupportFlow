@@ -19,9 +19,9 @@ impl MemorySearchTool {
         enable_knowledge: bool,
     ) -> Self {
         let description = if enable_knowledge {
-            "Search agent's long-term memory and knowledge base using semantic and keyword search. Use this to recall past conversations, preferences, and knowledge pages."
+            "在长期记忆与知识库中进行语义/关键词检索，用于召回历史对话、偏好与知识页。"
         } else {
-            "Search agent's long-term memory using semantic and keyword search. Use this to recall past conversations, preferences, and knowledge."
+            "在长期记忆中进行语义/关键词检索，用于召回历史对话与偏好。"
         }
         .to_string();
         Self {

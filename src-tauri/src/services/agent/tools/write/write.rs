@@ -23,7 +23,7 @@ impl AgentTool for WriteTool {
     }
 
     fn description(&self) -> &str {
-        "Write content to a file. Creates the file if it doesn't exist, overwrites if it does. Automatically creates parent directories. IMPORTANT: Single write should not exceed 10KB. For large files, create a skeleton first, then use edit to add content in chunks."
+        "写入文件内容。不存在则创建，存在则覆盖；自动创建父目录。单次写入不宜超过 10KB，大文件请先写骨架再用 edit 分段补充。"
     }
 
     fn input_schema(&self) -> Value {

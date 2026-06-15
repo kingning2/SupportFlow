@@ -20,7 +20,7 @@ pub struct LsTool {
 impl LsTool {
     pub fn new(config: WorkspaceToolConfig) -> Self {
         let description = format!(
-            "List directory contents. Returns entries sorted alphabetically, with '/' suffix for directories. Includes dotfiles. Output is truncated to {DEFAULT_LIMIT} entries or {}KB (whichever is hit first).",
+            "列出目录内容，按字母排序；目录以 `/` 结尾，包含隐藏文件。输出截断至 {DEFAULT_LIMIT} 项或 {}KB。",
             DEFAULT_MAX_BYTES / 1024
         );
         Self {

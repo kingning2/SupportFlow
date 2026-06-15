@@ -103,6 +103,13 @@ pub fn resolve_credentials(
             api_base: "https://api.link-ai.tech/v1".to_string(),
             model,
         },
+        BotType::Ollama => ProviderCredentials {
+            family: ProviderFamily::OpenAiCompat,
+            api_key: non_empty(config.ollama_api_key.clone()).unwrap_or_else(|| "ollama".into()),
+            api_base: non_empty(config.ollama_api_base.clone())
+                .unwrap_or_else(|| "http://localhost:11434/v1".to_string()),
+            model,
+        },
         BotType::Custom => ProviderCredentials {
             family: ProviderFamily::OpenAiCompat,
             api_key: non_empty(config.custom_api_key.clone()).unwrap_or_default(),
@@ -129,7 +136,7 @@ pub fn resolve_credentials(
         },
     };
 
-    if creds.api_key.trim().is_empty() {
+    if creds.api_key.trim().is_empty() && bot_type != BotType::Ollama {
         return Err(format!(
             "missing API key for provider {}",
             bot_type.as_str()

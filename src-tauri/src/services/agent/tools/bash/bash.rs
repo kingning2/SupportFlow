@@ -51,12 +51,12 @@ impl BashTool {
 
     fn build_description() -> String {
         let platform = if cfg!(windows) {
-            "PLATFORM: Windows (cmd.exe). Do NOT use Unix-only commands like grep, head, tail, sed, awk.\n"
+            "平台：Windows（cmd.exe）。请勿使用 grep、head、tail、sed、awk 等 Unix 专用命令。\n"
         } else {
             ""
         };
         format!(
-            "Execute a bash command in the current working directory. Returns stdout and stderr. Output is truncated to last {DEFAULT_MAX_LINES} lines or {}KB (whichever is hit first). If truncated, full output is saved to a temp file.\n{platform}ENVIRONMENT: All API keys from env_config are auto-injected. Use $VAR_NAME directly.\n\nSAFETY:\n- Freely create/modify/delete files within the workspace\n- For destructive commands out of workspace, explain and confirm first",
+            "在当前工作目录执行 Shell 命令，返回标准输出与错误输出。输出截断为最近 {DEFAULT_MAX_LINES} 行或 {}KB。\n{platform}环境：env_config 中的 API 密钥会自动注入，可直接使用 $变量名。\n\n安全：可在工作区内自由操作文件；工作区外的破坏性命令须先说明并确认。",
             DEFAULT_MAX_BYTES / 1024
         )
     }

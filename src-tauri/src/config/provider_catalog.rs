@@ -45,6 +45,16 @@ const DOUBAO_MODELS: &[&str] = &["doubao-seed-2-pro", "doubao-seed-2-code"];
 
 const MOONSHOT_MODELS: &[&str] = &["kimi-k2", "moonshot-v1-8k"];
 
+const OLLAMA_MODELS: &[&str] = &[
+    "llama3.2",
+    "llama3.1",
+    "qwen2.5:7b",
+    "qwen2.5:14b",
+    "mistral",
+    "deepseek-r1:8b",
+    "gemma2:9b",
+];
+
 const MINIMAX_MODELS: &[&str] = &["MiniMax-M2.5", "abab6.5s-chat"];
 
 pub const PROVIDER_METAS: &[ProviderMeta] = &[
@@ -148,6 +158,15 @@ pub const PROVIDER_METAS: &[ProviderMeta] = &[
         models: &[],
     },
     ProviderMeta {
+        id: "ollama",
+        aliases: &[],
+        api_key_field: "ollama_api_key",
+        api_base_field: Some("ollama_api_base"),
+        api_base_default: Some("http://localhost:11434/v1"),
+        bot_type_value: "ollama",
+        models: OLLAMA_MODELS,
+    },
+    ProviderMeta {
         id: "custom",
         aliases: &[],
         api_key_field: "custom_api_key",
@@ -194,6 +213,8 @@ fn config_string(config: &ModelsConfig, field: &str) -> Option<String> {
         "dashscope_api_key" => config.dashscope_api_key.clone(),
         "minimax_api_key" => config.minimax_api_key.clone(),
         "linkai_api_key" => config.linkai_api_key.clone(),
+        "ollama_api_key" => config.ollama_api_key.clone(),
+        "ollama_api_base" => config.ollama_api_base.clone(),
         "custom_api_key" => config.custom_api_key.clone(),
         "custom_api_base" => config.custom_api_base.clone(),
         _ => None,

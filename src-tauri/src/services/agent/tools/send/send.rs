@@ -88,7 +88,7 @@ impl AgentTool for SendTool {
     }
 
     fn description(&self) -> &str {
-        "Send a LOCAL file (image, video, audio, document) to the user. Only for local file paths. Do NOT use this for URLs — URLs should be included directly in your text reply, the system will handle them automatically."
+        "向用户发送本地文件（图片、音视频、文档）。仅用于本地路径，不要传 URL——链接应直接写在回复文本中。"
     }
 
     fn input_schema(&self) -> Value {

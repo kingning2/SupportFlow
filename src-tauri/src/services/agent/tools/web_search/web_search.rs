@@ -486,7 +486,7 @@ impl AgentTool for WebSearchTool {
     }
 
     fn description(&self) -> &str {
-        "Search the web for real-time information. Returns titles, URLs, and snippets."
+        "搜索互联网实时信息，返回标题、链接与摘要。"
     }
 
     fn input_schema(&self) -> Value {

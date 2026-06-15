@@ -14,6 +14,14 @@ fn has_key(key: &Option<String>) -> bool {
     key.as_ref().is_some_and(|s| !s.trim().is_empty())
 }
 
+fn non_empty_ollama_base(config: &ModelsConfig) -> bool {
+    config
+        .ollama_api_base
+        .as_deref()
+        .map(|s| !s.trim().is_empty())
+        .unwrap_or(true)
+}
+
 /// Whether `config.json` has credentials for this vendor.
 pub fn provider_configured(bot_type: BotType, config: &ModelsConfig) -> bool {
     match bot_type {
@@ -29,6 +37,7 @@ pub fn provider_configured(bot_type: BotType, config: &ModelsConfig) -> bool {
         BotType::Qwen | BotType::QwenDashscope => has_key(&config.dashscope_api_key),
         BotType::Minimax => has_key(&config.minimax_api_key),
         BotType::Linkai => has_key(&config.linkai_api_key),
+        BotType::Ollama => non_empty_ollama_base(config),
         BotType::Custom => has_key(&config.custom_api_key),
         BotType::Baidu | BotType::Qianfan | BotType::Xunfei | BotType::Modelscope => false,
     }
@@ -47,6 +56,7 @@ const PROVIDER_ORDER: &[BotType] = &[
     BotType::QwenDashscope,
     BotType::Minimax,
     BotType::Linkai,
+    BotType::Ollama,
     BotType::Custom,
     BotType::Baidu,
     BotType::Qianfan,

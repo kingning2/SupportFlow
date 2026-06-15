@@ -16,9 +16,9 @@ pub struct MemoryGetTool {
 impl MemoryGetTool {
     pub fn new(memory: std::sync::Arc<dyn MemoryManager>, enable_knowledge: bool) -> Self {
         let description = if enable_knowledge {
-            "Read specific content from memory or knowledge files. Use this to get full context from a memory file, knowledge page, or specific line range."
+            "读取指定记忆或知识文件的完整内容，支持按行范围读取。"
         } else {
-            "Read specific content from memory files. Use this to get full context from a memory file or specific line range."
+            "读取指定记忆文件的完整内容，支持按行范围读取。"
         }
         .to_string();
         Self {

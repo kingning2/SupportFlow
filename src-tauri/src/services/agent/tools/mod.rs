@@ -5,6 +5,7 @@ pub mod bash;
 pub mod browser;
 pub mod edit;
 pub mod env_config;
+mod labels_zh;
 pub mod ls;
 pub mod mcp;
 pub mod memory;
@@ -23,6 +24,7 @@ pub use bash::{BashConfig, BashTool};
 pub use browser::{BrowserSettings, BrowserTool};
 pub use edit::EditTool;
 pub use env_config::{EnvConfigTool, EnvConfigToolConfig};
+pub use labels_zh::{tool_description_zh, tool_label};
 pub use ls::LsTool;
 pub use mcp::{
     load_mcp_configs, McpClient, McpDynamicTool, McpServerConfig, McpServerStatus, McpTool,

@@ -217,9 +217,7 @@ impl AgentTool for WebFetchTool {
     }
 
     fn description(&self) -> &str {
-        "Fetch content from a http/https URL. For web pages, extracts readable text. \
-         For document files (PDF, Word, TXT, Markdown, Excel, PPT), downloads and parses the file content. \
-         Supported file types: .pdf, .docx, .txt, .md, .csv, .xls, .xlsx, .ppt, .pptx"
+        "抓取 HTTP/HTTPS 页面或文档（PDF、Word、TXT、Markdown、Excel、PPT 等）并提取可读文本。"
     }
 
     fn input_schema(&self) -> Value {

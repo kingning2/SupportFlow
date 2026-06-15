@@ -33,10 +33,7 @@ impl AgentTool for BrowserTool {
     }
 
     fn description(&self) -> &str {
-        "Control a browser to navigate web pages, interact with elements, and extract content. \
-         Actions: navigate, snapshot, click, fill, select, scroll, screenshot, wait, back, forward, \
-         get_text, press, evaluate. Uses installed Chrome/Edge in headless mode (no extra browser download). \
-         Workflow: navigate → interact by ref from snapshot → snapshot to verify."
+        "控制浏览器：导航、快照、点击、填表、选择、滚动、截图、等待、前进/后退、取文本、按键、执行脚本。使用本机 Chrome/Edge 无头模式。推荐流程：navigate → 按快照 ref 交互 → snapshot 验证。"
     }
 
     fn input_schema(&self) -> Value {

@@ -12,7 +12,7 @@ use crate::services::agent::protocol::{
     RunStreamError, ToolResult as CapturedToolResult,
 };
 use crate::services::agent::rig::RigRunParams;
-use crate::services::agent::skills::SkillManager;
+use crate::services::agent::skills::{builtin_skills_dir, SkillManager};
 use crate::services::agent::tools::{
     load_builtin_tools, AgentTool, McpToolLoader, McpToolRegistry, ToolManagerConfig,
     ToolRunResult, ToolStage,
@@ -75,7 +75,9 @@ impl Agent {
         let workspace_dir = tool_config.workspace_dir.clone();
         let tools = load_builtin_tools(&tool_config);
 
-        let skill_manager = workspace_dir.as_ref().map(|ws| SkillManager::new(ws, None));
+        let skill_manager = workspace_dir
+            .as_ref()
+            .map(|ws| SkillManager::new(ws, Some(builtin_skills_dir())));
 
         let mcp_loader = workspace_dir
             .as_ref()
