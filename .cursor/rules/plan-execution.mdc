@@ -1,0 +1,50 @@
+---
+alwaysApply: true
+---
+# Plan 执行工作流
+
+**在实现路线图功能、处理 `plan/` 下任务、或用户提及「按计划 / 下一个任务 / T00x」时执行。**
+
+## 单一真相源
+
+- 总索引：[`plan/EXECUTION.md`](../../plan/EXECUTION.md) — 必须维护 **Current** 与 **Next**
+- 每个任务一个文件，禁止把多个任务写进同一文件
+
+## 目录与状态
+
+| 目录 | 含义 |
+| ---- | ---- |
+| `plan/pending/` | 待处理 |
+| `plan/in-progress/` | 正在进行（同时最多 1 个） |
+| `plan/completed/` | 处理完成 |
+
+## 状态流转（每次变更都要做）
+
+1. **开始**：`pending/T00x-*.md` → `in-progress/`；更新 `EXECUTION.md` 的 **Current**
+2. **完成**：勾选任务内 Acceptance criteria；`in-progress/` → `completed/`；**Current** 清空或指向下一个；**Next** 指向下一个 `pending/` 文件
+3. **阻塞**：在任务文件 **Notes** 写明原因，**Current** 可保留；未经用户同意不要跳号
+
+## 任务文件命名与模板
+
+- 命名：`T{三位序号}-{kebab-slug}.md`（例：`T004-rag-rerank-layer.md`）
+- 文首元数据表必填：`ID`、`Priority`、`Status`、`Depends on`、`Blocks`、`Milestone`
+- 正文必含：`Goal`、`Scope`、`Out of scope`（可选）、`Acceptance criteria`（checkbox）、`Key files`
+
+## 实现任务时的代码约束
+
+- 只改当前任务 **Scope** 内内容；Scope 外需求写入新 `pending/` 任务，不顺手扩 scope
+- 改代码前遵守 `AGENTS.md` 中对应语言的 coding-rules / architecture / folder-structure 文档
+- 跨模块改动按 [git-commit-cn](./git-commit-cn.mdc) 拆分 commit（用户要求提交时）
+
+## 新增任务
+
+1. 取下一个序号（当前最大 T015 → 新任务 T016）
+2. 写入 `plan/pending/`，并追加到 `EXECUTION.md` 队列表
+3. 填写 `Depends on` / `Blocks`，避免循环依赖
+
+## 禁止
+
+- 不更新 `EXECUTION.md` 就移动任务文件
+- `in-progress/` 同时放多个任务
+- 跳过 **Depends on** 未满足的前置任务（除非用户明确同意）
+- 在 `completed/` 任务上继续堆改动而不开新任务

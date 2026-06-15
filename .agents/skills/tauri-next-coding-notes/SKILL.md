@@ -34,6 +34,7 @@ user-invocable: true
 8. **日志与错误处理** → [logging-and-errors.md](./rules/logging-and-errors.md)
 9. **提交前检查** → [preflight-checks.md](./rules/preflight-checks.md)
 10. **Rust 分层** → `docs/rust-coding-rules.md`（`cmd` / `context` / `services` / `utils` / `python`）
+11. **UI 基础控件** → [ui-primitives.md](./rules/ui-primitives.md)（禁止原生 `button` / `input`，用 `@supportflow/ui`）
 
 ## 快速模式（常用）
 
