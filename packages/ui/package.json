@@ -37,7 +37,6 @@
     "./app-shell/*": "./src/app-shell/*",
     "./design-system": "./src/design-system/index.css",
     "./design-system/flavors/wework": "./src/design-system/flavors/wework.css",
-    "./design-system/flavors/wechat": "./src/design-system/flavors/wechat.css",
     "./channel/wework-connect-panel": "./src/agent-console/views/channels/wework-connect-panel.tsx"
   },
   "dependencies": {

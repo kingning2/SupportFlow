@@ -1,19 +1,18 @@
 //! Rust-owned frontend channel console APIs.
 
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::sync::Arc;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 
-use super::status::ChannelStatusStore;
 use crate::context::agent_runtime::AgentRuntime;
 
 /// Dispatch one frontend channel console API call.
 ///
 /// # Arguments
 ///
-/// * `app` - Tauri app handle used to access managed stores
+/// * `_app` - Tauri app handle (reserved for future channel APIs)
 /// * `runtime` - Shared agent runtime used to reach the Python sidecar when needed
-/// * `path` - Console API path such as `wx/qrlogin`
+/// * `path` - Console API path such as `wework/contacts_sync`
 /// * `method` - HTTP-like method string such as `GET` or `POST`
 /// * `body` - JSON request body from frontend
 ///
@@ -21,7 +20,7 @@ use crate::context::agent_runtime::AgentRuntime;
 ///
 /// * `Value` - JSON payload matching the existing frontend contract
 pub async fn dispatch(
-    app: &AppHandle,
+    _app: &AppHandle,
     runtime: &Arc<AgentRuntime>,
     path: &str,
     method: &str,
@@ -31,58 +30,12 @@ pub async fn dispatch(
     let normalized_method = method.trim().to_ascii_uppercase();
 
     match (normalized_path, normalized_method.as_str()) {
-        ("wx/qrlogin", "GET") | ("wx/qrlogin", "POST") => wx_qrlogin(app),
         ("wework/contacts_sync", "POST") => wework_contacts_sync(runtime, body).await,
         _ => Err(format!(
             "unknown channel console api: {} /{}",
             normalized_method, normalized_path
         )),
     }
-}
-
-/// Return current personal WeChat QR/login state derived from Rust status store.
-///
-/// # Arguments
-///
-/// * `app` - Tauri app handle used to read the managed status store
-///
-/// # Returns
-///
-/// * `Value` - Existing QR login response shape expected by frontend
-fn wx_qrlogin(app: &AppHandle) -> Result<Value, String> {
-    let store = app.state::<ChannelStatusStore>();
-    let status = store.get("wx")?;
-
-    let Some(status) = status else {
-        return Ok(json!({
-            "status": "success",
-            "login_status": "idle",
-            "message": "Start wx channel first or wait for QR",
-        }));
-    };
-
-    let login_status = phase_to_wx_login_status(&status.phase);
-    if login_status == "logged_in" {
-        return Ok(json!({
-            "status": "success",
-            "qr_status": "confirmed",
-            "login_status": "logged_in",
-        }));
-    }
-
-    let qr_status = match login_status {
-        "scanned" => "scaned",
-        _ => "wait",
-    };
-
-    Ok(json!({
-        "status": "success",
-        "qr_status": qr_status,
-        "login_status": login_status,
-        "qrcode_url": status.qr_code_url,
-        "qr_image": status.qr_image,
-        "message": status.message,
-    }))
 }
 
 /// Trigger one manual WeCom contacts sync through the narrow Python runtime RPC.
@@ -105,22 +58,4 @@ async fn wework_contacts_sync(runtime: &Arc<AgentRuntime>, body: &Value) -> Resu
     }
 
     runtime.request_wework_contacts_sync().await
-}
-
-/// Map raw runtime phase into the frontend login status vocabulary.
-///
-/// # Arguments
-///
-/// * `phase` - Raw phase emitted by the Python sidecar
-///
-/// # Returns
-///
-/// * `&str` - Frontend login status string
-fn phase_to_wx_login_status(phase: &str) -> &str {
-    match phase {
-        "waiting_scan" => "waiting_scan",
-        "scanned" => "scanned",
-        "logged_in" | "ready" => "logged_in",
-        _ => "idle",
-    }
 }

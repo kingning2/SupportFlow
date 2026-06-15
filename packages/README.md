@@ -12,7 +12,7 @@ packages/
 
 ```
 shared → ui → apps/full
-shared + ui → apps/wework | apps/wechat（渠道页在各自 app 内）
+shared + ui → apps/wework（渠道页在各自 app 内）
 ```
 
 ## 导入示例

@@ -30,7 +30,7 @@ pub(crate) fn skill_to_detail(e: &SkillEntry) -> SkillDetail {
 
 pub(crate) fn should_skip_deferred_channel_autostart() -> bool {
     crate::utils::env::get("DEV_CHANNEL")
-        .map(|v| v.trim() == "wework" || v.trim() == "wx")
+        .map(|v| v.trim() == "wework")
         .unwrap_or(false)
 }
 
@@ -40,7 +40,7 @@ pub(crate) fn deferred_autostart_channels(config_path: &Path) -> Result<Vec<Stri
     let configured = crate::utils::channel::parse_desktop_channel_types(root.get("channel_type"));
     if let Some(dev_channel) = crate::utils::env::get("DEV_CHANNEL") {
         let trimmed = dev_channel.trim().to_string();
-        if trimmed == "wework" || trimmed == "wx" {
+        if trimmed == "wework" {
             return Ok(Vec::new());
         }
         if !trimmed.is_empty() {

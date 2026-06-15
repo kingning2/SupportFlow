@@ -229,10 +229,6 @@ struct ChannelMeta {
 
 const KNOWN_CHANNELS: &[ChannelMeta] = &[
     ChannelMeta {
-        id: "wx",
-        label: "个人微信",
-    },
-    ChannelMeta {
         id: "wework",
         label: "企微个人号",
     },

@@ -8,7 +8,7 @@
 
 Python 以**独立进程**运行（sidecar 或 markitdown 子进程），只负责：
 
-- `wx` / `wework` SDK 登录与回调
+- `wework` SDK 登录与回调
 - SDK 消息解析
 - SDK 消息发送
 - SDK 媒体下载与必要格式转换
@@ -38,12 +38,12 @@ Python **不负责**：
 3. 一个模块如果只被一个地方使用，优先内联。
 4. 不新增与渠道无关的「通用框架层」。
 5. 不新增测试脚本、复现脚本、旧控制台路由脚本。
-6. 不新增旧渠道兼容代码，只允许保留 `wx` 与 `wework`。
+6. 不新增旧渠道兼容代码，只保留 `wework`。
 
 ## 模块边界
 
-1. `wechat_channel.py` / `wework_channel.py` 只处理各自渠道的运行时行为。
-2. `wechat_message.py` / `wework_message.py` 只处理各自渠道的消息解析。
+1. `wework_channel.py` 只处理企微渠道的运行时行为。
+2. `wework_message.py` 只处理企微渠道的消息解析。
 3. `run.py` 只处理 `ntwork` 客户端初始化、注册、运行循环。
 4. `rust_ipc.py` 只处理 Rust 通信，不承载业务规则。
 5. `rpc_handlers.py` 只做最小 RPC 分发，不写策略层逻辑。

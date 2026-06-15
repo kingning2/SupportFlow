@@ -48,10 +48,6 @@ def clear_singleton_cache(channel_name: str | None = None) -> None:
 
     _singleton_cache.pop(channel_name, None)
 
-    cls_map = {
-        "wx": "channel.wechat.wechat_channel.WechatChannel",
-        "wework": "channel.wework.wework_channel.WeworkChannel",
-    }
     if channel_name == "wework":
         try:
             from channel.wework.run import reset_wework_client
@@ -60,29 +56,27 @@ def clear_singleton_cache(channel_name: str | None = None) -> None:
         except Exception as e:
             logger.warning("[ChannelManager] Failed to reset wework ntwork client: %s", e)
 
-    module_path = cls_map.get(channel_name)
-    if not module_path:
-        return
-    try:
-        import importlib
+        module_path = "channel.wework.wework_channel.WeworkChannel"
+        try:
+            import importlib
 
-        module_name, class_name = module_path.rsplit(".", 1)
-        module = importlib.import_module(module_name)
-        wrapper = getattr(module, class_name, None)
-        if wrapper and hasattr(wrapper, "__closure__") and wrapper.__closure__:
-            for cell in wrapper.__closure__:
-                try:
-                    cell_contents = cell.cell_contents
-                    if isinstance(cell_contents, dict):
-                        cell_contents.clear()
-                        logger.debug(
-                            "[ChannelManager] Cleared singleton cache for %s", class_name
-                        )
-                        break
-                except ValueError:
-                    pass
-    except Exception as e:
-        logger.warning("[ChannelManager] Failed to clear singleton cache: %s", e)
+            module_name, class_name = module_path.rsplit(".", 1)
+            module = importlib.import_module(module_name)
+            wrapper = getattr(module, class_name, None)
+            if wrapper and hasattr(wrapper, "__closure__") and wrapper.__closure__:
+                for cell in wrapper.__closure__:
+                    try:
+                        cell_contents = cell.cell_contents
+                        if isinstance(cell_contents, dict):
+                            cell_contents.clear()
+                            logger.debug(
+                                "[ChannelManager] Cleared singleton cache for %s", class_name
+                            )
+                            break
+                    except ValueError:
+                        pass
+        except Exception as e:
+            logger.warning("[ChannelManager] Failed to clear singleton cache: %s", e)
 
 
 def parse_channel_type(raw) -> list:
@@ -110,16 +104,11 @@ def parse_external_channel_type(raw) -> list:
 
 def create_channel(channel_type: str):
     """根据通道类型创建对应的通道实例。"""
-    if channel_type == "wx":
-        from channel.wechat.wechat_channel import WechatChannel
-
-        ch = WechatChannel()
-    elif channel_type == "wework":
-        from channel.wework.wework_channel import WeworkChannel
-
-        ch = WeworkChannel()
-    else:
+    if channel_type != "wework":
         raise RuntimeError(f"unknown channel type: {channel_type!r}")
+    from channel.wework.wework_channel import WeworkChannel
+
+    ch = WeworkChannel()
     ch.channel_type = channel_type
     return ch
 

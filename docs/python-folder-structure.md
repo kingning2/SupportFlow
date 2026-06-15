@@ -12,8 +12,6 @@ Rust 通过 `src-tauri/src/python/` 调用 Python（sidecar RPC、MarkItDown 子
 
 - `channel_agent/channel/wework/`
   - 企业微信 SDK 适配（`ntwork`）
-- `channel_agent/channel/wechat/`
-  - 微信 SDK 适配（按需保留）
 - `channel_agent/scripts/markitdown_convert.py`
   - 文档转 Markdown 脚本（**非** sidecar 入口）
 
@@ -54,7 +52,7 @@ pnpm run build:channel-sidecar       # PyInstaller → src-tauri/binaries/
 ## 结构原则
 
 1. `channel/` 下只放 sidecar 启动、Rust RPC 对接、以及渠道适配代码。
-2. `wework/`、`wechat/` 处理各自 SDK 的登录、消息解析、发送、媒体下载。
+2. `wework/` 处理 SDK 的登录、消息解析、发送、媒体下载。
 3. `markitdown_convert.py` 只服务 Rust 单次子进程调用，不并入 sidecar 主循环。
 4. 共有工具尽量极少；如果不是 SDK 适配必需，优先迁移到 Rust。
 5. 不再新增测试目录、复现脚本、旧控制台路由、旧渠道工厂层、旧 AI/模型层。

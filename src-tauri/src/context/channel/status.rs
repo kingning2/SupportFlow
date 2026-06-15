@@ -60,7 +60,7 @@ impl ChannelStatusStore {
     ///
     /// # Arguments
     ///
-    /// * `channel` - Channel id such as `wx` or `wework`
+    /// * `channel` - Channel id such as `wework`
     ///
     /// # Returns
     ///

@@ -1,12 +1,13 @@
 # Channel Sidecar
 
-Python sidecar for channel access. Rust stays frontend-facing and orchestrates the app; Python only handles channel connectivity for the supported personal channels.
+Python sidecar for WeCom (`wework`) channel access. Rust owns desktop orchestration; Python only handles SDK login, messaging, and media download.
 
 ## Scope
 
-- `channel/wework/`: personal WeCom desktop (`wework`)
-- `bridge/`: Python to Rust bridge
-- `common/`, `config.py`, `lib/`: shared sidecar config, logging, and vendored libraries
+- `channel/wework/`: WeCom desktop (`ntwork`)
+- `bridge/`: Context/Reply types for Rust IPC
+- `common/`, `config.py`: shared sidecar config and logging
+- `scripts/markitdown_convert.py`: one-shot MarkItDown helper (invoked by Rust, not sidecar)
 
 ## Development
 
@@ -30,4 +31,4 @@ pnpm run bootstrap:sidecar-wheels
 pnpm run build:channel-sidecar
 ```
 
-`requirements-sidecar.txt` now only contains shared runtime dependencies for the retained `wework` channel. `requirements-wework.txt` handles the additional `ntwork` path for WeCom.
+`requirements-sidecar.txt` holds shared runtime deps; `requirements-wework.txt` adds `ntwork` / `pilk` for WeCom.

@@ -311,21 +311,13 @@ $hidden = @(
     "bridge",
     "common",
     "config",
-    "voice",
-    "lib",
     "pilk",
     "requests",
     "urllib3",
     "certifi",
     "charset_normalizer",
     "idna",
-    "PIL",
-    "qrcode",
-    "yaml",
-    "dotenv",
-    "web",
-    "websocket",
-    "Crypto",
+    "PIL"
 )
 if ($hasNtwork) {
     $hidden += @("ntwork", "ntwork.core", "ntwork.wc", "ntwork.conf", "ntwork.const", "pyee")
@@ -347,8 +339,6 @@ foreach ($m in $hidden) {
 }
 $pyArgs += "--collect-submodules"
 $pyArgs += "channel"
-$pyArgs += "--collect-submodules"
-$pyArgs += "lib"
 if ($hasNtwork) {
     # Bundle ntwork/pilk/xcgui into the one-file sidecar (no runtime pip / site-packages).
     $ntworkDir = Get-SitePackageDir -PythonExe $PythonExe -PackageName "ntwork"
