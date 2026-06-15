@@ -17,3 +17,4 @@ Rules:
 - `config/` keeps shell accent and shell layout constants.
 - `features/<channel>/` keeps platform-private pages and logic.
 - `components/` keeps app-private reusable pieces.
+- UI uses **Semi Design** (`@douyinfe/semi-ui-19`, `@douyinfe/semi-icons`); Vite enables the Feishu DSM theme via `@douyinfe/semi-vite-plugin`.

@@ -4,24 +4,32 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --port 3000 --webpack",
-    "build": "next build --webpack",
+    "dev": "vite --port 3000",
+    "build": "vite build",
+    "preview": "vite preview --port 3000",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@douyinfe/semi-icons": "^2.100.0",
+    "@douyinfe/semi-ui-19": "^2.100.0",
     "@supportflow/shared": "workspace:*",
     "@supportflow/ui": "workspace:*",
-    "lucide-react": "^1.17.0",
-    "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-router-dom": "^7.9.6"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@douyinfe/semi-vite-plugin": "^2.100.0",
+    "@semi-bot/semi-theme-feishu-dashboard": "^1.0.4",
+    "@tailwindcss/vite": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.1.1",
+    "sass": "^1.89.2",
     "tailwindcss": "^4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vite": "^7.1.12",
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }
