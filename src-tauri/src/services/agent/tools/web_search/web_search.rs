@@ -1,18 +1,18 @@
-﻿//! `agent/tools/web_search/web_search.py`
+//! `agent/tools/web_search/web_search.py`
 
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::config::ModelsConfig;
 use async_trait::async_trait;
 use chrono::{Duration as ChronoDuration, Local};
-use models::ModelsConfig;
 use reqwest::Client;
 use serde_json::{json, Value};
 use tracing::info;
 
 use crate::services::agent::tools::base_tool::{AgentTool, ToolRunResult};
 use crate::services::agent::tools::web_search::config::{default_timeout_secs, WebSearchSettings};
-use crate::services::agent::utils::{build_reqwest_client, HttpProxySettings};
+use crate::utils::http_proxy::{build_reqwest_client, HttpProxySettings};
 
 pub struct WebSearchTool {
     settings: WebSearchSettings,
@@ -22,7 +22,7 @@ pub struct WebSearchTool {
 impl WebSearchTool {
     pub fn new(config: Arc<ModelsConfig>) -> Self {
         let settings = WebSearchSettings::from_models(&config);
-        let proxy = HttpProxySettings::from_models(&config);
+        let proxy = HttpProxySettings::from_config(&config);
         Self {
             settings,
             client: build_reqwest_client(&proxy, Duration::from_secs(default_timeout_secs()), None),

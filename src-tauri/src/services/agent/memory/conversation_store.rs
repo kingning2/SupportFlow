@@ -362,7 +362,7 @@ pub fn restore_agent_messages(
     agent: &crate::services::agent::Agent,
     session_id: &str,
     workspace: &Path,
-    config: &models::ModelsConfig,
+    config: &crate::config::ModelsConfig,
 ) {
     if !config.conversation_persistence.unwrap_or(true) {
         return;
@@ -407,7 +407,7 @@ pub fn restore_agent_messages(
 
 pub fn persist_agent_run(
     workspace: &Path,
-    config: &models::ModelsConfig,
+    config: &crate::config::ModelsConfig,
     session_id: &str,
     channel_type: &str,
     new_messages: &[Value],

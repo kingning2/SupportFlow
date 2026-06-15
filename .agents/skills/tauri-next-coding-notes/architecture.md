@@ -1,6 +1,7 @@
 # Architecture Snapshot
 
-> 按职位查看「主要改哪些文件夹」：[`docs/development-rules/roles-and-directories.md`](../../../docs/development-rules/roles-and-directories.md)
+> 协作总纲：[`AGENTS.md`](../../../AGENTS.md)  
+> Rust / Python / TS 分层：[`docs/`](../../../docs/) 下 `*-architecture.md`、`*-folder-structure.md`
 
 ## Monorepo 总览
 
@@ -10,7 +11,8 @@ apps/wework/        企微独立应用（渠道页在各自 src/）
 apps/wechat/        微信独立应用
 packages/shared/    IPC、枚举、Redux、Provider、contracts
 packages/ui/        控制台、shadcn、标题栏、Modal、动效
-src-tauri/          Rust 桌面端
+channel_agent/      Python 渠道 sidecar + markitdown 脚本（仓库根目录）
+src-tauri/          Rust 桌面端（单 crate，src/ 内按模块分层）
 ```
 
 依赖方向：`shared` → `ui` → `apps/*`。渠道私有页面只放在对应 `apps/<channel>/src/`，不进 `packages/`。
@@ -44,9 +46,16 @@ src-tauri/          Rust 桌面端
 ## `src-tauri` 职责
 
 - `src/cmd/*`：Rust command 薄入口。
-- `src/context/*`：`.manage` 持有的跨 Webview 共享态（会话）。
+- `src/context/*`：`.manage` 持有的跨 Webview 共享态与运行时编排（含 sidecar 协调）。
+- `src/services/*`：Agent（`rig` 编排）、Bridge、渠道服务。
+- `src/config/*`：`config.json`、Provider 目录、Context/Reply 契约。
+- `src/python/*`：渠道 sidecar（stdio RPC）与 markitdown 子进程；**不用 PyO3**。
+- `src/process_runtime/*`：子进程与 stdio JSON-RPC 基础设施。
+- `src/io/*`：带日志的文件 IO（`crate::fs_io`）。
 - `src/utils/*`：无 Store 的通用逻辑（窗口、日志等）。
+- `src/cli/*` + `src/bin/sf.rs`：无头 CLI。
 - `resources/languages/*.json`：i18n 资源。
+- `binaries/channel-sidecar-*`：PyInstaller 产物。
 
 ## 调用链
 
@@ -54,7 +63,7 @@ src-tauri/          Rust 桌面端
 
 1. 业务代码调用 `packages/shared/src/tauri-bridge/cmd/*.ts`（`TauriCmd` 枚举）。
 2. `invokeWrapper(TauriCmd.Xxx, args)`。
-3. Rust command 在 `src-tauri/src/cmd/*.rs`（逻辑在 `utils/` 或 `context/`）。
+3. Rust command 在 `src-tauri/src/cmd/*.rs`（逻辑在 `context/`、`services/` 或 `utils/`）。
 4. `src-tauri/src/lib.rs` 注册 `generate_handler!`。
 
 ### Event（emit / listen）
@@ -64,6 +73,12 @@ src-tauri/          Rust 桌面端
 3. 前端 → Rust：`tauriEmit` → `events/handlers/*`（如 `fe/log`）。
 4. 全局订阅：`TauriEventProvider` 内 `CrossWebviewSyncSubscriptions`（会话 → Redux）。
 5. `lib.rs` 的 `setup` 调用 `events::setup` 注册 listen。
+
+### Python sidecar
+
+1. `context::AgentRuntime::start_sidecar_deferred` → `python::spawn_sidecar`。
+2. 生产：`tauri-plugin-shell` 拉起 `binaries/channel-sidecar-*`；开发：`python -m channel`。
+3. 双向 NDJSON RPC：`process_runtime::StdioJsonRpcRuntime` + `channel_agent/channel/rust_ipc.py`。
 
 ## 前后端契约
 

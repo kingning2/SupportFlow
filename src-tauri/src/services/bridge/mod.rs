@@ -1,4 +1,4 @@
-﻿//! SupportFlow Agent `bridge/` package 鈥?bot routing, `AgentBridge`, initializer, events.
+//! SupportFlow Agent `bridge/` package 鈥?bot routing, `AgentBridge`, initializer, events.
 //!
 //! Replaces Python `bridge/bridge.py`, `agent_bridge.py`, `agent_initializer.py`,
 //! `agent_event_handler.py` for the Tauri desktop runtime.
@@ -23,8 +23,8 @@ pub use context_params::context_from_reply_params;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::config::ModelsConfig;
 use crate::services::agent::McpToolLoader;
-use models::ModelsConfig;
 
 /// Shared bridge stack for one runtime workspace + config.
 pub struct BridgeRuntime {
@@ -50,11 +50,11 @@ impl BridgeRuntime {
     pub async fn reply(
         &self,
         query: &str,
-        context: Option<models::Context>,
+        context: Option<crate::config::Context>,
         use_agent: bool,
         clear_history: bool,
         on_event: Option<crate::services::agent::AgentEventCallback>,
-    ) -> models::Reply {
+    ) -> crate::config::Reply {
         if use_agent || self.bridge.config.agent_enabled() {
             self.agent_bridge
                 .agent_reply(query, context, on_event, clear_history)

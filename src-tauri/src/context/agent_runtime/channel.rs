@@ -44,11 +44,11 @@ impl AgentRuntime {
             .cloned()
             .ok_or_else(|| "channel.process: missing config".to_string())?;
 
-        let ctx: channel_runtime::ChannelRuntimeContext =
+        let ctx: crate::channel_runtime::ChannelRuntimeContext =
             serde_json::from_value(ctx_v).map_err(|e| format!("channel.process context: {e}"))?;
-        let cfg: channel_runtime::ChannelRuntimeConfig =
+        let cfg: crate::channel_runtime::ChannelRuntimeConfig =
             serde_json::from_value(cfg_v).map_err(|e| format!("channel.process config: {e}"))?;
-        let result = channel_runtime::process_message(&ctx, &cfg);
+        let result = crate::channel_runtime::process_message(&ctx, &cfg);
         let out = serde_json::to_value(result).map_err(|e| e.to_string())?;
         Ok(out)
     }
@@ -65,9 +65,9 @@ impl AgentRuntime {
             .get("meta")
             .cloned()
             .ok_or_else(|| "channel.decorate_text: missing meta".to_string())?;
-        let meta: channel_runtime::ChannelRuntimeResult = serde_json::from_value(meta_v)
+        let meta: crate::channel_runtime::ChannelRuntimeResult = serde_json::from_value(meta_v)
             .map_err(|e| format!("channel.decorate_text meta: {e}"))?;
-        Ok(channel_runtime::decorate_text(text, &meta))
+        Ok(crate::channel_runtime::decorate_text(text, &meta))
     }
 
     pub async fn channel_extract_media(
@@ -79,7 +79,7 @@ impl AgentRuntime {
             .and_then(|v| v.as_str())
             .ok_or_else(|| "channel.extract_media: missing text".to_string())?;
         let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(5) as usize;
-        let items = channel_runtime::extract_media_urls(text, limit);
+        let items = crate::channel_runtime::extract_media_urls(text, limit);
         serde_json::to_value(items).map_err(|e| e.to_string())
     }
 }

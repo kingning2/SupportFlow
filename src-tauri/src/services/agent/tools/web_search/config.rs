@@ -1,6 +1,6 @@
 ﻿//! Provider resolution for `web_search` (`agent/tools/web_search/web_search.py`).
 
-use models::ModelsConfig;
+use crate::config::ModelsConfig;
 
 use crate::services::agent::tools::env_config::read_env_file;
 use crate::services::agent::tools::utils::path::supportflow_env_file;
@@ -182,8 +182,8 @@ mod tests {
     fn respects_explicit_provider_when_configured() {
         let cfg = ModelsConfig {
             linkai_api_key: Some("lk".into()),
-            tools: Some(models::ToolsConfig {
-                web_search: Some(models::WebSearchConfig {
+            tools: Some(crate::config::ToolsConfig {
+                web_search: Some(crate::config::WebSearchConfig {
                     bocha_api_key: Some("b".into()),
                     ..Default::default()
                 }),

@@ -73,7 +73,7 @@ pub fn load(workspace: &Path) -> SkillsConfigMap {
     if !path.is_file() {
         return HashMap::new();
     }
-    let raw = fs_io::read_to_string(&path).unwrap_or_default();
+    let raw = crate::io::read_to_string(&path).unwrap_or_default();
     serde_json::from_str(&raw).unwrap_or_default()
 }
 
@@ -89,10 +89,10 @@ pub fn load(workspace: &Path) -> SkillsConfigMap {
 /// * `Result<(), anyhow::Error>` - 保存结果
 pub fn save(workspace: &Path, config: &SkillsConfigMap) -> Result<()> {
     let dir = skills_dir(workspace);
-    fs_io::create_dir_all(&dir)?;
+    crate::io::create_dir_all(&dir)?;
     let path = skills_config_path(workspace);
     let json = serde_json::to_string_pretty(config).context("serialize skills_config")?;
-    fs_io::write(&path, json).with_context(|| format!("write {}", path.display()))
+    crate::io::write(&path, json).with_context(|| format!("write {}", path.display()))
 }
 
 /// 注册或更新一个技能条目。
@@ -137,4 +137,84 @@ pub fn register_skill(
 /// * `&'static str` - Skill Hub API 地址
 pub fn hub_api_base() -> &'static str {
     "https://skills.supportflow.ai/api"
+}
+
+pub fn set_enabled(workspace: &Path, name: &str, enabled: bool) -> Result<()> {
+    let mut cfg = load(workspace);
+    let entry = cfg
+        .get_mut(name)
+        .ok_or_else(|| anyhow::anyhow!("skill '{name}' not in skills_config.json"))?;
+    entry.enabled = enabled;
+    save(workspace, &cfg)
+}
+
+pub fn merge_disk_skills(workspace: &Path, config: &mut SkillsConfigMap) -> bool {
+    let mut dirty = false;
+    for (dir, source) in [
+        (skills_dir(workspace), "custom"),
+        (builtin_skills_dir(), "builtin"),
+    ] {
+        if !dir.is_dir() {
+            continue;
+        }
+        let Ok(entries) = crate::io::read_dir(&dir) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
+            }
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if name.starts_with('.') || name == "skills_config.json" {
+                continue;
+            }
+            if !path.join("SKILL.md").is_file() {
+                continue;
+            }
+            if config.contains_key(&name) {
+                continue;
+            }
+            let desc = read_skill_description(&path);
+            config.insert(
+                name.clone(),
+                SkillConfigEntry {
+                    name: name.clone(),
+                    description: desc,
+                    source: source.into(),
+                    enabled: true,
+                    category: "skill".into(),
+                    display_name: None,
+                },
+            );
+            dirty = true;
+        }
+    }
+    dirty
+}
+
+fn builtin_skills_dir() -> PathBuf {
+    let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../skills");
+    if repo.is_dir() {
+        return repo;
+    }
+    PathBuf::new()
+}
+
+fn read_skill_description(skill_path: &Path) -> String {
+    let skill_md = skill_path.join("SKILL.md");
+    let Ok(content) = crate::io::read_to_string(&skill_md) else {
+        return String::new();
+    };
+    for line in content.lines() {
+        let t = line.trim();
+        if !t.is_empty() && !t.starts_with('#') && !t.starts_with("---") {
+            return t.chars().take(200).collect();
+        }
+    }
+    String::new()
+}
+
+pub fn is_enabled_in_config(config: &SkillsConfigMap, name: &str) -> bool {
+    config.get(name).map(|e| e.enabled).unwrap_or(true)
 }

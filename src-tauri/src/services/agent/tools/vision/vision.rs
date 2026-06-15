@@ -1,12 +1,13 @@
-﻿//! `agent/tools/vision/vision.py`
+//! `agent/tools/vision/vision.py`
 
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::config::ModelsConfig;
+use crate::utils::{build_reqwest_client, HttpProxySettings};
 use async_trait::async_trait;
 use base64::{engine::general_purpose::STANDARD, Engine};
-use models::{build_reqwest_client, HttpProxySettings, ModelsConfig};
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json, Value};
 use tracing::{info, warn};
@@ -34,7 +35,7 @@ pub struct VisionTool {
 
 impl VisionTool {
     pub fn new(config: Arc<ModelsConfig>) -> Self {
-        let proxy = HttpProxySettings::from_models(&config);
+        let proxy = HttpProxySettings::from_config(&config);
         Self { config, proxy }
     }
 
@@ -120,37 +121,6 @@ impl VisionTool {
         image_block: &Value,
     ) -> Result<Value, String> {
         match &provider.backend {
-            VisionBackend::Bot { bot } => {
-                let url = image_block
-                    .get("image_url")
-                    .and_then(|u| u.get("url"))
-                    .and_then(|u| u.as_str())
-                    .ok_or_else(|| "missing image url".to_string())?;
-                let resp = bot
-                    .call_vision(url, question, Some(model), MAX_TOKENS)
-                    .await;
-                if resp.get("error").and_then(|e| e.as_bool()).unwrap_or(false) {
-                    let msg = resp
-                        .get("message")
-                        .and_then(|m| m.as_str())
-                        .unwrap_or("vision API error");
-                    return Err(msg.to_string());
-                }
-                let content = resp
-                    .get("content")
-                    .and_then(|c| c.as_str())
-                    .unwrap_or("")
-                    .to_string();
-                if content.is_empty() {
-                    return Err("Empty response from vision API".into());
-                }
-                Ok(json!({
-                    "model": resp.get("model").and_then(|m| m.as_str()).unwrap_or(model),
-                    "provider": provider.name,
-                    "content": content,
-                    "usage": resp.get("usage").cloned().unwrap_or(json!({})),
-                }))
-            }
             VisionBackend::OpenAi { api_key, api_base }
             | VisionBackend::LinkAi { api_key, api_base } => {
                 self.call_raw_http(

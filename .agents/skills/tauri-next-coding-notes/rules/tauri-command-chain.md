@@ -1,6 +1,6 @@
 # Tauri Command Chain
 
-新增或修改 **Tauri Command** 时，按顺序改齐以下位置（详见 [`docs/development-rules/fullstack-ipc.md`](../../../../docs/development-rules/fullstack-ipc.md)）：
+新增或修改 **Tauri Command** 时，按顺序改齐以下位置（IPC 规则见 [`docs/rust-coding-rules.md`](../../../../docs/rust-coding-rules.md)）：
 
 1. Rust command 文件（`src-tauri/src/cmd/*.rs`）
 2. Rust 模块导出（`src-tauri/src/cmd/mod.rs`）

@@ -1,7 +1,7 @@
 //! Model name → `BotType` routing (`bridge/bridge.py` + `agent_bridge.AgentLLMModel`).
 
-use models::config::ModelsConfig;
-use models::const_::BotType;
+use crate::config::config::ModelsConfig;
+use crate::config::const_::BotType;
 
 /// Resolve chat bot type from config and model name (mirrors Python `Bridge.__init__` / `AgentLLMModel._resolve_bot_type`).
 pub fn resolve_bot_type(config: &ModelsConfig) -> Result<BotType, String> {

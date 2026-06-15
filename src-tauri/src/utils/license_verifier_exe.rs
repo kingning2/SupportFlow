@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use process_runtime::{run_sync, CommandSpec, ProcessSharedContext};
+use crate::process_runtime::{run_sync, CommandSpec, ProcessSharedContext};
 use serde::Deserialize;
 
 /// 子进程校验结果（与 license-verifier stdout JSON 对齐）。
@@ -30,11 +30,11 @@ fn verifier_missing_message() -> String {
 ///
 /// 优先级：`LICENSE_VERIFIER_EXE` 环境变量 → `src-tauri/binaries/license-verifier-{target}.exe`
 pub fn resolve_verifier_exe() -> Result<PathBuf, String> {
-    if let Some(path) = process_runtime::resolve_exe_from_env("LICENSE_VERIFIER_EXE")? {
+    if let Some(path) = crate::process_runtime::resolve_exe_from_env("LICENSE_VERIFIER_EXE")? {
         return Ok(path);
     }
 
-    let path = process_runtime::binary_in_dir(
+    let path = crate::process_runtime::binary_in_dir(
         &crate::utils::path::crate_path("binaries"),
         "license-verifier",
         env!("BUILD_TARGET"),

@@ -2,17 +2,18 @@
 
 mod handler;
 mod spawn;
+mod tauri_shell;
 
 pub use spawn::spawn_sidecar;
 
-use process_runtime::{ProcessSharedContext, StdioJsonRpcRuntime};
+use crate::process_runtime::{ProcessSharedContext, StdioJsonRpcRuntime};
 use serde_json::{json, Value};
 use std::sync::{Arc, Weak};
 use tauri::AppHandle;
 use tauri_plugin_shell::ShellExt;
 
 use crate::context::agent_runtime::AgentRuntime;
-use crate::utils::process_tauri::{apply_env_shell, start_shell_event_loop, ShellStdinWriter};
+use tauri_shell::{apply_env_shell, start_shell_event_loop, ShellStdinWriter};
 
 use handler::ChannelInboundHandler;
 use spawn::{

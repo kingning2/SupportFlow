@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Weak};
 
-use process_runtime::{ProcessSharedContext, ProcessSlot};
+use crate::process_runtime::{ProcessSharedContext, ProcessSlot};
 use tauri::AppHandle;
 
 use crate::context::agent_runtime::AgentRuntime;

@@ -4,7 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use models::{
+use crate::config::{
     clear_provider_credentials, find_provider_meta, set_chat_model, update_provider_credentials,
     ModelsConfig,
 };

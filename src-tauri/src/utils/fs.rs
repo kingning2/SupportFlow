@@ -1,8 +1,8 @@
-//! Tauri 侧文件 IO：复用 [`fs_io`]，对外提供 `Result<_, String>` 以匹配 command/context 约定。
+//! Tauri 侧文件 IO：复用 [`crate::io`]，对外提供 `Result<_, String>` 以匹配 command/context 约定。
 
 use std::path::Path;
 
-pub use fs_io::{
+pub use crate::io::{
     create_dir_all as create_dir_all_io, read as read_io, read_to_string as read_to_string_io,
     write as write_io,
 };

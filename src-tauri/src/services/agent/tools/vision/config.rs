@@ -2,8 +2,9 @@
 
 use std::sync::Arc;
 
-use models::const_::BotType;
-use models::{create_bot, BotHandle, ModelsConfig};
+use crate::config::const_::BotType;
+use crate::config::ModelsConfig;
+use crate::services::agent::rig::resolve_credentials;
 
 const DEFAULT_MODEL: &str = "gpt-4.1-mini";
 
@@ -16,7 +17,6 @@ pub struct VisionProvider {
 pub enum VisionBackend {
     OpenAi { api_key: String, api_base: String },
     LinkAi { api_key: String, api_base: String },
-    Bot { bot: BotHandle },
 }
 
 pub fn user_vision_model(config: &ModelsConfig) -> Option<String> {
@@ -131,17 +131,20 @@ fn build_linkai(config: &ModelsConfig, model_override: Option<String>) -> Option
     })
 }
 
-fn build_bot_provider(
+fn build_compat_provider(
     config: Arc<ModelsConfig>,
     bot_type: BotType,
     display_name: &str,
     model_override: Option<String>,
 ) -> Option<VisionProvider> {
-    let bot = create_bot(bot_type, config).ok()?;
+    let creds = resolve_credentials(config.as_ref(), bot_type).ok()?;
     Some(VisionProvider {
         name: display_name.to_string(),
-        model_override,
-        backend: VisionBackend::Bot { bot },
+        model_override: model_override.or(Some(creds.model)),
+        backend: VisionBackend::OpenAi {
+            api_key: creds.api_key,
+            api_base: creds.api_base,
+        },
     })
 }
 
@@ -154,14 +157,14 @@ fn route_by_provider_id(
     let p = match provider_id {
         "openai" => build_openai(&config, model),
         "linkai" => build_linkai(&config, model),
-        "moonshot" => build_bot_provider(config, BotType::Moonshot, "Moonshot", model),
-        "doubao" => build_bot_provider(config, BotType::Doubao, "Doubao", model),
-        "dashscope" => build_bot_provider(config, BotType::QwenDashscope, "DashScope", model),
-        "claudeAPI" => build_bot_provider(config, BotType::ClaudeApi, "Claude", model),
-        "gemini" => build_bot_provider(config, BotType::Gemini, "Gemini", model),
-        "qianfan" => build_bot_provider(config, BotType::Qianfan, "Qianfan", model),
-        "zhipu" => build_bot_provider(config, BotType::ZhipuAi, "ZhipuAI", model),
-        "minimax" => build_bot_provider(config, BotType::Minimax, "MiniMax", model),
+        "moonshot" => build_compat_provider(config, BotType::Moonshot, "Moonshot", model),
+        "doubao" => build_compat_provider(config, BotType::Doubao, "Doubao", model),
+        "dashscope" => build_compat_provider(config, BotType::QwenDashscope, "DashScope", model),
+        "claudeAPI" => build_compat_provider(config, BotType::ClaudeApi, "Claude", model),
+        "gemini" => build_compat_provider(config, BotType::Gemini, "Gemini", model),
+        "qianfan" => build_compat_provider(config, BotType::Qianfan, "Qianfan", model),
+        "zhipu" => build_compat_provider(config, BotType::ZhipuAi, "ZhipuAI", model),
+        "minimax" => build_compat_provider(config, BotType::Minimax, "MiniMax", model),
         _ => None,
     }?;
     Some(vec![p])
@@ -206,7 +209,7 @@ fn route_by_model_name(config: Arc<ModelsConfig>, user_model: &str) -> Option<Ve
         "MiniMax" => BotType::Minimax,
         _ => return None,
     };
-    build_bot_provider(config, bot_type, display, Some(user_model.to_string())).map(|p| vec![p])
+    build_compat_provider(config, bot_type, display, Some(user_model.to_string())).map(|p| vec![p])
 }
 
 fn append_discoverable(config: Arc<ModelsConfig>, providers: &mut Vec<VisionProvider>) {
@@ -280,7 +283,7 @@ fn append_discoverable(config: Arc<ModelsConfig>, providers: &mut Vec<VisionProv
         if !key.is_some_and(valid_key) {
             continue;
         }
-        if let Some(p) = build_bot_provider(
+        if let Some(p) = build_compat_provider(
             config.clone(),
             *bot_type,
             name,

@@ -1,29 +1,25 @@
 //! `bridge/bridge.py` — bot routing, voice/translate stubs, agent delegation.
 
-use std::collections::HashMap;
 use std::sync::Arc;
 
-use models::openai_compatible::{CallWithToolsRequest, LlmResult, OpenAICompatibleBot};
-use models::{create_bot, BotType, Context, ModelsConfig, Reply};
-use serde_json::json;
+use crate::config::{Context, ModelsConfig, Reply};
 use tracing::info;
 
+use crate::services::agent::rig::run_simple_chat;
+
 use super::agent_bridge::AgentBridge;
-use super::bot_router::{auto_pick_voice_to_text, resolve_bot_type};
+use super::bot_router::auto_pick_voice_to_text;
 
 /// SupportFlow Agent `Bridge` (without Python voice/translate backends).
 pub struct Bridge {
     pub config: Arc<ModelsConfig>,
-    chat_bot_type: BotType,
     voice_to_text_provider: String,
     text_to_voice_provider: String,
-    bots: std::sync::Mutex<HashMap<String, Arc<dyn OpenAICompatibleBot>>>,
     agent_bridge: std::sync::Mutex<Option<Arc<AgentBridge>>>,
 }
 
 impl Bridge {
     pub fn new(config: Arc<ModelsConfig>) -> Self {
-        let chat_bot_type = resolve_bot_type(&config).unwrap_or(BotType::Deepseek);
         let mut voice_to_text = config.voice_to_text.clone().unwrap_or_default();
         if voice_to_text.is_empty() {
             voice_to_text = auto_pick_voice_to_text(&config).to_string();
@@ -47,10 +43,8 @@ impl Bridge {
 
         Self {
             config,
-            chat_bot_type,
             voice_to_text_provider: voice_to_text,
             text_to_voice_provider: text_to_voice,
-            bots: std::sync::Mutex::new(HashMap::new()),
             agent_bridge: std::sync::Mutex::new(None),
         }
     }
@@ -68,9 +62,6 @@ impl Bridge {
             .clone()
             .filter(|s| !s.is_empty())
             .unwrap_or_else(|| "google".to_string());
-        let mut bots = self.bots.lock().expect("bots");
-        bots.remove("voice_to_text");
-        bots.remove("text_to_voice");
         info!(
             "[Bridge] voice refreshed: voice_to_text={}, text_to_voice={}",
             voice_to_text, text_to_voice
@@ -81,23 +72,10 @@ impl Bridge {
         *self = Self::new(self.config.clone());
     }
 
-    fn get_chat_bot(&self) -> Result<Arc<dyn OpenAICompatibleBot>, String> {
-        let mut bots = self.bots.lock().expect("bots");
-        if let Some(b) = bots.get("chat") {
-            return Ok(b.clone());
-        }
-        let bot = create_bot(self.chat_bot_type, self.config.clone())?;
-        bots.insert("chat".to_string(), bot.clone());
-        Ok(bot)
-    }
-
-    /// Non-agent chat completion (`Bridge.fetch_reply_content`).
+    /// Non-agent chat completion — always routed through rig.
     pub async fn fetch_reply_content(&self, query: &str, _context: Option<&Context>) -> Reply {
-        match self.get_chat_bot() {
-            Ok(bot) => match simple_bot_reply(bot.as_ref(), query).await {
-                Ok(reply) => reply,
-                Err(e) => Reply::error(e),
-            },
+        match run_simple_chat(self.config.as_ref(), query).await {
+            Ok(text) => Reply::text(text),
             Err(e) => Reply::error(e),
         }
     }
@@ -127,23 +105,4 @@ impl Bridge {
     pub fn agent_bridge(&self) -> Option<Arc<AgentBridge>> {
         self.agent_bridge.lock().expect("agent_bridge").clone()
     }
-}
-
-async fn simple_bot_reply(bot: &dyn OpenAICompatibleBot, query: &str) -> Result<Reply, String> {
-    let req = CallWithToolsRequest {
-        messages: vec![json!({"role": "user", "content": query})],
-        stream: false,
-        model: Some(bot.get_api_config().model),
-        ..Default::default()
-    };
-    let result = bot.call_with_tools(req).await.map_err(|e| e.to_string())?;
-    let LlmResult::Complete(body) = result else {
-        return Err("expected non-streaming response".into());
-    };
-    let content = body
-        .pointer("/choices/0/message/content")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
-    Ok(Reply::text(content))
 }

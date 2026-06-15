@@ -51,20 +51,20 @@
 
 ## 总表
 
-| 编号 | 优先级 | 主题                       | 当前问题                                                                       | 目标状态                                                              | 主要影响目录                                                                                  | 预估依赖 |
-| ---- | ------ | -------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
-| T01  | P0     | Rust 分层入口收口          | `cmd`、`context`、`services`、`utils` 的落点规则虽然有文档，但未形成一致执行面 | 所有新旧入口都能按固定心智模型归类                                    | `src-tauri/src/cmd`、`src-tauri/src/context`、`src-tauri/src/services`、`src-tauri/src/utils` | 无       |
-| T02  | P0     | `crates/agent` 历史层治理  | 与 `src/services/agent` 并存，形成双中心                                       | 明确该 crate 的保留范围、迁移范围、下线路径                           | `src-tauri/crates/agent`、`src-tauri/src/services/agent`                                      | T01      |
-| T03  | P0     | `crates/bridge` 历史层治理 | 与 `src/services/bridge` 并存，边界模糊                                        | 明确 bridge 仅保留基础设施或完全迁往 `services/bridge`                | `src-tauri/crates/bridge`、`src-tauri/src/services/bridge`                                    | T01      |
-| T04  | P0     | Python sidecar 应用层收口  | `channel_agent` 仍有应用编排与历史通用层残留                                   | Python 只保留 SDK 适配、RPC 骨架、脚本入口                            | `channel_agent/channel`、`channel_agent/bridge`、`channel_agent/common`                       | T01      |
-| T05  | P1     | Channel 运行态分层收口     | Channel 的状态、配置、控制逻辑分散                                             | 状态归 `context/channel`，纯逻辑归 `services` 或 `utils`              | `src-tauri/src/context/channel`、`src-tauri/src/utils/channel.rs`                             | T01、T04 |
-| T06  | P1     | Agent Runtime 门面化       | `context/agent_runtime` 可能直接依赖过多内部细节                               | 由少量应用服务门面承接运行时调用                                      | `src-tauri/src/context/agent_runtime`、`src-tauri/src/services/agent`                         | T02      |
-| T07  | P1     | `utils` 业务化治理         | 部分 `utils` 文件已接近领域服务                                                | 仅保留通用逻辑，领域逻辑迁入 `services`                               | `src-tauri/src/utils`                                                                         | T01、T02 |
-| T08  | P1     | Python 入口统一            | Python 相关调用已经集中到 `src/python`，但需进一步守住单入口规则               | 所有 Python 互操作只经 `src-tauri/src/python/*`                       | `src-tauri/src/python`、`src-tauri/src/services/agent`                                        | T04      |
-| T09  | P1     | TS 共享层职责收口          | `packages/shared`、`packages/ui`、`apps/*` 后续容易互相回流业务                | `shared` 只保留桥接与共享类型，`ui` 只保留组件壳，业务页面留在 `apps` | `packages/shared`、`packages/ui`、`apps/*`                                                    | 无       |
-| T10  | P2     | 依赖规则自动化             | 分层规则主要依赖人工遵守                                                       | 用依赖规则与 CI 阻断非法依赖                                          | `.dependency-cruiser.cjs`、`.github/workflows`                                                | T01-T09  |
-| T11  | P2     | 结构测试与契约校验         | 文档与代码之间缺少结构性回归检查                                               | 增加命令、事件、桥接与 Python 入口结构测试                            | `src-tauri`、`packages/shared`                                                                | T10      |
-| T12  | P2     | 新人导览与迁移看板         | 结构规则对熟悉项目的人清楚，对新同学仍陡峭                                     | 用导览文档和迁移看板降低认知成本                                      | `docs`、`plan`                                                                                | T01-T11  |
+| 编号 | 优先级 | 主题                           | 当前问题                                                                       | 目标状态                                                              | 主要影响目录                                                                                  | 预估依赖 |
+| ---- | ------ | ------------------------------ | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
+| T01  | P0     | Rust 分层入口收口              | `cmd`、`context`、`services`、`utils` 的落点规则虽然有文档，但未形成一致执行面 | 所有新旧入口都能按固定心智模型归类                                    | `src-tauri/src/cmd`、`src-tauri/src/context`、`src-tauri/src/services`、`src-tauri/src/utils` | 无       |
+| T02  | P0     | ~~`crates/agent` 历史层治理~~  | ~~与 `src/services/agent` 并存~~                                               | **已完成**：`crates/agent` 已删除，能力在 `src/services/agent`        | `src-tauri/src/services/agent`                                                                | T01      |
+| T03  | P0     | ~~`crates/bridge` 历史层治理~~ | ~~与 `src/services/bridge` 并存~~                                              | **已完成**：`crates/bridge` 已删除，能力在 `src/services/bridge`      | `src-tauri/src/services/bridge`                                                               | T01      |
+| T04  | P0     | Python sidecar 应用层收口      | `channel_agent` 仍有应用编排与历史通用层残留                                   | Python 只保留 SDK 适配、RPC 骨架、脚本入口                            | `channel_agent/channel`、`channel_agent/bridge`、`channel_agent/common`                       | T01      |
+| T05  | P1     | Channel 运行态分层收口         | Channel 的状态、配置、控制逻辑分散                                             | 状态归 `context/channel`，纯逻辑归 `services` 或 `utils`              | `src-tauri/src/context/channel`、`src-tauri/src/utils/channel.rs`                             | T01、T04 |
+| T06  | P1     | Agent Runtime 门面化           | `context/agent_runtime` 可能直接依赖过多内部细节                               | 由少量应用服务门面承接运行时调用                                      | `src-tauri/src/context/agent_runtime`、`src-tauri/src/services/agent`                         | T02      |
+| T07  | P1     | `utils` 业务化治理             | 部分 `utils` 文件已接近领域服务                                                | 仅保留通用逻辑，领域逻辑迁入 `services`                               | `src-tauri/src/utils`                                                                         | T01、T02 |
+| T08  | P1     | Python 入口统一                | Python 相关调用已经集中到 `src/python`，但需进一步守住单入口规则               | 所有 Python 互操作只经 `src-tauri/src/python/*`                       | `src-tauri/src/python`、`src-tauri/src/services/agent`                                        | T04      |
+| T09  | P1     | TS 共享层职责收口              | `packages/shared`、`packages/ui`、`apps/*` 后续容易互相回流业务                | `shared` 只保留桥接与共享类型，`ui` 只保留组件壳，业务页面留在 `apps` | `packages/shared`、`packages/ui`、`apps/*`                                                    | 无       |
+| T10  | P2     | 依赖规则自动化                 | 分层规则主要依赖人工遵守                                                       | 用依赖规则与 CI 阻断非法依赖                                          | `.dependency-cruiser.cjs`、`.github/workflows`                                                | T01-T09  |
+| T11  | P2     | 结构测试与契约校验             | 文档与代码之间缺少结构性回归检查                                               | 增加命令、事件、桥接与 Python 入口结构测试                            | `src-tauri`、`packages/shared`                                                                | T10      |
+| T12  | P2     | 新人导览与迁移看板             | 结构规则对熟悉项目的人清楚，对新同学仍陡峭                                     | 用导览文档和迁移看板降低认知成本                                      | `docs`、`plan`                                                                                | T01-T11  |
 
 ## 阶段附录
 
@@ -74,27 +74,29 @@
 
 - 已将桌面主流程中的 `crate::agent::*` 引用收口到 `crate::services::agent::*`
 - 已将桌面主流程中的 `crate::bridge::*` 引用收口到 `crate::services::bridge::*`
-- 已验证 `src-tauri` 主工程可通过 `cargo check -p tauri-app --features desktop,channel-wx,channel-wework`
+- **已删除** `src-tauri/crates/agent`、`crates/bridge`、`crates/models`、`crates/fs_io`、`crates/channel_runtime`、`crates/process_runtime`、`crates/cli`；对应能力迁入 `src/` 单 crate 模块（`services/`、`config/`、`io/`、`channel_runtime/`、`process_runtime/`、`cli/`）
+- 已验证 `src-tauri` 主工程可通过 `cargo check -p tauri-app --features desktop,channel-wework`
+- Python 互操作文档已明确：**Tauri sidecar + markitdown 子进程**，**不使用 PyO3**
 
 ### 仍待继续的 P0 动作
 
-- 为历史 `src-tauri/crates/agent` 与 `src-tauri/crates/bridge` 补充兼容层标识与退场约束
-- 对 `channel_agent/channel/channel_manager.py` 做职责裁边，拆出“必须留在 Python”与“应迁往 Rust”的逻辑清单
+- 对 `channel_agent/channel/channel_manager.py` 做职责裁边，拆出「必须留在 Python」与「应迁往 Rust」的逻辑清单
 - 对 `channel_agent/bridge/*` 与 `channel_agent/common/*` 建立逐文件迁移判断表
 
-### P0 收口结论
+### P0 收口结论（历史 `crates/` — 已下线）
 
-#### `src-tauri/crates/agent`
+#### `src-tauri/crates/agent` / `crates/bridge` / `crates/models` 等
 
-- 定位：历史兼容 crate，不再作为桌面主实现中心
-- 当前结论：桌面主流程已经收口到 `src-tauri/src/services/agent/*`
-- P0 约束：不再向该 crate 新增桌面应用编排逻辑
-
-#### `src-tauri/crates/bridge`
-
-- 定位：历史兼容 crate，不再作为桌面主实现中心
-- 当前结论：桌面主流程已经收口到 `src-tauri/src/services/bridge/*`
-- P0 约束：不再向该 crate 新增桌面运行时桥接逻辑
+- **状态**：目录已删除（2025–2026 结构收口）
+- **现行落点**：
+  - Agent → `src/services/agent/`（含 `rig` LLM 编排）
+  - Bridge → `src/services/bridge/`
+  - 配置与 Provider 契约 → `src/config/`
+  - 文件 IO → `src/io/`（`crate::fs_io`）
+  - 渠道消息规则 → `src/channel_runtime/`
+  - 子进程/RPC → `src/process_runtime/`
+  - CLI → `src/cli/` + `src/bin/sf.rs`
+- **约束**：不再恢复 `src-tauri/crates/*` 工作区成员；新代码按 `docs/rust-folder-structure.md` 落模块
 
 #### `channel_agent/channel/channel_manager.py`
 
@@ -111,10 +113,10 @@
 
 #### `channel_agent/bridge/*`
 
-| 对象         | P0 结论        | 后续方向                                      |
-| ------------ | -------------- | --------------------------------------------- |
-| `context.py` | 保留为兼容 DTO | 新逻辑进入 Rust `models` / `services::bridge` |
-| `reply.py`   | 保留为兼容 DTO | 新逻辑进入 Rust `models` / `services::bridge` |
+| 对象         | P0 结论        | 后续方向                                              |
+| ------------ | -------------- | ----------------------------------------------------- |
+| `context.py` | 保留为兼容 DTO | 新逻辑进入 Rust `config::bridge` / `services::bridge` |
+| `reply.py`   | 保留为兼容 DTO | 新逻辑进入 Rust `config::bridge` / `services::bridge` |
 
 #### `channel_agent/common/*`
 
@@ -167,44 +169,19 @@
   - `context` 方法能用“状态 + 广播 + 协调”解释其职责
 - `前置依赖`：无
 
-### P0-B `crates/` 历史层治理
+### P0-B `crates/` 历史层治理 — **已完成**
 
-#### 任务 P0-B1
+`src-tauri/crates/*` 已全部删除并迁入 `src/` 单 crate。下列任务仅作历史记录。
 
-- `任务编号`：P0-B1
-- `优先级`：P0
-- `对象`：`src-tauri/crates/agent`
-- `问题`：`crates/agent` 与 `src-tauri/src/services/agent` 同时存在，且文件结构高度镜像，说明迁移未收口。
-- `目标`：明确该 crate 是“保留为可复用基础能力”还是“整体退场”。
-- `动作`：
-  - 对照 `crates/agent/src/*` 与 `src/services/agent/*` 的重复模块
-  - 建立模块级归类表：`保留在 crate` / `迁入 services` / `已重复待删除`
-  - 优先核查 `knowledge`、`memory`、`prompt`、`protocol`、`skills`、`tools`、`utils`
-  - 对 `tests/*.rs` 标记其未来归属：跟随 crate 保留，或迁入新的服务层测试策略
-- `迁移去向`：
-  - 真正跨 CLI 与桌面共享的纯能力，可留在 crate
-  - 依赖桌面运行时、应用编排、状态协同的能力迁入 `src-tauri/src/services/agent`
-- `完成标准`：
-  - `crates/agent` 的存在理由可被一句话准确说明
-  - 不再允许“同名模块在 crate 和 services 长期双写”
-- `前置依赖`：P0-A1、P0-A2
+#### 任务 P0-B1（已完成）
 
-#### 任务 P0-B2
+- `对象`：~~`src-tauri/crates/agent`~~ → `src-tauri/src/services/agent`
+- `完成标准`：✅ 已达成
 
-- `任务编号`：P0-B2
-- `优先级`：P0
-- `对象`：`src-tauri/crates/bridge`
-- `问题`：`bridge` crate 与 `src/services/bridge` 并存，且包含 `agent_bridge`、`bot_router`、`config_sync` 等明显应用层语义。
-- `目标`：确认 `bridge` 是否还应作为 crate 存在。
-- `动作`：
-  - 审核 `src/lib.rs`、`agent_bridge.rs`、`agent_event_handler.rs`、`agent_initializer.rs`、`bot_router.rs`、`bridge.rs`、`config_sync.rs`、`context_params.rs`
-  - 区分哪些是纯协议/基础设施，哪些是桌面应用编排
-  - 若属于应用层，建立迁往 `src/services/bridge` 的逐文件迁移项
-- `迁移去向`：`src-tauri/src/services/bridge/*`
-- `完成标准`：
-  - `crates/bridge` 仅保留可独立复用的基础设施，或形成明确下线计划
-  - `services/bridge` 成为唯一业务桥接中心
-- `前置依赖`：P0-A1、P0-A2
+#### 任务 P0-B2（已完成）
+
+- `对象`：~~`src-tauri/crates/bridge`~~ → `src-tauri/src/services/bridge`
+- `完成标准`：✅ 已达成
 
 ### P0-C Python sidecar 瘦身
 
@@ -234,9 +211,9 @@
 - `目标`：如果仅是兼容 DTO，则保留最小形态；否则迁回 Rust。
 - `动作`：
   - 审查 `Context` 与 `Reply` 相关结构是否仍被 Rust 侧或 sidecar 运行所必需
-  - 若只是旧协议兼容，考虑在 Rust `models`/`services/bridge` 中建立唯一语义模型
+  - 若只是旧协议兼容，考虑在 Rust `config::bridge` / `services::bridge` 中建立唯一语义模型
   - 清点其调用方，决定是否进入退场列表
-- `迁移去向`：`src-tauri/crates/models` 或 `src-tauri/src/services/bridge/*`
+- `迁移去向`：`src-tauri/src/config/bridge/*` 或 `src-tauri/src/services/bridge/*`
 - `完成标准`：
   - `channel_agent/bridge/*` 的存在理由清晰
   - 不再作为 Python 应用层的扩展入口

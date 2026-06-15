@@ -2,8 +2,8 @@
 
 use std::sync::{Arc, Weak};
 
+use crate::process_runtime::InboundRpcHandler;
 use async_trait::async_trait;
-use process_runtime::InboundRpcHandler;
 use serde_json::{json, Value};
 use tokio::sync::Mutex;
 

@@ -1,6 +1,6 @@
-//! Build `models::Context` from sidecar `agent.reply` JSON params.
+//! Build `crate::config::Context` from sidecar `agent.reply` JSON params.
 
-use models::{Context, ContextType};
+use crate::config::{Context, ContextType};
 
 pub fn context_from_reply_params(params: &serde_json::Value) -> Context {
     let mut ctx = Context::default();

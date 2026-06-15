@@ -1,7 +1,8 @@
 //! OpenAI-compatible embedding providers (`agent/memory/embedding/provider.py`).
 
+use crate::config::ModelsConfig;
+use crate::utils::{build_reqwest_client, HttpProxySettings};
 use async_trait::async_trait;
-use models::{build_reqwest_client, HttpProxySettings, ModelsConfig};
 use serde_json::json;
 
 const EMBEDDING_HTTP_TIMEOUT_SECS: u64 = 90;
@@ -173,7 +174,7 @@ impl EmbeddingProvider for OpenAiEmbeddingProvider {
 pub fn create_embedding_provider(
     config: &ModelsConfig,
 ) -> Result<Option<std::sync::Arc<dyn EmbeddingProvider>>, String> {
-    let proxy = HttpProxySettings::from_models(config);
+    let proxy = HttpProxySettings::from_config(config);
     let explicit = config
         .embedding_provider
         .as_deref()

@@ -1,6 +1,13 @@
-pub mod services;
+pub mod io;
+pub use io as fs_io;
 
+pub mod channel_runtime;
+pub mod config;
+pub mod process_runtime;
+
+pub mod cli;
 pub mod python;
+pub mod services;
 
 #[cfg(feature = "desktop")]
 mod cmd;
@@ -10,10 +17,8 @@ mod context;
 pub mod contracts;
 #[cfg(feature = "desktop")]
 mod events;
-#[cfg(feature = "desktop")]
-mod utils;
+pub mod utils;
 
-pub use models;
 pub use services::agent;
 pub use services::bridge;
 

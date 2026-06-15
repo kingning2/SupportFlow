@@ -6,16 +6,16 @@
 
 ## 角色定位
 
-Python sidecar 只负责：
+Python 以**独立进程**运行（sidecar 或 markitdown 子进程），只负责：
 
 - `wx` / `wework` SDK 登录与回调
 - SDK 消息解析
 - SDK 消息发送
 - SDK 媒体下载与必要格式转换
-- `rust_ipc` 双向通信
-- `markitdown` 文档转 Markdown
+- `rust_ipc` 双向通信（仅 sidecar）
+- `markitdown` 文档转 Markdown（仅 `scripts/markitdown_convert.py`，由 Rust 子进程调用）
 
-Python sidecar 不负责：
+Python **不负责**：
 
 - 应用编排
 - 前端 API 路由
@@ -24,12 +24,19 @@ Python sidecar 不负责：
 - 模型提供商逻辑
 - 调度、任务、工作流
 
+## 与 Rust 的边界
+
+1. 需要持久化、跨 Webview 共享或前端可见的状态，必须在 Rust 落地，Python 只上报事件或响应 RPC。
+2. sidecar 通过 `rust_ipc.notify_rust` / `call_rust` 与 Rust 通信；不得在 Python 内直接调用 Tauri 或写桌面配置。
+3. `markitdown_convert.py` 从 stdin/argv 读入、向 stdout 输出；不依赖 sidecar 进程已启动。
+4. 不为「减少进程数」引入 PyO3 或把 markitdown 并入 sidecar 主入口。
+
 ## 代码规范
 
 1. 能放 Rust 的逻辑，不放 Python。
-2. 能删除的中间层就删除，不保留“以后可能还会用”的抽象。
+2. 能删除的中间层就删除，不保留「以后可能还会用」的抽象。
 3. 一个模块如果只被一个地方使用，优先内联。
-4. 不新增与渠道无关的“通用框架层”。
+4. 不新增与渠道无关的「通用框架层」。
 5. 不新增测试脚本、复现脚本、旧控制台路由脚本。
 6. 不新增旧渠道兼容代码，只允许保留 `wx` 与 `wework`。
 
@@ -46,17 +53,14 @@ Python sidecar 不负责：
 ## 函数与类
 
 1. 关键函数必须写中文文档注释。
-2. 文档注释至少说明：
-   - 功能
-   - 关键参数
-   - 返回值
+2. 文档注释至少说明：功能、关键参数、返回值。
 3. 小型辅助函数可以不写长注释，但命名必须清晰。
 4. 类职责必须单一，不允许一个类同时承担 SDK 适配和应用编排。
 
 ## 错误处理
 
 1. SDK 调用失败时，要返回可诊断的错误信息。
-2. 不要静默吞掉异常，除非明确是“尽力而为”的状态通知。
+2. 不要静默吞掉异常，除非明确是「尽力而为」的状态通知。
 3. 日志优先输出事实，不输出空泛语句。
 
 ## 风格要求

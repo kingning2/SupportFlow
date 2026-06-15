@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
-use models::ModelsConfig;
+use crate::config::ModelsConfig;
 use tracing::{info, warn};
 
 const ENV_FILE: &str = ".supportflow/.env";

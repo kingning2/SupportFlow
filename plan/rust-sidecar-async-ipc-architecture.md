@@ -106,9 +106,9 @@ Rust 必须始终把 Python 看成一个可以重启、可以超时、可以替�
 
 `context/` 是 Rust 管理 Python sidecar 的核心层。所有 Rust 与 Python 的通信，都只允许收口在这里。
 
-#### `channel_python_sidecar`
+#### `python::sidecar` + `process_runtime`
 
-它是异步多进程 RPC 客户端层，负责：
+异步多进程 RPC 客户端层（实现位于 `src/python/sidecar/` + `src/process_runtime/`），负责：
 
 - 持有 sidecar 进程句柄
 - 持有 `stdin` / `stdout` / `stderr`
@@ -145,7 +145,7 @@ Rust 必须始终把 Python 看成一个可以重启、可以超时、可以替�
 
 推荐规则：
 
-- 单次 RPC 超时放在 `channel_python_sidecar`
+- 单次 RPC 超时放在 `process_runtime::StdioJsonRpcRuntime` / `python::sidecar`
 - 是否重试、何时重试、何时回退放在 `channel_runtime`
 - 不要让前端或 `cmd/` 知道 sidecar 重试细节
 
@@ -186,17 +186,18 @@ Rust 必须始终把 Python 看成一个可以重启、可以超时、可以替�
 
 前端永远只订阅 Rust 定义的 event。
 
-### `crates/*`
+### `services/` 与 `config/`
 
-真正的核心能力放在 Rust crates 中，例如：
+真正的核心能力放在 Rust `src/services/` 与相关模块中，例如：
 
-- AI 对话
-- 知识库
-- 媒体处理
-- 消息加工
-- 富文本处理
+- AI 对话（`services/agent/rig`）
+- 知识库（`services/agent/knowledge`）
+- 媒体处理、消息加工（Agent 工具链）
+- 配置与 Provider 契约（`config/`）
 
 Python 收到渠道消息后，只允许回调 Rust 请求这些能力，不能在 sidecar 内重新长出 AI 编排层。
+
+**不使用 PyO3**：Python 始终以独立 sidecar 或单次脚本子进程运行。
 
 ## 多进程通信模型
 
@@ -416,14 +417,12 @@ Python 收到渠道消息后，只允许回调 Rust 请求这些能力，不能�
 
 这份文档只引用以下关键锚点：
 
-- `src-tauri/src/context/channel_python_sidecar.rs`
-  - 异步多进程 RPC 客户端层
-- `src-tauri/src/context/channel_runtime.rs`
-  - 动作编排与后台任务层
-- `src-tauri/src/context/channel_status.rs`
-  - Rust 本地状态真相层
-- `src-tauri/src/context/channel_console_api.rs`
-  - 前端领域接口翻译层
+- `src-tauri/src/python/sidecar/` + `src-tauri/src/process_runtime/`
+  - 异步多进程 RPC 客户端层（`ChannelPythonSidecar`、`StdioJsonRpcRuntime`）
+- `src-tauri/src/context/channel/`
+  - 动作编排、状态快照、控制台 API（如 `bridge.rs`、`status.rs`、`console_api.rs`）
+- `src-tauri/src/context/agent_runtime/`
+  - sidecar 延迟启动与运行时协调
 
 ## 未来演进方向
 

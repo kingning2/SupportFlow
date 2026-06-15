@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crate::context::channel::ChannelBridge;
-use crate::context::workspace_console;
+use crate::services::agent::workspace;
 use crate::services::agent::McpToolLoader;
 use tauri::AppHandle;
 use tokio::sync::Mutex;
@@ -36,7 +36,7 @@ impl AgentRuntime {
         let mcp_loader = McpToolLoader::new(workspace.clone());
         mcp_loader.ensure_background_load();
         let session_id = format!("session_{}", uuid::Uuid::new_v4());
-        let _ = workspace_console::upsert_session_index(&workspace, &session_id, Some("New Chat"));
+        let _ = workspace::upsert_session_index(&workspace, &session_id, Some("New Chat"));
         let channel_bridge = Arc::new(ChannelBridge::new());
         let _ = channel_bridge.sync_from_config_file(&config_path);
         let bridge_stack = build_bridge_stack(workspace.clone(), &config, mcp_loader.clone());

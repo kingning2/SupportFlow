@@ -5,77 +5,18 @@ use std::sync::{Arc, Mutex};
 use serde_json::{json, Value};
 use tracing::{info, warn};
 
-use crate::services::agent::prompt::build_agent_system_prompt;
-use crate::services::agent::protocol::cancel::CancelHandle;
-use crate::services::agent::protocol::result::{
-    AgentAction, AgentActionType, ToolResult as CapturedToolResult,
+use crate::config::ModelsConfig;
+use crate::services::agent::context::build_agent_system_prompt;
+use crate::services::agent::protocol::{
+    AgentAction, AgentActionType, AgentEventCallback, CancelHandle, LlmBridgeConfig,
+    RunStreamError, ToolResult as CapturedToolResult,
 };
-use crate::services::agent::protocol::stream::{
-    AgentEventCallback, AgentStreamExecutor, AgentStreamExecutorInit, AgentStreamHost,
-    LlmBridgeConfig, LlmModel, RunStreamError,
-};
-use crate::services::agent::protocol::tokens::{context_reserve_tokens, model_context_window};
+use crate::services::agent::rig::RigRunParams;
 use crate::services::agent::skills::SkillManager;
 use crate::services::agent::tools::{
     load_builtin_tools, AgentTool, McpToolLoader, McpToolRegistry, ToolManagerConfig,
     ToolRunResult, ToolStage,
 };
-
-const DEFAULT_MAX_CONTEXT_TURNS: u32 = 20;
-
-type ClearSessionCallback = Arc<dyn Fn() + Send + Sync>;
-type MemoryFlushCallback = Arc<dyn Fn(&[Value], &str) + Send + Sync>;
-
-/// Host bridge from [`Agent`] into [`AgentStreamExecutor`].
-struct AgentHostBridge {
-    model_name: String,
-    max_context_tokens: Option<u32>,
-    context_reserve_tokens: Option<u32>,
-    session_id: Option<String>,
-    on_clear_session: Option<ClearSessionCallback>,
-    on_memory_flush: Option<MemoryFlushCallback>,
-}
-
-impl AgentStreamHost for AgentHostBridge {
-    fn flush_memory_overflow(&self, messages: &[Value]) {
-        if let Some(cb) = &self.on_memory_flush {
-            cb(messages, "overflow");
-        }
-    }
-
-    fn clear_session_db(&self) {
-        if let Some(cb) = &self.on_clear_session {
-            cb();
-        } else if let Some(ref sid) = self.session_id {
-            info!(session_id = %sid, "clear_session_db (no store wired yet)");
-        }
-    }
-
-    fn context_window_tokens(&self) -> u32 {
-        model_context_window(&self.model_name)
-    }
-
-    fn max_context_tokens(&self) -> Option<u32> {
-        self.max_context_tokens.or_else(|| {
-            let window = self.context_window_tokens();
-            let reserve = self
-                .context_reserve_tokens
-                .unwrap_or_else(|| context_reserve_tokens(window, None));
-            Some(window.saturating_sub(reserve))
-        })
-    }
-
-    fn memory_flush_on_trim(
-        &self,
-        discarded_messages: &[Value],
-        reason: &str,
-        _discarded_turn_count: usize,
-    ) {
-        if let Some(cb) = &self.on_memory_flush {
-            cb(discarded_messages, reason);
-        }
-    }
-}
 
 #[derive(Default)]
 /// Options for [`Agent::run_stream`].
@@ -91,13 +32,9 @@ pub struct Agent {
     pub name: String,
     pub system_prompt: String,
     pub description: String,
-    pub model: Option<Arc<dyn LlmModel>>,
     pub bridge: LlmBridgeConfig,
     pub tools: Vec<Arc<dyn AgentTool>>,
     pub max_steps: u32,
-    pub max_context_tokens: Option<u32>,
-    pub context_reserve_tokens: Option<u32>,
-    pub max_context_turns: u32,
     pub messages: Mutex<Vec<Value>>,
     pub captured_actions: Mutex<Vec<AgentAction>>,
     pub workspace_dir: Option<std::path::PathBuf>,
@@ -108,22 +45,19 @@ pub struct Agent {
     pub skill_manager: Mutex<Option<SkillManager>>,
     pub mcp_registry: Option<Arc<McpToolRegistry>>,
     pub mcp_loader: Option<Arc<McpToolLoader>>,
+    pub models_config: Option<Arc<ModelsConfig>>,
     /// Messages added in the last `run_stream` call.
     pub last_run_new_messages: Mutex<Vec<Value>>,
-    /// Files queued for channel send (from stream executor).
+    /// Files queued for channel send (from send tool).
     pub files_to_send: Mutex<Vec<Value>>,
 }
 
 impl Agent {
-    pub fn new(
-        system_prompt: impl Into<String>,
-        model: Arc<dyn LlmModel>,
-        bridge: LlmBridgeConfig,
-    ) -> Self {
+    /// 使用默认工具配置创建 Agent。
+    pub fn new(system_prompt: impl Into<String>, bridge: LlmBridgeConfig) -> Self {
         let workspace_dir = std::env::current_dir().ok();
         Self::with_tool_config(
             system_prompt,
-            model,
             bridge,
             ToolManagerConfig {
                 workspace_dir: workspace_dir.clone(),
@@ -132,10 +66,9 @@ impl Agent {
         )
     }
 
-    /// Construct agent with explicit workspace/tool configuration (memory backend, etc.).
+    /// 构造 Agent，并加载内置工具、Skills 与 MCP loader。
     pub fn with_tool_config(
         system_prompt: impl Into<String>,
-        model: Arc<dyn LlmModel>,
         bridge: LlmBridgeConfig,
         tool_config: ToolManagerConfig,
     ) -> Self {
@@ -156,13 +89,9 @@ impl Agent {
             name: "Agent".into(),
             system_prompt: system_prompt.into(),
             description: "AI Agent".into(),
-            model: Some(model),
             bridge,
             tools,
             max_steps: 100,
-            max_context_tokens: None,
-            context_reserve_tokens: None,
-            max_context_turns: DEFAULT_MAX_CONTEXT_TURNS,
             messages: Mutex::new(Vec::new()),
             captured_actions: Mutex::new(Vec::new()),
             workspace_dir,
@@ -173,6 +102,7 @@ impl Agent {
             skill_manager: Mutex::new(skill_manager),
             mcp_registry,
             mcp_loader,
+            models_config: tool_config.models_config.clone(),
             last_run_new_messages: Mutex::new(Vec::new()),
             files_to_send: Mutex::new(Vec::new()),
         }
@@ -213,16 +143,6 @@ impl Agent {
             .and_then(|sm| sm.get_skill(name).cloned())
     }
 
-    pub fn with_llm_model(
-        system_prompt: impl Into<String>,
-        model: Arc<dyn LlmModel>,
-        bridge: LlmBridgeConfig,
-    ) -> Self {
-        let mut agent = Self::new(system_prompt, model, bridge);
-        agent.tools.clear();
-        agent
-    }
-
     pub fn add_tool(&mut self, tool: Arc<dyn AgentTool>) {
         self.tools.push(tool);
     }
@@ -240,7 +160,7 @@ impl Agent {
         };
 
         let tools: Vec<Arc<dyn AgentTool>> = self.tools.clone();
-        let runtime_model = self.model.as_ref().map(|m| m.model_name());
+        let runtime_model = Some(self.bridge.model.as_str());
 
         let built = {
             let mut guard = self.skill_manager.lock().expect("skill_manager");
@@ -278,10 +198,10 @@ impl Agent {
             loader.refresh_if_changed();
         }
 
-        let model = self
-            .model
+        let config = self
+            .models_config
             .as_ref()
-            .ok_or_else(|| RunStreamError::Other("No model available for agent".into()))?;
+            .ok_or_else(|| RunStreamError::Other("No models config for agent".into()))?;
 
         let full_system_prompt = self.get_full_system_prompt(options.skill_filter);
 
@@ -290,56 +210,39 @@ impl Agent {
             (guard.clone(), guard.len())
         };
 
-        let model_name = model.model_name().to_string();
-        let host: Arc<dyn AgentStreamHost> = Arc::new(AgentHostBridge {
-            model_name,
-            max_context_tokens: self.max_context_tokens,
-            context_reserve_tokens: self.context_reserve_tokens,
-            session_id: self.session_id.clone(),
-            on_clear_session: None,
-            on_memory_flush: None,
-        });
+        let tools_map = self
+            .tools
+            .iter()
+            .map(|t| (t.name().to_string(), t.clone()))
+            .collect();
 
-        let tool_arcs: Vec<Arc<dyn AgentTool>> = self.tools.clone();
-
-        let mut executor = AgentStreamExecutor::new(AgentStreamExecutorInit {
-            model: model.clone(),
-            bridge: self.bridge.clone(),
+        let output = crate::services::agent::rig::run_rig_stream(RigRunParams {
+            config: config.as_ref(),
+            bridge: &self.bridge,
             system_prompt: full_system_prompt,
-            tools: tool_arcs,
+            user_message: user_message.to_string(),
             messages: messages_copy,
-            max_turns: self.max_steps,
-            max_context_turns: self.max_context_turns,
+            tools: tools_map,
+            max_steps: self.max_steps,
             on_event: options.on_event,
             cancel: options.cancel,
-            host: Some(host),
-        });
-        executor.mcp_registry = self.mcp_registry.clone();
-
-        let response = match executor.run_stream(user_message).await {
-            Ok(r) => r,
-            Err(e) => {
-                if executor.messages.is_empty() {
-                    self.messages.lock().expect("messages").clear();
-                    info!("Cleared Agent message history after executor recovery");
-                }
-                return Err(e);
-            }
-        };
+            mcp_registry: self.mcp_registry.clone(),
+        })
+        .await?;
 
         {
             let mut guard = self.messages.lock().expect("messages");
-            *guard = executor.messages.clone();
-            let trim_adjusted_start = original_length.min(executor.messages.len());
+            *guard = output.messages.clone();
+            let trim_adjusted_start = original_length.min(output.messages.len());
             *self.last_run_new_messages.lock().expect("last_run") =
-                executor.messages[trim_adjusted_start..].to_vec();
+                output.messages[trim_adjusted_start..].to_vec();
         }
 
-        *self.files_to_send.lock().expect("files") = executor.files_to_send.clone();
+        *self.files_to_send.lock().expect("files") = output.files_to_send.clone();
 
         self.execute_post_process_tools().await;
 
-        Ok(response)
+        Ok(output.response)
     }
 
     async fn execute_post_process_tools(&self) {

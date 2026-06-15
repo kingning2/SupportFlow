@@ -139,18 +139,19 @@ SUPPORT_FLOW_WORKSPACE=D:/path/to/your-workspace
 
 ## 技术栈
 
-| 部分   | 技术                                               |
-| ------ | -------------------------------------------------- |
-| 桌面   | Tauri 2                                            |
-| 界面   | Next.js、React、TypeScript、shadcn/ui、AI Elements |
-| Agent  | Rust（`src-tauri/crates/agent`）                   |
-| 模型层 | Rust（`src-tauri/crates/models`）                  |
+| 部分           | 技术                                                    |
+| -------------- | ------------------------------------------------------- |
+| 桌面           | Tauri 2                                                 |
+| 界面           | Next.js、React、TypeScript、shadcn/ui、AI Elements      |
+| Agent          | Rust（`src-tauri/src/services/agent`，`rig-core` 编排） |
+| 配置与模型契约 | Rust（`src-tauri/src/config`）                          |
+| 渠道 SDK       | Python sidecar（`channel_agent/`，stdio RPC）           |
 
 ---
 
 ## 参与开发
 
-架构约定与 IPC 说明见 [`AGENTS.md`](./AGENTS.md)、[`docs/agent-console.md`](./docs/agent-console.md)、[`docs/development-rules/README.md`](./docs/development-rules/README.md)。
+架构约定与 IPC 说明见 [`AGENTS.md`](./AGENTS.md) 与 [`docs/`](./docs/) 下各语言架构文档（`rust-*`、`python-*`、`ts-*`）。
 
 ```bash
 pnpm run check

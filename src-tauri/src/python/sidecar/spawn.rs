@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use super::handler::ChannelInboundHandler;
 use super::ChannelPythonSidecar;
-use process_runtime::{
+use crate::process_runtime::{
     resolve_exe_from_env, CommandSpec, LaunchMode, ProcessSharedContext, StdioJsonRpcConfig,
     StdioJsonRpcRuntime,
 };

@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use models::ModelsConfig;
+use crate::config::ModelsConfig;
 
 use crate::services::agent::tools::bash::{BashConfig, BashTool};
 use crate::services::agent::tools::browser::BrowserTool;

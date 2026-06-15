@@ -1,23 +1,20 @@
-//! 工作区知识库与会话列表（委托 workspace_console）。
+//! 工作区知识库与会话列表（委托 `services::agent::workspace`）。
 
 use std::sync::Arc;
 
 use tauri::AppHandle;
 
-use crate::context::workspace_console;
-use crate::services::agent::AgentWorkspaceService;
+use crate::services::agent::workspace::{self, AgentWorkspaceService};
 
 use super::AgentRuntime;
 
 impl AgentRuntime {
-    pub async fn list_sessions(&self) -> Result<Vec<workspace_console::SessionRow>, String> {
+    pub async fn list_sessions(&self) -> Result<Vec<workspace::SessionRow>, String> {
         let current = self.session_id().await;
         AgentWorkspaceService::new(&self.workspace).list_sessions(Some(&current))
     }
 
-    pub async fn list_knowledge_files(
-        &self,
-    ) -> Result<Vec<workspace_console::KnowledgeFileRow>, String> {
+    pub async fn list_knowledge_files(&self) -> Result<Vec<workspace::KnowledgeFileRow>, String> {
         AgentWorkspaceService::new(&self.workspace).list_knowledge_files()
     }
 
@@ -25,7 +22,7 @@ impl AgentRuntime {
         AgentWorkspaceService::new(&self.workspace).read_knowledge_file(path)
     }
 
-    pub async fn knowledge_graph(&self) -> Result<workspace_console::KnowledgeGraphData, String> {
+    pub async fn knowledge_graph(&self) -> Result<workspace::KnowledgeGraphData, String> {
         AgentWorkspaceService::new(&self.workspace).knowledge_graph()
     }
 
@@ -55,7 +52,7 @@ impl AgentRuntime {
             .await
     }
 
-    pub async fn list_channels(&self) -> Result<Vec<workspace_console::ChannelRow>, String> {
+    pub async fn list_channels(&self) -> Result<Vec<workspace::ChannelRow>, String> {
         AgentWorkspaceService::new(&self.workspace).list_channels(&self.config_path)
     }
 

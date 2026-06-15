@@ -4,4 +4,3 @@ pub mod channel;
 pub mod license_store;
 #[cfg(feature = "desktop")]
 pub mod process_hub;
-pub mod workspace_console;

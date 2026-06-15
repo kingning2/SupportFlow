@@ -1,10 +1,10 @@
-﻿//! `agent/tools/browser/browser_tool.py` — AI-facing browser tool (Rust CDP).
+//! `agent/tools/browser/browser_tool.py` — AI-facing browser tool (Rust CDP).
 
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::config::ModelsConfig;
 use async_trait::async_trait;
-use models::ModelsConfig;
 use serde_json::{json, Value};
 
 use crate::services::agent::tools::base_tool::{AgentTool, ToolRunResult};

@@ -4,11 +4,11 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::config::{Context, Reply, ReplyType};
 use crate::services::agent::{
     conversation_store_for_workspace, get_cancel_registry, persist_agent_run, Agent,
     AgentEventCallback, CancelHandle, McpToolLoader, RunStreamOptions,
 };
-use models::{Context, Reply, ReplyType};
 use serde_json::Value;
 use tracing::{error, info};
 
@@ -20,7 +20,7 @@ use super::bridge_runtime::Bridge;
 pub struct AgentBridge {
     pub bridge: Arc<Bridge>,
     workspace: PathBuf,
-    config: Arc<models::ModelsConfig>,
+    config: Arc<crate::config::ModelsConfig>,
     mcp_loader: Arc<McpToolLoader>,
     agents: std::sync::Mutex<HashMap<String, Arc<Agent>>>,
     default_agent: std::sync::Mutex<Option<Arc<Agent>>>,
@@ -30,7 +30,7 @@ impl AgentBridge {
     pub fn new(
         bridge: Arc<Bridge>,
         workspace: PathBuf,
-        config: Arc<models::ModelsConfig>,
+        config: Arc<crate::config::ModelsConfig>,
         mcp_loader: Arc<McpToolLoader>,
     ) -> Arc<Self> {
         Arc::new(Self {

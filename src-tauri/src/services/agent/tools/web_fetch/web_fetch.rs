@@ -3,9 +3,9 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
+use crate::config::ModelsConfig;
 use async_trait::async_trait;
 use futures_util::StreamExt;
-use models::ModelsConfig;
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use serde_json::{json, Value};
 use tracing::info;
@@ -20,9 +20,7 @@ use crate::services::agent::tools::web_fetch::document::{
 use crate::services::agent::tools::web_fetch::html::{
     decode_bytes, detect_encoding, extract_text, extract_title,
 };
-use crate::services::agent::utils::{
-    build_reqwest_client, log_http_proxy_settings, HttpProxySettings,
-};
+use crate::utils::http_proxy::{build_reqwest_client, log_http_proxy_settings, HttpProxySettings};
 
 const DEFAULT_TIMEOUT_SECS: u64 = 30;
 const USER_AGENT_STR: &str =
@@ -39,7 +37,7 @@ impl WebFetchTool {
     }
 
     pub fn with_models_config(cwd: PathBuf, config: &ModelsConfig) -> Self {
-        let proxy = HttpProxySettings::from_models(config);
+        let proxy = HttpProxySettings::from_config(config);
         log_http_proxy_settings(&proxy);
         Self::with_proxy(cwd, &proxy)
     }

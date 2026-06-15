@@ -2,17 +2,17 @@
 
 use std::sync::Arc;
 
-use models::catalog::provider_configured;
-use models::provider_catalog::{
+use crate::config::catalog::provider_configured;
+use crate::config::provider_catalog::{
     build_provider_details, find_provider_meta as find_provider_meta_detail,
 };
-use models::{list_providers, ModelsConfig};
+use crate::config::{list_providers, ModelsConfig};
 use tauri::AppHandle;
 
-use crate::context::workspace_console;
 use crate::events::payloads::{
     AgentConsoleState, ModelProviderDetail, ModelProviderItem, SkillDetail, SkillItem, ToolItem,
 };
+use crate::services::agent::workspace;
 use crate::services::agent::{AgentConsoleService, InstallSkillResult};
 
 use super::helpers::{skill_to_detail, skill_to_item};
@@ -60,11 +60,11 @@ impl AgentRuntime {
                     .into_iter()
                     .map(|e| skill_to_item(&e))
                     .collect();
-                let model_name = agent
-                    .model
-                    .as_ref()
-                    .map(|m| m.model_name().to_string())
-                    .unwrap_or_else(|| config_model_fallback.clone());
+                let model_name = if agent.bridge.model.is_empty() {
+                    config_model_fallback.clone()
+                } else {
+                    agent.bridge.model.clone()
+                };
                 (model_name, tools, skills)
             })
             .await?;
@@ -133,11 +133,8 @@ impl AgentRuntime {
         };
         let session_id_for_index = self.session_id().await;
         let workspace = self.workspace.clone();
-        let _ = workspace_console::upsert_session_index(
-            &workspace,
-            &session_id_for_index,
-            Some(&title_hint),
-        );
+        let _ =
+            workspace::upsert_session_index(&workspace, &session_id_for_index, Some(&title_hint));
 
         self.ensure_agent().await?;
         let session_id = self.session_id().await;

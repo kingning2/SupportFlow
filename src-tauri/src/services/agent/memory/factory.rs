@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use models::ModelsConfig;
+use crate::config::ModelsConfig;
 
 use super::config::MemoryConfig;
 use super::embedding::create_embedding_provider;

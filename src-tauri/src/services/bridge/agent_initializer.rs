@@ -3,14 +3,13 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::config::ModelsConfig;
 use crate::services::agent::{
-    build_agent_system_prompt, create_memory_manager, restore_agent_messages, Agent, BotLlmModel,
+    build_agent_system_prompt, create_memory_manager, restore_agent_messages, Agent,
     LlmBridgeConfig, McpToolLoader, ToolManagerConfig,
 };
-use models::{create_bot, ModelsConfig};
 use tracing::info;
 
-use super::bot_router::resolve_bot_type;
 use super::config_sync::{load_dotenv_into_process, sync_config_to_dotenv_logged};
 
 pub struct AgentInitOptions {
@@ -25,6 +24,7 @@ pub struct AgentInitOptions {
 pub struct AgentInitializer;
 
 impl AgentInitializer {
+    /// 初始化桌面 Agent：加载工具、MCP、会话历史，并绑定 rig 运行时配置。
     pub fn initialize(opts: AgentInitOptions) -> Result<Agent, String> {
         sync_config_to_dotenv_logged(&opts.config);
         load_dotenv_into_process();
@@ -34,8 +34,6 @@ impl AgentInitializer {
             create_memory_manager(opts.workspace.clone(), &opts.config, enable_knowledge)?;
 
         let config_arc = opts.config.clone();
-        let bot_type = resolve_bot_type(&opts.config)?;
-        let bot = create_bot(bot_type, config_arc.clone())?;
         let model_name = opts.config.model_or("deepseek-chat");
 
         let bridge_cfg = LlmBridgeConfig {
@@ -46,14 +44,10 @@ impl AgentInitializer {
             session_id: opts.session_id.clone(),
         };
 
-        let model = Arc::new(BotLlmModel::new(bot, bridge_cfg.clone()));
-
         let max_steps = opts.config.agent_max_steps.unwrap_or(20);
-        let max_context_tokens = opts.config.agent_max_context_tokens;
 
         let mut agent = Agent::with_tool_config(
             "You are SupportFlow, a helpful desktop assistant.",
-            model,
             bridge_cfg,
             ToolManagerConfig {
                 workspace_dir: Some(opts.workspace.clone()),
@@ -65,7 +59,6 @@ impl AgentInitializer {
         );
 
         agent.max_steps = max_steps;
-        agent.max_context_tokens = max_context_tokens;
         agent.workspace_dir = Some(opts.workspace.clone());
         agent.session_id = opts.session_id.clone();
         agent.mcp_registry = Some(opts.mcp_loader.registry.clone());
@@ -78,7 +71,7 @@ impl AgentInitializer {
             None,
             true,
             enable_knowledge,
-            agent.model.as_ref().map(|m| m.model_name()),
+            Some(model_name.as_str()),
         );
         if !full_prompt.trim().is_empty() {
             agent.system_prompt = full_prompt;

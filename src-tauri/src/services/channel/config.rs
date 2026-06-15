@@ -25,14 +25,14 @@ fn channel_field_defs(channel: &str) -> Option<&'static [(&'static str, &'static
 }
 
 fn root_object(path: &std::path::Path) -> Result<Map<String, Value>, String> {
-    let root = models::provider_catalog::read_config_root(path)?;
+    let root = crate::config::provider_catalog::read_config_root(path)?;
     root.as_object()
         .cloned()
         .ok_or_else(|| "config root must be a JSON object".to_string())
 }
 
 fn write_root(path: &std::path::Path, root: Map<String, Value>) -> Result<(), String> {
-    models::provider_catalog::write_config_root(path, &Value::Object(root))
+    crate::config::provider_catalog::write_config_root(path, &Value::Object(root))
 }
 
 fn parse_channel_type(root: &Map<String, Value>) -> Vec<String> {

@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use crate::context::workspace_console;
 use crate::events::payloads::AgentStreamChunk;
+use crate::services::agent::workspace;
 use crate::services::agent::{Agent, AgentEvent};
 
 use super::AgentRuntime;
@@ -18,7 +18,7 @@ impl AgentRuntime {
     pub async fn new_session(&self) -> String {
         let id = format!("session_{}", uuid::Uuid::new_v4());
         *self.session_id.lock().await = id.clone();
-        let _ = workspace_console::upsert_session_index(&self.workspace, &id, Some("New Chat"));
+        let _ = workspace::upsert_session_index(&self.workspace, &id, Some("New Chat"));
         self.bridge_stack
             .write()
             .await

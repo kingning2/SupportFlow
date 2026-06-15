@@ -329,7 +329,7 @@ fn append_log(knowledge_dir: &Path, rel_path: &str, original_name: &str) -> Resu
 /// Re-index `knowledge/*.md` for `memory_search` after ingest.
 pub async fn trigger_memory_sync(
     workspace_root: &Path,
-    models_config: &models::ModelsConfig,
+    models_config: &crate::config::ModelsConfig,
 ) -> bool {
     let enable_knowledge = models_config.knowledge.unwrap_or(true);
     if !enable_knowledge {

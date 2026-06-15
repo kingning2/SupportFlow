@@ -257,7 +257,7 @@ impl KnowledgeService {
         category: &str,
         sync_memory: bool,
         knowledge_enabled: bool,
-        models_config: &models::ModelsConfig,
+        models_config: &crate::config::ModelsConfig,
     ) -> Result<IngestBatchResult, String> {
         if files.is_empty() {
             return Err("no files provided".into());

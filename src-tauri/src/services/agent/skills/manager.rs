@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 
 use tracing::{debug, warn};
 
-use super::formatter::format_skills_for_prompt;
 use super::loader::SkillLoader;
 use super::types::{Skill, SkillEntry};
+use crate::services::agent::context::format_skills_for_prompt;
 
 pub struct SkillManager {
     pub builtin_dir: PathBuf,

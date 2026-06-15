@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
+use crate::config::Context;
 use crate::services::agent::AgentEvent;
-use models::Context;
 use tracing::debug;
 
 const WEIXIN_THINKING_INSTANT_MAX: usize = 7;

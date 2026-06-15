@@ -1,9 +1,9 @@
-﻿//! Browser tool settings (`tools.browser` in config.json).
+//! Browser tool settings (`tools.browser` in config.json).
 
 use std::path::{Path, PathBuf};
 
+use crate::config::ModelsConfig;
 use chromiumoxide::detection::{default_executable, DetectionOptions};
-use models::ModelsConfig;
 
 use crate::services::agent::tools::utils::path::expand_path;
 

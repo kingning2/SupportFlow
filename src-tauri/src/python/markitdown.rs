@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use process_runtime::{run_sync, CommandSpec, ProcessSharedContext};
+use crate::process_runtime::{run_sync, CommandSpec, ProcessSharedContext};
 
 use crate::python::paths;
 
