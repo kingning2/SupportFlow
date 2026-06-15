@@ -4,7 +4,7 @@
 | ---------- | --------------- |
 | ID         | T002            |
 | Priority   | P0              |
-| Status     | pending         |
+| Status     | completed       |
 | Depends on | T001            |
 | Blocks     | T003            |
 | Milestone  | M1 Workflow MVP |
@@ -22,9 +22,9 @@
 
 ## Acceptance criteria
 
-- [ ] Schema + migration 脚本或 `CREATE TABLE IF NOT EXISTS`
-- [ ] 单元测试：创建 run → 写入 step → 重启后 load 一致
-- [ ] 文档记录 DB 路径与备份策略
+- [x] Schema + migration 脚本或 `CREATE TABLE IF NOT EXISTS`
+- [x] 单元测试：创建 run → 写入 step → 重启后 load 一致
+- [x] 文档记录 DB 路径与备份策略
 
 ## Key files
 

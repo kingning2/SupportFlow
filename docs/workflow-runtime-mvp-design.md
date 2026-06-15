@@ -125,6 +125,22 @@ src-tauri/src/services/workflow/
 
 建议存储路径：`{workspace}/.workflow/runs/{run_id}.json`（MVP），后续可迁 SQLite。
 
+## 持久化实现（T002）
+
+| 项               | 值                                                                        |
+| ---------------- | ------------------------------------------------------------------------- |
+| **数据库路径**   | `{workspace}/workflow/runs.db`                                            |
+| **与会话库关系** | 独立 SQLite，**不**共用 `memory/long-term/index.db`                       |
+| **表**           | `workflow_runs`、`workflow_steps`、`workflow_events`                      |
+| **API**          | `WorkflowStore::create_run` / `update_step` / `append_event` / `load_run` |
+
+### 备份策略
+
+1. **日常**：WAL 模式（`PRAGMA journal_mode=WAL`），与 conversation_store 一致。
+2. **手动备份**：复制整个 `{workspace}/workflow/` 目录（含 `runs.db` 与 `runs.db-wal`）。
+3. **恢复**：停止应用后替换 `runs.db`（及 WAL/SHM 文件），重启即可 `load_run` 恢复未完成流程。
+4. **清理**：已完成且超过保留期的 run 可由 T003+ executor 定期 purge（当前未实现）。
+
 ## IPC 与事件契约（草案）
 
 ### Commands（T003 实现）

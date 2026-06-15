@@ -6,8 +6,8 @@
 
 | 字段        | 值                                                                                           |
 | ----------- | -------------------------------------------------------------------------------------------- |
-| **Current** | _（无）_ — T001 已完成，待开始 T002                                                          |
-| **Next**    | [`pending/T002-workflow-state-persistence.md`](./pending/T002-workflow-state-persistence.md) |
+| **Current** | _（无）_ — T002 已完成，待开始 T003                                                          |
+| **Next**    | [`pending/T003-workflow-executor-skeleton.md`](./pending/T003-workflow-executor-skeleton.md) |
 
 > 开始任务时：将文件从 `pending/` 移到 `in-progress/`，并更新本表 **Current**。  
 > 完成任务时：移到 `completed/`，把 **Next** 指向下一个 `pending/` 文件。
