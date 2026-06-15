@@ -152,7 +152,7 @@ pub fn merge_disk_skills(workspace: &Path, config: &mut SkillsConfigMap) -> bool
     let mut dirty = false;
     for (dir, source) in [
         (skills_dir(workspace), "custom"),
-        (builtin_skills_dir(), "builtin"),
+        (resolve_builtin_skills_dir(), "builtin"),
     ] {
         if !dir.is_dir() {
             continue;
@@ -193,12 +193,21 @@ pub fn merge_disk_skills(workspace: &Path, config: &mut SkillsConfigMap) -> bool
     dirty
 }
 
-fn builtin_skills_dir() -> PathBuf {
-    let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../skills");
+fn resolve_builtin_skills_dir() -> PathBuf {
+    let bundled = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources/skills");
+    if bundled.is_dir() {
+        return bundled;
+    }
+    let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../skills");
     if repo.is_dir() {
         return repo;
     }
     PathBuf::new()
+}
+
+/// 内置技能目录（打包资源或仓库根 `skills/`）。
+pub fn builtin_skills_dir() -> PathBuf {
+    resolve_builtin_skills_dir()
 }
 
 fn read_skill_description(skill_path: &Path) -> String {

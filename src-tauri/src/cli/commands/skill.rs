@@ -10,8 +10,8 @@ use serde_json::Value;
 
 use crate::cli::paths;
 use crate::services::agent::skills::{
-    hub_api_base, is_enabled_in_config, load_skills_config, merge_disk_skills, register_skill,
-    save_skills_config, set_enabled, skills_dir, SkillConfigEntry,
+    builtin_skills_dir, hub_api_base, is_enabled_in_config, load_skills_config, merge_disk_skills,
+    register_skill, save_skills_config, set_enabled, skills_dir, SkillConfigEntry,
 };
 
 const REMOTE_PAGE_SIZE: u32 = 10;
@@ -379,7 +379,7 @@ fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<()> {
 
 fn info(name: &str) -> Result<()> {
     let ws = paths::resolve_workspace()?;
-    let mgr = SkillManager::new(&ws, None);
+    let mgr = SkillManager::new(&ws, Some(builtin_skills_dir()));
     if let Some(entry) = mgr.get_skill(name) {
         let cfg = load_skills_config(&ws);
         let enabled = is_enabled_in_config(&cfg, name) && entry.enabled;
