@@ -7,59 +7,112 @@
     "typecheck": "tsc --noEmit"
   },
   "exports": {
-    "./badge": "./src/badge.tsx",
-    "./button": "./src/button.tsx",
-    "./button-group": "./src/button-group.tsx",
-    "./card": "./src/card.tsx",
-    "./checkbox": "./src/checkbox.tsx",
-    "./collapsible": "./src/collapsible.tsx",
-    "./command": "./src/command.tsx",
-    "./content-container": "./src/content-container.tsx",
-    "./dialog": "./src/dialog.tsx",
-    "./dropdown-menu": "./src/dropdown-menu.tsx",
-    "./hover-card": "./src/hover-card.tsx",
-    "./input": "./src/input.tsx",
-    "./input-group": "./src/input-group.tsx",
-    "./scroll-area": "./src/scroll-area.tsx",
-    "./select": "./src/select.tsx",
-    "./separator": "./src/separator.tsx",
-    "./shadow-card": "./src/shadow-card.tsx",
-    "./spinner": "./src/spinner.tsx",
-    "./textarea": "./src/textarea.tsx",
-    "./tooltip": "./src/tooltip.tsx",
+    "./badge": {
+      "import": "./src/badge.tsx",
+      "deprecated": "Use Tag from @douyinfe/semi-ui-19"
+    },
+    "./button": {
+      "import": "./src/button.tsx",
+      "deprecated": "Use Button from @douyinfe/semi-ui-19"
+    },
+    "./button-group": {
+      "import": "./src/button-group.tsx",
+      "deprecated": "Use Space or Button from @douyinfe/semi-ui-19"
+    },
+    "./card": {
+      "import": "./src/card.tsx",
+      "deprecated": "Use Card from @douyinfe/semi-ui-19"
+    },
+    "./checkbox": {
+      "import": "./src/checkbox.tsx",
+      "deprecated": "Use Checkbox from @douyinfe/semi-ui-19"
+    },
+    "./collapsible": {
+      "import": "./src/collapsible.tsx",
+      "deprecated": "Use Collapse from @douyinfe/semi-ui-19"
+    },
+    "./command": {
+      "import": "./src/command.tsx",
+      "deprecated": "Use Semi List/Input or cmdk with Semi Modal"
+    },
+    "./content-container": {
+      "import": "./src/content-container.tsx",
+      "deprecated": "Use Layout/Space from @douyinfe/semi-ui-19"
+    },
+    "./dialog": {
+      "import": "./src/dialog.tsx",
+      "deprecated": "Use Modal from @douyinfe/semi-ui-19"
+    },
+    "./dropdown-menu": {
+      "import": "./src/dropdown-menu.tsx",
+      "deprecated": "Use Dropdown from @douyinfe/semi-ui-19"
+    },
+    "./hover-card": {
+      "import": "./src/hover-card.tsx",
+      "deprecated": "Use Popover from @douyinfe/semi-ui-19"
+    },
+    "./input": {
+      "import": "./src/input.tsx",
+      "deprecated": "Use Input from @douyinfe/semi-ui-19"
+    },
+    "./input-group": {
+      "import": "./src/input-group.tsx",
+      "deprecated": "Use Input with prefix/suffix from @douyinfe/semi-ui-19"
+    },
+    "./scroll-area": {
+      "import": "./src/scroll-area.tsx",
+      "deprecated": "Use overflow styles or ScrollList from @douyinfe/semi-ui-19"
+    },
+    "./select": {
+      "import": "./src/select.tsx",
+      "deprecated": "Use Select from @douyinfe/semi-ui-19"
+    },
+    "./separator": {
+      "import": "./src/separator.tsx",
+      "deprecated": "Use Divider from @douyinfe/semi-ui-19"
+    },
+    "./shadow-card": {
+      "import": "./src/shadow-card.tsx",
+      "deprecated": "Use Card from @douyinfe/semi-ui-19"
+    },
+    "./spinner": {
+      "import": "./src/spinner.tsx",
+      "deprecated": "Use Spin from @douyinfe/semi-ui-19"
+    },
+    "./textarea": {
+      "import": "./src/textarea.tsx",
+      "deprecated": "Use TextArea from @douyinfe/semi-ui-19"
+    },
+    "./tooltip": {
+      "import": "./src/tooltip.tsx",
+      "deprecated": "Use Tooltip from @douyinfe/semi-ui-19"
+    },
     "./title-bar": "./src/title-bar/index.ts",
     "./modal": "./src/modal/index.ts",
     "./modal/*": "./src/modal/*",
-    "./antd-provider": "./src/antd-provider.tsx",
+    "./semi-provider": "./src/semi-provider.tsx",
     "./agent-console": "./src/agent-console/index.ts",
     "./agent-console/*": "./src/agent-console/*",
     "./app-shell": "./src/app-shell/index.ts",
     "./app-shell/*": "./src/app-shell/*",
     "./design-system": "./src/design-system/index.css",
     "./design-system/flavors/wework": "./src/design-system/flavors/wework.css",
+    "./license": "./src/license/index.ts",
+    "./license/*": "./src/license/*",
     "./channel/wework-connect-panel": "./src/agent-console/views/channels/wework-connect-panel.tsx"
   },
   "dependencies": {
-    "@ant-design/icons": "^6.2.5",
     "@antv/g6": "^5.1.1",
     "@antv/graphin": "^3.0.5",
+    "@douyinfe/semi-icons": "^2.100.0",
+    "@douyinfe/semi-ui-19": "^2.100.0",
+    "@semi-bot/semi-theme-feishu-dashboard": "^1.0.4",
     "@reduxjs/toolkit": "^2.11.2",
-    "@streamdown/cjk": "^1.0.3",
-    "@streamdown/code": "^1.1.1",
-    "@streamdown/math": "^1.0.2",
-    "@streamdown/mermaid": "^1.0.2",
     "@supportflow/shared": "workspace:*",
     "@tauri-apps/api": "^2.10.1",
-    "ai": "^6.0.193",
-    "antd": "^6.4.3",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",
-    "lucide-react": "^1.17.0",
-    "nanoid": "^5.1.11",
-    "shiki": "^4.1.0",
-    "streamdown": "^2.5.0",
-    "tw-animate-css": "^1.4.0",
-    "use-stick-to-bottom": "^1.1.4"
+    "tw-animate-css": "^1.4.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
