@@ -1,6 +1,10 @@
 "use client";
 
-import { Card as AntdCard } from "antd";
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
+import { Card as SemiCard } from "@douyinfe/semi-ui-19";
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
@@ -8,7 +12,7 @@ import { cn } from "@supportflow/shared";
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => (
     <div ref={ref} className={cn(className)} {...props}>
-      <AntdCard>{children}</AntdCard>
+      <SemiCard>{children}</SemiCard>
     </div>
   )
 );
@@ -46,5 +50,7 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
   )
 );
 CardFooter.displayName = "CardFooter";
+
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
 
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };

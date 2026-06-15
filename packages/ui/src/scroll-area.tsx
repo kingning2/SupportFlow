@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
@@ -26,5 +30,7 @@ const ScrollBar = React.forwardRef<
   />
 ));
 ScrollBar.displayName = "ScrollBar";
+
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
 
 export { ScrollArea, ScrollBar };

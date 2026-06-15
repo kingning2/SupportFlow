@@ -1,6 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
+import { IconClose } from "@douyinfe/semi-icons";
+import { IconButton } from "@douyinfe/semi-ui-19";
 import {
   createContext,
   createElement,
@@ -21,7 +22,6 @@ import {
   closeModalWindow,
   notifyModalWindowReady
 } from "@supportflow/shared/tauri-bridge/cmd/window";
-import { Button } from "@supportflow/ui/button";
 import { TauriEvent, isModalPanel } from "@supportflow/shared/tauri-bridge/enums";
 import { cn } from "@supportflow/shared";
 import type { ModalOpenPanelPayload } from "@supportflow/shared/contracts/tauri-payloads";
@@ -147,28 +147,46 @@ function DefaultModalHeader({
 }) {
   return (
     <header
-      className={cn(
-        "border-border/80 relative flex shrink-0 items-start gap-3 overflow-hidden border-b bg-white px-5 py-4 select-none",
-        headerClassName
-      )}
+      style={{
+        position: "relative",
+        display: "flex",
+        flexShrink: 0,
+        alignItems: "flex-start",
+        gap: 12,
+        overflow: "hidden",
+        borderBottom: "1px solid var(--semi-color-border)",
+        background: "var(--semi-color-bg-0)",
+        padding: "16px 20px",
+        userSelect: "none"
+      }}
+      className={headerClassName}
       onMouseDown={onModalDragMouseDown}
     >
-      <div data-drag-region className="flex min-w-0 flex-1 items-start">
-        <div className="pointer-events-none w-full min-w-0">{title}</div>
+      <div
+        data-drag-region
+        style={{ display: "flex", minWidth: 0, flex: 1, alignItems: "flex-start" }}
+      >
+        <div style={{ pointerEvents: "none", width: "100%", minWidth: 0 }}>{title}</div>
       </div>
-      <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-2">
-        <div className="flex items-center gap-0.5">
+      <div
+        style={{
+          pointerEvents: "auto",
+          display: "flex",
+          flexShrink: 0,
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: 8
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
           {toolbar}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-8 shrink-0 text-slate-500 hover:bg-white/60 hover:text-slate-700"
-            onClick={onClose}
+          <IconButton
+            icon={<IconClose />}
             aria-label="Close"
-          >
-            <X className="size-4" />
-          </Button>
+            theme="borderless"
+            type="tertiary"
+            onClick={onClose}
+          />
         </div>
         {extra}
       </div>
@@ -191,10 +209,15 @@ export function Modal({
 
   return (
     <div
-      className={cn(
-        "modal-window flex min-h-0 flex-1 flex-col overflow-hidden bg-white",
-        className
-      )}
+      style={{
+        display: "flex",
+        minHeight: 0,
+        flex: 1,
+        flexDirection: "column",
+        overflow: "hidden",
+        background: "var(--semi-color-bg-0)"
+      }}
+      className={className}
     >
       {header ?? (
         <DefaultModalHeader
@@ -205,9 +228,23 @@ export function Modal({
           onClose={() => requestClose()}
         />
       )}
-      <div className={cn("min-h-0 flex-1 overflow-auto p-4", bodyClassName)}>{children}</div>
+      <div
+        style={{ minHeight: 0, flex: 1, overflow: "auto", padding: 16 }}
+        className={bodyClassName}
+      >
+        {children}
+      </div>
       {footer ? (
-        <footer className="border-border/80 shrink-0 border-t bg-white px-4 py-3">{footer}</footer>
+        <footer
+          style={{
+            flexShrink: 0,
+            borderTop: "1px solid var(--semi-color-border)",
+            background: "var(--semi-color-bg-0)",
+            padding: "12px 16px"
+          }}
+        >
+          {footer}
+        </footer>
       ) : null}
     </div>
   );
@@ -251,7 +288,9 @@ export function ModalPanelHost({ registry }: { registry: ModalPanelRegistry }) {
   if (!isModalPanel(panelName)) {
     return (
       <Modal title={"視窗"}>
-        <p className="text-muted-foreground text-sm">{`未知面板：${panelName || "—"}`}</p>
+        <p
+          style={{ fontSize: 14, color: "var(--semi-color-text-2)" }}
+        >{`未知面板：${panelName || "—"}`}</p>
       </Modal>
     );
   }
@@ -260,7 +299,9 @@ export function ModalPanelHost({ registry }: { registry: ModalPanelRegistry }) {
   if (!Panel) {
     return (
       <Modal title={"視窗"}>
-        <p className="text-muted-foreground text-sm">{`未知面板：${panelName || "—"}`}</p>
+        <p
+          style={{ fontSize: 14, color: "var(--semi-color-text-2)" }}
+        >{`未知面板：${panelName || "—"}`}</p>
       </Modal>
     );
   }
@@ -281,10 +322,15 @@ export function ModalOverlay({ className }: ModalOverlayProps) {
     <div
       role="presentation"
       aria-hidden
-      className={cn(
-        "modal-overlay-enter pointer-events-auto absolute inset-0 z-200 bg-slate-900/45 backdrop-blur-[1px]",
-        className
-      )}
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 200,
+        pointerEvents: "auto",
+        background: "rgb(15 23 42 / 0.45)",
+        backdropFilter: "blur(1px)"
+      }}
+      className={className}
     />
   );
 }

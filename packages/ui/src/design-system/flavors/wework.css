@@ -1,8 +1,10 @@
 /**
- * 企业微信 flavor：浅蓝品牌，覆盖语义与桌面壳变量。
+ * 企业微信 flavor：飞书中台浅色系，直角窗口。
  */
 [data-flavor="wework"] {
   color-scheme: light;
+
+  --window-radius: 0px;
 
   --channel-primary: 214 84% 55%;
   --channel-primary-foreground: 0 0% 100%;
@@ -12,15 +14,27 @@
   --primary: var(--channel-primary);
   --primary-foreground: var(--channel-primary-foreground);
   --ring: var(--channel-primary);
-  --accent: 214 100% 97%;
+  --accent: 220 14% 96%;
   --accent-foreground: 214 84% 40%;
-  --border: 214 32% 88%;
-  --input: 214 32% 88%;
-  --muted: 214 40% 96%;
-  --muted-foreground: 215 16% 42%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --background: 0 0% 100%;
 
-  --app-bg: #eef4fb;
-  --main-window-bg: #f7faff;
+  --app-bg: #f5f6f7;
+  --main-window-bg: #ffffff;
+  --wework-rail-bg: #eef0f3;
+  --wework-panel-bg: #ffffff;
+  --wework-canvas: #f5f6f7;
+}
+
+[data-flavor="wework"] #App {
+  clip-path: none !important;
+  border-radius: 0 !important;
+  background: var(--main-window-bg);
 }

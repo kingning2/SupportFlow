@@ -1,6 +1,10 @@
 "use client";
 
-import { Tag } from "antd";
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
+import { Tag } from "@douyinfe/semi-ui-19";
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
@@ -14,22 +18,23 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 function mapVariant(variant: BadgeVariant = "default") {
   switch (variant) {
     case "destructive":
-      return "error" as const;
+      return { color: "red" as const, type: "light" as const };
     case "secondary":
-      return "default" as const;
+      return { color: "grey" as const, type: "ghost" as const };
     case "outline":
-      return "default" as const;
+      return { color: "grey" as const, type: "ghost" as const };
     default:
-      return "processing" as const;
+      return { color: "blue" as const, type: "light" as const };
   }
 }
 
 function Badge({ className, variant = "default", children, ...props }: BadgeProps) {
+  const mapped = mapVariant(variant);
+
   return (
     <Tag
-      bordered={variant === "outline"}
-      color={mapVariant(variant)}
-      className={cn("inline-flex items-center", className)}
+      {...mapped}
+      className={cn("inline-flex items-center", variant === "outline" && "border", className)}
       {...(props as React.ComponentProps<typeof Tag>)}
     >
       {children}
@@ -37,7 +42,9 @@ function Badge({ className, variant = "default", children, ...props }: BadgeProp
   );
 }
 
-/** @deprecated shadcn cva helper — kept for import compatibility. */
+/** @deprecated shadcn cva helper �?kept for import compatibility. */
 const badgeVariants = () => "";
+
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
 
 export { Badge, badgeVariants };

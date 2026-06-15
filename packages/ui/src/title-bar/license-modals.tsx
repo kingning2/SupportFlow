@@ -1,16 +1,18 @@
 "use client";
 
-import { Modal } from "antd";
-import { Copy } from "lucide-react";
-import { useCallback, useState } from "react";
+import type { ReactNode } from "react";
+import { IconCopy } from "@douyinfe/semi-icons";
+import { Button, Input, Modal, Space, Typography } from "@douyinfe/semi-ui-19";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   getLicenseStatus,
   pickAndApplyLicenseActivationKey,
   type LicenseStatusDto
 } from "@supportflow/shared/tauri-bridge/cmd/license";
-import { Button } from "@supportflow/ui/button";
-import { Input } from "@supportflow/ui/input";
+import { useOptionalLicenseGate } from "@supportflow/ui/license";
+
+const { Text, Paragraph } = Typography;
 
 type LicenseModalProps = {
   open: boolean;
@@ -35,10 +37,21 @@ function useLicenseStatus() {
   return { status, error, setError, loadStatus, setStatus };
 }
 
+function ModalFooter({ children }: { children: ReactNode }) {
+  return <Space style={{ width: "100%", justifyContent: "flex-end" }}>{children}</Space>;
+}
+
 /** 订阅激活弹窗 */
 export function LicenseActivationModal({ open, onOpenChange }: LicenseModalProps) {
   const { status, error, setError, loadStatus, setStatus } = useLicenseStatus();
+  const licenseGate = useOptionalLicenseGate();
   const [activating, setActivating] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      void loadStatus();
+    }
+  }, [loadStatus, open]);
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
@@ -51,43 +64,44 @@ export function LicenseActivationModal({ open, onOpenChange }: LicenseModalProps
     try {
       const next = await pickAndApplyLicenseActivationKey();
       setStatus(next);
+      licenseGate?.applyStatus(next);
+      if (next.valid) {
+        onOpenChange(false);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
     } finally {
       setActivating(false);
     }
-  }, [setError, setStatus]);
+  }, [licenseGate, onOpenChange, setError, setStatus]);
 
   const isLicensed = status?.valid === true;
 
   return (
     <Modal
-      open={open}
-      title={"订阅激活"}
+      visible={open}
+      title="订阅激活"
       onCancel={handleClose}
-      afterOpenChange={(visible) => {
-        if (visible) void loadStatus();
-      }}
-      destroyOnHidden
-      footer={[
-        <Button key="cancel" type="button" variant="outline" onClick={handleClose}>
-          {"取消"}
-        </Button>,
-        <Button
-          key="apply"
-          type="button"
-          disabled={activating}
-          onClick={() => void handleApplyActivation()}
-        >
-          {activating ? "激活中…" : "激活"}
-        </Button>
-      ]}
+      footer={
+        <ModalFooter>
+          <Button theme="light" type="tertiary" onClick={handleClose}>
+            取消
+          </Button>
+          <Button type="primary" loading={activating} onClick={() => void handleApplyActivation()}>
+            {activating ? "激活中…" : "激活"}
+          </Button>
+        </ModalFooter>
+      }
     >
-      <p className="text-muted-foreground mb-3 text-sm">
-        {isLicensed ? "已激活，可正常使用" : "粘贴管理员提供的激活码后点击激活"}
-      </p>
-      {error ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
+      <Paragraph type="tertiary" style={{ marginBottom: 12 }}>
+        {isLicensed ? "已激活，可正常使用" : "选择管理员提供的激活文件后点击激活"}
+      </Paragraph>
+      {error ? (
+        <Text type="danger" style={{ display: "block", marginTop: 8 }}>
+          {error}
+        </Text>
+      ) : null}
     </Modal>
   );
 }
@@ -98,6 +112,12 @@ export function LicenseMachineCodeModal({ open, onOpenChange }: LicenseModalProp
   const [machineCopied, setMachineCopied] = useState(false);
 
   const machineCode = status?.machineCode ?? "";
+
+  useEffect(() => {
+    if (open) {
+      void loadStatus();
+    }
+  }, [loadStatus, open]);
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
@@ -127,31 +147,34 @@ export function LicenseMachineCodeModal({ open, onOpenChange }: LicenseModalProp
 
   return (
     <Modal
-      open={open}
-      title={"机器码"}
+      visible={open}
+      title="机器码"
       onCancel={handleClose}
-      afterOpenChange={(visible) => {
-        if (visible) void loadStatus();
-      }}
-      destroyOnHidden
-      footer={[
-        <Button key="cancel" type="button" variant="outline" onClick={handleClose}>
-          {"取消"}
-        </Button>,
-        <Button
-          key="copy"
-          type="button"
-          disabled={!machineCode}
-          onClick={() => void handleCopyMachineCode()}
-        >
-          <Copy className="mr-1.5 size-3.5" />
-          {machineCopied ? "已复制" : "复制机器码"}
-        </Button>
-      ]}
+      footer={
+        <ModalFooter>
+          <Button theme="light" type="tertiary" onClick={handleClose}>
+            取消
+          </Button>
+          <Button
+            type="primary"
+            disabled={!machineCode}
+            onClick={() => void handleCopyMachineCode()}
+          >
+            <IconCopy />
+            {machineCopied ? "已复制" : "复制机器码"}
+          </Button>
+        </ModalFooter>
+      }
     >
-      <p className="text-muted-foreground mb-3 text-sm">{"复制机器码发给管理员"}</p>
-      <Input className="font-mono text-xs" value={machineCode} readOnly />
-      {error ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
+      <Paragraph type="tertiary" style={{ marginBottom: 12 }}>
+        复制机器码发给管理员
+      </Paragraph>
+      <Input style={{ fontFamily: "monospace", fontSize: 12 }} value={machineCode} readonly />
+      {error ? (
+        <Text type="danger" style={{ display: "block", marginTop: 8 }}>
+          {error}
+        </Text>
+      ) : null}
     </Modal>
   );
 }

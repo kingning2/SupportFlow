@@ -1,6 +1,10 @@
 "use client";
 
-import { Modal } from "antd";
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
+import { Modal } from "@douyinfe/semi-ui-19";
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
@@ -38,10 +42,9 @@ const DialogContent = React.forwardRef<
 
   return (
     <Modal
-      open={open}
+      visible={open}
       onCancel={() => onOpenChange?.(false)}
       footer={null}
-      destroyOnHidden
       className={cn(className)}
     >
       <div ref={ref} {...props}>
@@ -76,6 +79,8 @@ const DialogDescription = React.forwardRef<
   <p ref={ref} className={cn("text-muted-foreground text-sm", className)} {...props} />
 ));
 DialogDescription.displayName = "DialogDescription";
+
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
 
 export {
   Dialog,

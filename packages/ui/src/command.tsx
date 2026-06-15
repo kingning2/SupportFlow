@@ -1,7 +1,11 @@
 "use client";
 
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
 import { Command as CommandPrimitive } from "cmdk";
-import { Search } from "lucide-react";
+import { IconSearch } from "@douyinfe/semi-icons";
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
@@ -45,7 +49,7 @@ const CommandInput = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
   <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    <IconSearch style={{ marginRight: 8, opacity: 0.5, flexShrink: 0 }} />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
@@ -134,6 +138,8 @@ const CommandShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanE
   );
 };
 CommandShortcut.displayName = "CommandShortcut";
+
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
 
 export {
   Command,

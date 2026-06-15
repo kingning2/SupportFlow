@@ -1,6 +1,10 @@
 "use client";
 
-import { Tooltip as AntdTooltip } from "antd";
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
+import { Tooltip as SemiTooltip } from "@douyinfe/semi-ui-19";
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
@@ -44,7 +48,7 @@ type TooltipCompoundProps = {
   children: React.ReactNode;
 };
 
-/** Resolves shadcn-style Tooltip + Trigger + Content tree into one antd Tooltip. */
+/** Resolves shadcn-style Tooltip + Trigger + Content tree into one Semi Tooltip. */
 function TooltipCompound({ children }: TooltipCompoundProps) {
   let trigger: React.ReactNode = null;
   let content: React.ReactNode = null;
@@ -70,9 +74,9 @@ function TooltipCompound({ children }: TooltipCompoundProps) {
   }
 
   return (
-    <AntdTooltip title={content} placement={side}>
+    <SemiTooltip content={content} position={side}>
       <span className="inline-flex">{trigger}</span>
-    </AntdTooltip>
+    </SemiTooltip>
   );
 }
 
@@ -89,5 +93,7 @@ const TooltipRoot = ({ children, ...props }: TooltipProps) => {
 
   return <Tooltip>{children}</Tooltip>;
 };
+
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
 
 export { TooltipRoot as Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };

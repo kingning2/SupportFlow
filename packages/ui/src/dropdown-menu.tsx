@@ -1,11 +1,22 @@
 "use client";
 
-import { Dropdown, type MenuProps } from "antd";
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
+import { Dropdown } from "@douyinfe/semi-ui-19";
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
 
-type MenuItemEntry = NonNullable<MenuProps["items"]>[number];
+type MenuItemEntry = {
+  key: string;
+  type?: "divider" | "submenu";
+  label?: React.ReactNode;
+  disabled?: boolean;
+  onClick?: () => void;
+  children?: MenuItemEntry[];
+};
 
 type DropdownMenuContextValue = {
   registerItem: (item: MenuItemEntry) => () => void;
@@ -26,6 +37,33 @@ function useDropdownMenuContext() {
   return ctx;
 }
 
+function renderMenuItems(items: MenuItemEntry[]): React.ReactNode {
+  return items.map((item) => {
+    if (item.type === "divider") {
+      return <Dropdown.Divider key={item.key} />;
+    }
+
+    if (item.children && item.children.length > 0) {
+      return (
+        <Dropdown
+          key={item.key}
+          position="rightTop"
+          trigger="hover"
+          render={<Dropdown.Menu>{renderMenuItems(item.children)}</Dropdown.Menu>}
+        >
+          <Dropdown.Item disabled={item.disabled}>{item.label}</Dropdown.Item>
+        </Dropdown>
+      );
+    }
+
+    return (
+      <Dropdown.Item key={item.key} disabled={item.disabled} onClick={item.onClick}>
+        {item.label}
+      </Dropdown.Item>
+    );
+  });
+}
+
 type DropdownMenuProps = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -38,6 +76,7 @@ const DropdownMenu = ({ open, onOpenChange, children }: DropdownMenuProps) => {
   const [align, setAlignState] = React.useState<"start" | "center" | "end">("center");
   const [sideOffset, setSideOffsetState] = React.useState(4);
   const [extraNodes, setExtraNodes] = React.useState<React.ReactNode[]>([]);
+  const [contentClassNameState, setContentClassNameState] = React.useState<string>();
 
   const setAlign = React.useCallback((next?: "start" | "center" | "end") => {
     if (next) setAlignState(next);
@@ -50,8 +89,6 @@ const DropdownMenu = ({ open, onOpenChange, children }: DropdownMenuProps) => {
   const setContentClassName = React.useCallback((next?: string) => {
     setContentClassNameState(next);
   }, []);
-
-  const [contentClassNameState, setContentClassNameState] = React.useState<string>();
 
   const registerItem = React.useCallback((item: MenuItemEntry) => {
     setItems((prev) => [...prev, item]);
@@ -72,28 +109,29 @@ const DropdownMenu = ({ open, onOpenChange, children }: DropdownMenuProps) => {
       setSideOffset,
       registerExtra
     }),
-    [registerItem, registerExtra]
+    [registerItem, registerExtra, setAlign, setSideOffset, setContentClassName]
   );
 
-  const placement = align === "start" ? "bottomLeft" : align === "end" ? "bottomRight" : "bottom";
+  const position = align === "start" ? "bottomLeft" : align === "end" ? "bottomRight" : "bottom";
+
+  const menu = (
+    <Dropdown.Menu className={cn(contentClassNameState)}>
+      {renderMenuItems(items)}
+      {extraNodes}
+    </Dropdown.Menu>
+  );
 
   return (
     <DropdownMenuContext.Provider value={ctx}>
       <div className="contents">{children}</div>
       {trigger ? (
         <Dropdown
-          open={open}
-          onOpenChange={onOpenChange}
-          trigger={["click"]}
-          placement={placement}
-          align={{ offset: [0, sideOffset] }}
-          menu={{ items }}
-          popupRender={(menu) => (
-            <div className={cn(contentClassNameState)} onPointerDown={(e) => e.stopPropagation()}>
-              {menu}
-              {extraNodes}
-            </div>
-          )}
+          visible={open}
+          onVisibleChange={onOpenChange}
+          trigger="click"
+          position={position}
+          spacing={sideOffset}
+          render={menu}
         >
           <span className="inline-flex">{trigger}</span>
         </Dropdown>
@@ -175,9 +213,9 @@ const DropdownMenuItem = React.forwardRef<
       key: itemKey,
       label: <span className={cn(className)}>{children}</span>,
       disabled,
-      onClick: (info) => {
-        onClick?.(info.domEvent as React.MouseEvent<HTMLDivElement>);
-        onSelect?.(info.domEvent as unknown as Event);
+      onClick: () => {
+        onClick?.({} as React.MouseEvent<HTMLDivElement>);
+        onSelect?.(new Event("select"));
       }
     };
     return register(item);
@@ -245,6 +283,7 @@ const DropdownMenuSubTrigger = ({
     if (subItems.length === 0) return;
     return parent.registerItem({
       key: subKey,
+      type: "submenu",
       label: <span className={cn(className)}>{children}</span>,
       children: subItems
     });
@@ -254,6 +293,8 @@ const DropdownMenuSubTrigger = ({
 };
 
 const DropdownMenuSubContent = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
 
 export {
   DropdownMenu,

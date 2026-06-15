@@ -87,4 +87,6 @@ function ButtonGroupSeparator({
   );
 }
 
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
+
 export { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, buttonGroupVariants };

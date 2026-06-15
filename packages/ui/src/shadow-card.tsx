@@ -1,13 +1,19 @@
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
 
+/** @deprecated Use `Card` from `@douyinfe/semi-ui-19`. */
 export type ShadowCardProps = React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * A Card-like container with consistent rounded corners and hover lift + shadow.
  * Designed to avoid "overflow-hidden" clipping during translate/hover.
  */
+/** @deprecated Use `Card` from `@douyinfe/semi-ui-19`. */
 export const ShadowCard = React.forwardRef<HTMLDivElement, ShadowCardProps>(
   ({ className, ...props }, ref) => (
     <div

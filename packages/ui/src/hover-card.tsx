@@ -1,6 +1,10 @@
 "use client";
 
-import { Popover } from "antd";
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
+import { Popover } from "@douyinfe/semi-ui-19";
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
@@ -56,5 +60,7 @@ const HoverCardContent = React.forwardRef<
   </div>
 ));
 HoverCardContent.displayName = "HoverCardContent";
+
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
 
 export { HoverCard, HoverCardTrigger, HoverCardContent };

@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
@@ -49,16 +53,16 @@ const Collapsible = ({
 };
 
 const CollapsibleTrigger = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean }
->(({ asChild, children, onClick, color: _color, ...props }, ref) => {
+  React.ElementRef<typeof Button>,
+  React.ComponentPropsWithoutRef<typeof Button> & { asChild?: boolean }
+>(({ asChild, children, onClick, ...props }, ref) => {
   const ctx = React.useContext(CollapsibleContext);
   if (!ctx) {
     throw new Error("CollapsibleTrigger must be used within Collapsible");
   }
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    onClick?.(event);
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    onClick?.(event as React.MouseEvent<HTMLButtonElement>);
     if (!event.defaultPrevented) {
       ctx.setOpen(!ctx.open);
     }
@@ -93,5 +97,7 @@ const CollapsibleContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes
   }
 );
 CollapsibleContent.displayName = "CollapsibleContent";
+
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
 
 export { Collapsible, CollapsibleTrigger, CollapsibleContent };

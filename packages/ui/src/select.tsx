@@ -1,6 +1,10 @@
 "use client";
 
-import { Select as AntdSelect } from "antd";
+/**
+ * @deprecated Import from `@douyinfe/semi-ui-19` instead.
+ *             This `@supportflow/ui/*` path is a compatibility shim only.
+ */
+import { Select as SemiSelect } from "@douyinfe/semi-ui-19";
 import * as React from "react";
 
 import { cn } from "@supportflow/shared";
@@ -120,19 +124,19 @@ const SelectTrigger = React.forwardRef<
   });
 
   return (
-    <AntdSelect
+    <SemiSelect
       value={ctx.value}
       onChange={(value) => ctx.onValueChange?.(String(value))}
       placeholder={ctx.placeholder}
       disabled={ctx.disabled}
       className={cn("w-full", ctx.triggerClassName)}
-      classNames={{ popup: { root: ctx.contentClassName } }}
-      options={ctx.options.map((option) => ({
+      dropdownClassName={ctx.contentClassName}
+      optionList={ctx.options.map((option) => ({
         value: option.value,
         label: option.label,
         disabled: option.disabled
       }))}
-      {...(props as React.ComponentProps<typeof AntdSelect>)}
+      {...(props as React.ComponentProps<typeof SemiSelect>)}
     />
   );
 });
@@ -185,6 +189,8 @@ SelectItem.displayName = "SelectItem";
 const SelectSeparator = () => null;
 const SelectScrollUpButton = () => null;
 const SelectScrollDownButton = () => null;
+
+/** @deprecated Use Semi components from `@douyinfe/semi-ui-19` instead. */
 
 export {
   Select,
