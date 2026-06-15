@@ -151,7 +151,12 @@ SUPPORT_FLOW_WORKSPACE=D:/path/to/your-workspace
 
 ## 参与开发
 
-架构约定与 IPC 说明见 [`AGENTS.md`](./AGENTS.md) 与 [`docs/`](./docs/) 下各语言架构文档（`rust-*`、`python-*`、`ts-*`）。
+架构约定与 IPC 说明见：
+
+- [`docs/project-architecture.md`](./docs/project-architecture.md) — 全项目架构总览
+- [`docs/project-folder-structure.md`](./docs/project-folder-structure.md) — 仓库目录结构
+- [`AGENTS.md`](./AGENTS.md) — AI 协作入口
+- [`docs/`](./docs/) 下各语言文档（`rust-*`、`python-*`、`ts-*`）
 
 ```bash
 pnpm run check

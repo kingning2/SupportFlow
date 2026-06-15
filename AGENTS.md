@@ -1,6 +1,11 @@
 # 仓库协作规则
 
-本仓库只保留三类核心协作文档：`Python`、`Rust`、`TypeScript`。
+## 全项目导览
+
+- [docs/project-architecture.md](./docs/project-architecture.md) — 系统分层、运行时边界、构建风味
+- [docs/project-folder-structure.md](./docs/project-folder-structure.md) — monorepo 目录树与写入规则速查
+
+本仓库按语言拆分的核心协作文档：`Python`、`Rust`、`TypeScript`。
 AI 在编写对应语言代码时，必须先遵守对应的「代码规范 + 架构文档 + 文件夹结构文档」。
 
 ## 按文件类型强制遵守
