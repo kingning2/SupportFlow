@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Button, Empty, List, SideSheet, Space, Spin, Typography } from "@douyinfe/semi-ui-19";
+import { IconPlus } from "@douyinfe/semi-icons";
 
 import {
   listAgentSessions,
   type AgentSessionSummary
 } from "@supportflow/shared/tauri-bridge/cmd/agent";
-import { cn } from "@supportflow/shared";
-import { Button } from "@supportflow/ui/button";
+
+const { Text } = Typography;
 
 interface SessionsProps {
   open: boolean;
@@ -49,62 +50,55 @@ export function Sessions({ open, sessionId, onClose, onNewChat }: SessionsProps)
     };
   }, [open, sessionId]);
 
-  if (!open) {
-    return null;
-  }
-
   return (
-    <>
-      <aside className="sessions">
-        <div className="sessions-header">
-          <span className="text-foreground text-sm font-semibold">{"历史会话"}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="text-muted-foreground"
-            onClick={onClose}
-          >
-            <X className="size-3.5" />
-          </Button>
-        </div>
-
-        <Button type="button" className="sessions-new" onClick={onNewChat}>
-          <Plus className="size-3.5" />
-          <span>{"新对话"}</span>
+    <SideSheet
+      visible={open}
+      placement="left"
+      width={280}
+      title="历史会话"
+      headerStyle={{ borderBottom: "1px solid var(--semi-color-border)" }}
+      bodyStyle={{ padding: 12 }}
+      onCancel={onClose}
+      closable
+    >
+      <Space vertical style={{ width: "100%" }} spacing="medium">
+        <Button block icon={<IconPlus />} type="primary" onClick={onNewChat}>
+          新对话
         </Button>
 
-        <div className="session-list">
-          {loading ? (
-            <p className="session-empty">{"加载会话列表…"}</p>
-          ) : sessions.length === 0 ? (
-            <p className="session-empty">{"暂无历史会话，发送消息或新建对话后会出现在这里。"}</p>
-          ) : (
-            sessions.map((session) => (
-              <div
-                key={session.id}
-                className={cn(
-                  "rounded-lg px-3 py-2 text-sm",
-                  session.id === sessionId
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground"
-                )}
-              >
-                <p className="truncate font-medium">{session.title || "新对话"}</p>
-                <p className="truncate font-mono text-xs opacity-70">{session.id}</p>
-              </div>
-            ))
-          )}
-        </div>
-      </aside>
-
-      <Button
-        type="button"
-        aria-label="Close session panel"
-        variant="ghost"
-        className="fixed inset-0 z-30 h-auto w-auto rounded-none bg-black/30 lg:hidden"
-        onClick={onClose}
-      />
-    </>
+        {loading ? (
+          <Spin style={{ display: "block", margin: "24px auto" }} />
+        ) : sessions.length === 0 ? (
+          <Empty description="暂无历史会话，发送消息或新建对话后会出现在这里。" />
+        ) : (
+          <List
+            split={false}
+            dataSource={sessions}
+            renderItem={(session) => (
+              <List.Item
+                style={{
+                  borderRadius: 8,
+                  marginBottom: 8,
+                  background:
+                    session.id === sessionId
+                      ? "var(--semi-color-primary-light-default)"
+                      : "transparent"
+                }}
+                main={
+                  <Space vertical align="start" spacing={2}>
+                    <Text strong ellipsis style={{ maxWidth: "100%" }}>
+                      {session.title || "新对话"}
+                    </Text>
+                    <Text type="tertiary" size="small" code ellipsis style={{ maxWidth: "100%" }}>
+                      {session.id}
+                    </Text>
+                  </Space>
+                }
+              />
+            )}
+          />
+        )}
+      </Space>
+    </SideSheet>
   );
 }

@@ -1,11 +1,18 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Avatar, Layout, Nav, Space, Typography } from "@douyinfe/semi-ui-19";
+import { IconSemiLogo } from "@douyinfe/semi-icons";
 
 import { cn } from "@supportflow/shared";
 import type { ConsoleView } from "@supportflow/shared/tauri-bridge/enums";
-import { Button } from "@supportflow/ui/button";
+
 import type { SidebarGroupId, SidebarNavGroup } from "../constants/sidebar-nav";
+
+const { Sider } = Layout;
+const { Text } = Typography;
+
+const SIDER_WIDTH = 208;
 
 interface SidebarProps {
   navGroups: SidebarNavGroup[];
@@ -26,83 +33,111 @@ export function Sidebar({
   mobileOpen,
   onCloseMobile
 }: SidebarProps) {
+  const [openKeys, setOpenKeys] = useState<string[]>(() =>
+    navGroups.filter((group) => openGroups[group.id]).map((group) => group.id)
+  );
+
+  useEffect(() => {
+    setOpenKeys(navGroups.filter((group) => openGroups[group.id]).map((group) => group.id));
+  }, [navGroups, openGroups]);
+
+  const navItems = useMemo(
+    () =>
+      navGroups.map((group) => ({
+        itemKey: group.id,
+        text: group.label,
+        items: group.items.map((item) => ({
+          itemKey: item.view,
+          text: item.label,
+          icon: item.icon
+        }))
+      })),
+    [navGroups]
+  );
+
   return (
     <>
-      <aside
+      <Sider
         className={cn(
-          "absolute inset-y-0 left-0 z-50 flex w-52 flex-col bg-[var(--console-sidebar-bg)] text-[hsl(var(--text-tertiary))] transition-transform duration-300 ease-in-out",
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:relative lg:translate-x-0"
+          "agent-console-sider",
+          mobileOpen ? "agent-console-sider--open" : "agent-console-sider--closed"
         )}
+        style={{
+          width: SIDER_WIDTH,
+          flexShrink: 0,
+          background: "var(--console-sidebar-bg, #1f2329)",
+          color: "var(--semi-color-text-2)"
+        }}
       >
-        <div className="border-border/20 flex h-14 shrink-0 items-center gap-3 border-b px-5">
-          <div className="bg-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
-            <span className="text-xs font-bold text-white">C</span>
-          </div>
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-semibold text-white">SupportFlow</span>
-            <span className="text-xs text-[hsl(var(--text-tertiary))]">控制台</span>
-          </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            height: 56,
+            padding: "0 20px",
+            borderBottom: "1px solid rgb(255 255 255 / 0.08)"
+          }}
+        >
+          <Avatar size="small" style={{ background: "var(--semi-color-primary)", color: "#fff" }}>
+            <IconSemiLogo />
+          </Avatar>
+          <Space vertical spacing={0}>
+            <Text strong style={{ color: "#fff" }}>
+              SupportFlow
+            </Text>
+            <Text size="small" type="tertiary">
+              控制台
+            </Text>
+          </Space>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {navGroups.map((group) => (
-            <div
-              key={group.id}
-              className={cn("menu-group", openGroups[group.id] && "open")}
-              data-group={group.id}
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-xs font-semibold tracking-wider text-neutral-500 uppercase transition-colors duration-150 hover:text-neutral-300"
-                onClick={() => onToggleGroup(group.id)}
-              >
-                <ChevronRight className="chevron size-2.5 transition-transform" />
-                <span>{group.label}</span>
-              </Button>
-              <div className="menu-group-items pl-2">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeView === item.view;
-                  return (
-                    <Button
-                      key={item.view}
-                      type="button"
-                      variant="ghost"
-                      className={cn(
-                        "sidebar-item flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition-all duration-150 hover:bg-white/5 hover:text-neutral-200",
-                        isActive && "active"
-                      )}
-                      onClick={() => {
-                        onNavigate(item.view);
-                        onCloseMobile();
-                      }}
-                    >
-                      <Icon className="item-icon size-4 shrink-0" />
-                      <span>{item.label}</span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
+        <Nav
+          mode="vertical"
+          style={{ height: "calc(100% - 56px - 48px)", background: "transparent", borderRight: 0 }}
+          items={navItems}
+          selectedKeys={[activeView]}
+          openKeys={openKeys}
+          onOpenChange={(data) => {
+            const keys = (data.openKeys ?? []).map(String);
+            setOpenKeys(keys);
+            navGroups.forEach((group) => {
+              const shouldOpen = keys.includes(group.id);
+              if (shouldOpen !== openGroups[group.id]) {
+                onToggleGroup(group.id);
+              }
+            });
+          }}
+          onSelect={(data) => {
+            const view = String(data.itemKey ?? "") as ConsoleView;
+            onNavigate(view);
+            onCloseMobile();
+          }}
+        />
 
-        <div className="border-border/20 shrink-0 border-t px-4 py-3">
-          <div className="flex items-center gap-2 text-xs text-[hsl(var(--text-tertiary))]">
-            <span className="bg-success size-1.5 rounded-full" />
-            <span>SupportFlow Desktop</span>
-          </div>
+        <div style={{ padding: "12px 16px", borderTop: "1px solid rgb(255 255 255 / 0.08)" }}>
+          <Space spacing="tight">
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "var(--semi-color-success)"
+              }}
+            />
+            <Text size="small" type="tertiary">
+              SupportFlow Desktop
+            </Text>
+          </Space>
         </div>
-      </aside>
+      </Sider>
 
       {mobileOpen ? (
-        <Button
-          type="button"
-          aria-label="Close sidebar"
-          variant="ghost"
-          className="fixed inset-0 z-40 h-auto w-auto rounded-none bg-black/50 lg:hidden"
+        <div
+          role="presentation"
+          className="agent-console-sider-backdrop"
           onClick={onCloseMobile}
+          onKeyDown={() => undefined}
         />
       ) : null}
     </>

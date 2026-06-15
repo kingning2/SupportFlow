@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Terminal } from "lucide-react";
+import { Button, Card, Checkbox, Space, Spin, Typography } from "@douyinfe/semi-ui-19";
+import { IconCopy, IconTerminal } from "@douyinfe/semi-icons";
 
 import {
   readAgentLogs,
@@ -9,10 +10,10 @@ import {
   stopAgentLogStream
 } from "@supportflow/shared/tauri-bridge/cmd/agent";
 import { ViewShell } from "../shared/console-brand";
-import { Button } from "@supportflow/ui/button";
-import { Checkbox } from "@supportflow/ui/checkbox";
 import { TauriEvent } from "@supportflow/shared/tauri-bridge/enums";
 import { tauriOn } from "@supportflow/shared/tauri-bridge/tauri-event";
+
+const { Text } = Typography;
 
 type LogLevel = "debug" | "info" | "warning" | "error" | "critical";
 type AgentLogStreamPayload = {
@@ -32,20 +33,20 @@ function lineLevel(line: string): LogLevel | null {
   return null;
 }
 
-function levelClass(level: LogLevel | null) {
+function levelColor(level: LogLevel | null): string {
   switch (level) {
     case "critical":
-      return "text-white font-semibold";
+      return "var(--semi-color-text-0)";
     case "error":
-      return "text-destructive";
+      return "var(--semi-color-danger)";
     case "warning":
-      return "text-warning";
+      return "var(--semi-color-warning)";
     case "info":
-      return "text-info";
+      return "var(--semi-color-info)";
     case "debug":
-      return "text-muted-foreground";
+      return "var(--semi-color-text-2)";
     default:
-      return "text-foreground/80";
+      return "var(--semi-color-text-1)";
   }
 }
 
@@ -67,17 +68,11 @@ export function Logs() {
     const load = async () => {
       try {
         const result = await readAgentLogs({ limit: 500 });
-        if (mounted) {
-          setRaw(result.content ?? "");
-        }
+        if (mounted) setRaw(result.content ?? "");
       } catch {
-        if (mounted) {
-          setRaw("");
-        }
+        if (mounted) setRaw("");
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
     };
 
@@ -85,23 +80,13 @@ export function Logs() {
 
     const unlistenLog = tauriOn<AgentLogStreamPayload>(TauriEvent.AgentLogStream, (event) => {
       const payload = event.payload;
-      if (!payload) {
-        return;
-      }
+      if (!payload) return;
       if (payload.type === "init") {
         setRaw(payload.content ?? "");
         return;
       }
-      if (payload.type === "line") {
-        if (!payload.content) {
-          return;
-        }
-        setRaw((prev) => {
-          if (!prev) {
-            return payload.content ?? "";
-          }
-          return `${prev}\n${payload.content ?? ""}`.trim();
-        });
+      if (payload.type === "line" && payload.content) {
+        setRaw((prev) => (prev ? `${prev}\n${payload.content}`.trim() : (payload.content ?? "")));
       }
     });
 
@@ -120,16 +105,10 @@ export function Logs() {
     let inherited: LogLevel | null = null;
 
     for (const row of rows) {
-      if (!row) {
-        continue;
-      }
+      if (!row) continue;
       const lv = lineLevel(row) ?? inherited;
-      if (lineLevel(row)) {
-        inherited = lineLevel(row);
-      }
-      if (lv && !enabledLevels[lv]) {
-        continue;
-      }
+      if (lineLevel(row)) inherited = lineLevel(row);
+      if (lv && !enabledLevels[lv]) continue;
       filtered.push({ text: row, level: lv });
     }
     return filtered;
@@ -137,17 +116,13 @@ export function Logs() {
 
   useEffect(() => {
     const container = document.getElementById("log-output");
-    if (!container || !autoScroll) {
-      return;
-    }
+    if (!container || !autoScroll) return;
     container.scrollTop = container.scrollHeight;
   }, [autoScroll, lines]);
 
   const copySelected = async () => {
     const selected = window.getSelection()?.toString().trim() ?? "";
-    if (!selected) {
-      return;
-    }
+    if (!selected) return;
     try {
       await navigator.clipboard.writeText(selected);
     } catch {
@@ -156,9 +131,7 @@ export function Logs() {
   };
 
   const copyAll = async () => {
-    if (!raw.trim()) {
-      return;
-    }
+    if (!raw.trim()) return;
     try {
       await navigator.clipboard.writeText(raw);
     } catch {
@@ -167,77 +140,84 @@ export function Logs() {
   };
 
   return (
-    <ViewShell title={"日志"} description={"实时日志输出 (run.log)"}>
-      <div className="mx-auto h-full w-full max-w-5xl">
-        <div className="bg-surface-2 border-border overflow-hidden rounded-xl border shadow-lg">
-          <div className="bg-surface-1 border-border flex items-center gap-2 border-b px-4 py-2.5">
-            <Terminal className="text-muted-foreground size-3.5" />
-            <span className="text-muted-foreground font-mono text-xs">run.log</span>
-            <div className="flex-1" />
-            <div className="mr-2 flex items-center gap-1">
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="text-foreground/80 hover:text-foreground h-7 px-2"
-                onClick={() => void copySelected()}
+    <ViewShell title="日志" description="实时日志输出 (run.log)">
+      <Card
+        bodyStyle={{ padding: 0 }}
+        title={
+          <Space>
+            <IconTerminal />
+            <Text code>run.log</Text>
+          </Space>
+        }
+        headerExtraContent={
+          <Space wrap>
+            <Button
+              icon={<IconCopy />}
+              theme="borderless"
+              type="tertiary"
+              size="small"
+              onClick={() => void copySelected()}
+            >
+              复制选中
+            </Button>
+            <Button
+              icon={<IconCopy />}
+              theme="borderless"
+              type="tertiary"
+              size="small"
+              onClick={() => void copyAll()}
+            >
+              复制全部
+            </Button>
+            {LEVEL_ORDER.map((lv) => (
+              <Checkbox
+                key={lv}
+                checked={enabledLevels[lv]}
+                onChange={(e) =>
+                  setEnabledLevels((prev) => ({ ...prev, [lv]: Boolean(e.target.checked) }))
+                }
               >
-                <Copy className="mr-1 size-3.5" />
-                {"复制选中"}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="text-foreground/80 hover:text-foreground h-7 px-2"
-                onClick={() => void copyAll()}
-              >
-                <Copy className="mr-1 size-3.5" />
-                {"复制全部"}
-              </Button>
-            </div>
-            <div className="mr-2 flex items-center gap-3">
-              {LEVEL_ORDER.map((lv) => (
-                <label key={lv} className="text-foreground/80 flex items-center gap-1 text-xs">
-                  <Checkbox
-                    checked={enabledLevels[lv]}
-                    onChange={(event) =>
-                      setEnabledLevels((prev) => ({
-                        ...prev,
-                        [lv]: Boolean(event.target.checked)
-                      }))
-                    }
-                  />
-                  <span className={levelClass(lv)}>{lv.toUpperCase()}</span>
-                </label>
-              ))}
-            </div>
-            <span className="text-muted-foreground text-xs">{"实时"}</span>
-          </div>
-          <div
-            id="log-output"
-            className="text-foreground/80 overflow-y-auto p-4 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap select-text"
-            style={{ height: "calc(100vh - 272px)" }}
-            onScroll={(event) => {
-              const el = event.currentTarget;
-              const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
-              setAutoScroll(gap < 24);
-            }}
-          >
-            {loading ? (
-              <p className="text-muted-foreground">{"加载日志中..."}</p>
-            ) : lines.length === 0 ? (
-              <p className="text-muted-foreground">{"暂无日志输出"}</p>
-            ) : (
-              lines.map((line, idx) => (
-                <span key={`${idx}-${line.text}`} className={`${levelClass(line.level)} block`}>
-                  {line.text}
-                </span>
-              ))
-            )}
-          </div>
+                <span style={{ color: levelColor(lv), fontSize: 12 }}>{lv.toUpperCase()}</span>
+              </Checkbox>
+            ))}
+            <Text type="tertiary" size="small">
+              实时
+            </Text>
+          </Space>
+        }
+      >
+        <div
+          id="log-output"
+          style={{
+            height: "calc(100vh - 272px)",
+            overflowY: "auto",
+            padding: 16,
+            fontFamily: "monospace",
+            fontSize: 12,
+            lineHeight: 1.6,
+            wordBreak: "break-all",
+            whiteSpace: "pre-wrap",
+            userSelect: "text"
+          }}
+          onScroll={(event) => {
+            const el = event.currentTarget;
+            const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
+            setAutoScroll(gap < 24);
+          }}
+        >
+          {loading ? (
+            <Spin tip="加载日志中..." />
+          ) : lines.length === 0 ? (
+            <Text type="tertiary">暂无日志输出</Text>
+          ) : (
+            lines.map((line, idx) => (
+              <div key={`${idx}-${line.text}`} style={{ color: levelColor(line.level) }}>
+                {line.text}
+              </div>
+            ))
+          )}
         </div>
-      </div>
+      </Card>
     </ViewShell>
   );
 }

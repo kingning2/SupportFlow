@@ -1,7 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, Radio } from "lucide-react";
+import {
+  Banner,
+  Button,
+  Empty,
+  Layout,
+  Modal,
+  Space,
+  Spin,
+  Typography
+} from "@douyinfe/semi-ui-19";
+import { IconPlus, IconRadio } from "@douyinfe/semi-icons";
 
 import {
   channelAction,
@@ -9,21 +19,22 @@ import {
   type ChannelCatalogEntry
 } from "@supportflow/shared/tauri-bridge/cmd/channel-python-channels";
 import { channelLabel } from "@supportflow/shared/tauri-bridge/enums";
-import { Button } from "@supportflow/ui/button";
 
 import { getDevChannel } from "../lib/agent-console/dev-channel";
 import { ActiveChannelCard } from "../views/channels/active-channel-card";
 import { ChannelAddPanel } from "../views/channels/channel-add-panel";
 
+const { Title, Text } = Typography;
+const { Content } = Layout;
+
 function ChannelsEmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-20">
-      <div className="bg-info/10 mb-4 flex size-16 items-center justify-center rounded-2xl">
-        <Radio className="text-info size-7" />
-      </div>
-      <p className="text-muted-foreground font-medium">暂未接入任何通道</p>
-      <p className="text-muted-foreground mt-1 text-sm">点击右上角“接入通道”开始配置。</p>
-    </div>
+    <Empty
+      image={<IconRadio size="extra-large" style={{ color: "var(--semi-color-info)" }} />}
+      title="暂未接入任何通道"
+      description="点击右上角「接入通道」开始配置。"
+      style={{ padding: "48px 0" }}
+    />
   );
 }
 
@@ -43,19 +54,24 @@ function ChannelsHeader({
   pageTitle: string;
 }) {
   return (
-    <div className="mb-6 flex items-center justify-between">
+    <div
+      style={{
+        marginBottom: 24,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}
+    >
       <div>
-        <h2 className="text-foreground text-xl font-bold">{pageTitle}</h2>
-        <p className="text-muted-foreground mt-1 text-sm">{pageDescription}</p>
+        <Title heading={5} style={{ margin: 0 }}>
+          {pageTitle}
+        </Title>
+        <Text type="tertiary" size="small" style={{ display: "block", marginTop: 4 }}>
+          {pageDescription}
+        </Text>
       </div>
       {!devChannel && !addOpen ? (
-        <Button
-          type="button"
-          disabled={!!loadError}
-          className="flex items-center gap-2"
-          onClick={onOpenAdd}
-        >
-          <Plus className="size-3.5" />
+        <Button icon={<IconPlus />} disabled={!!loadError} onClick={onOpenAdd}>
           接入通道
         </Button>
       ) : null}
@@ -65,31 +81,33 @@ function ChannelsHeader({
 
 function ChannelsLoading() {
   return (
-    <div className="text-muted-foreground flex items-center justify-center gap-2 py-8 text-sm">
-      <Loader2 className="size-4 animate-spin" />
-      <span>加载通道配置中...</span>
-    </div>
+    <Space style={{ justifyContent: "center", width: "100%", padding: "32px 0" }}>
+      <Spin tip="加载通道配置中..." />
+    </Space>
   );
 }
 
 function ChannelsError({ load, loadError }: { load: () => Promise<void>; loadError: string }) {
   return (
-    <div className="bg-warning/10 text-warning-foreground border-warning/30 rounded-xl border p-4 text-sm">
-      <p className="font-medium">通道 sidecar 未就绪</p>
-      <p className="mt-2 text-xs opacity-90">{loadError}</p>
-      <p className="mt-3 text-xs opacity-80">
-        请先运行 `pnpm run build:channel-sidecar` 生成 sidecar，开发态也可直接使用 `channel_agent`
-        源码。
-      </p>
-      <Button
-        type="button"
-        variant="outline"
-        className="border-warning/40 mt-4 text-xs"
-        onClick={() => void load()}
-      >
-        重试
-      </Button>
-    </div>
+    <Banner
+      type="warning"
+      fullMode={false}
+      bordered
+      closeIcon={null}
+      title="通道 sidecar 未就绪"
+      description={
+        <Space vertical align="start" spacing="tight">
+          <Text size="small">{loadError}</Text>
+          <Text type="tertiary" size="small">
+            请先运行 `pnpm run build:channel-sidecar` 生成 sidecar，开发态也可直接使用 channel_agent
+            源码。
+          </Text>
+          <Button size="small" onClick={() => void load()}>
+            重试
+          </Button>
+        </Space>
+      }
+    />
   );
 }
 
@@ -109,7 +127,7 @@ function ChannelsContent({
   catalog: ChannelCatalogEntry[];
   devChannel: string | null;
   handleConnected: () => Promise<void>;
-  handleDisconnect: (name: string) => Promise<void>;
+  handleDisconnect: (name: string) => void;
   load: () => Promise<void>;
   onCloseAdd: () => void;
   showEmptyState: boolean;
@@ -122,7 +140,7 @@ function ChannelsContent({
   return (
     <>
       {showGrid ? (
-        <div className="grid gap-4">
+        <Space vertical spacing="medium" style={{ width: "100%" }}>
           {showEmptyState ? (
             <ChannelsEmptyState />
           ) : (
@@ -136,7 +154,7 @@ function ChannelsContent({
               />
             ))
           )}
-        </div>
+        </Space>
       ) : null}
 
       {showFixedAddPanel && devChannel ? (
@@ -204,19 +222,23 @@ export function Channels() {
   const showEmptyState = activeChannels.length === 0 && !addOpen && !devChannel;
 
   const handleDisconnect = useCallback(
-    async (name: string) => {
-      if (!window.confirm("确认断开该通道吗？配置会保留，但通道将停止运行。")) {
-        return;
-      }
-      try {
-        await channelAction({ action: "disconnect", channel: name });
-        if (devChannel) {
-          setAddOpen(true);
+    (name: string) => {
+      Modal.confirm({
+        title: "确认断开该通道吗？",
+        content: "配置会保留，但通道将停止运行。",
+        okType: "danger",
+        onOk: async () => {
+          try {
+            await channelAction({ action: "disconnect", channel: name });
+            if (devChannel) {
+              setAddOpen(true);
+            }
+            await load();
+          } catch {
+            // noop
+          }
         }
-        await load();
-      } catch {
-        // noop
-      }
+      });
     },
     [devChannel, load]
   );
@@ -228,16 +250,26 @@ export function Channels() {
 
   if (devChannel && !loading && !loadError && catalog.length > 0 && !devChannelRow) {
     return (
-      <div className="flex h-full min-h-0 flex-col items-center justify-center p-6 text-sm text-red-500">
-        <p>{`未知通道“${devChannel}”，请检查 NEXT_PUBLIC_DEV_CHANNEL 或启动脚本。`}</p>
-      </div>
+      <Layout style={{ height: "100%", minHeight: 0 }}>
+        <Content
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+            color: "var(--semi-color-danger)"
+          }}
+        >
+          <Text>{`未知通道「${devChannel}」，请检查 NEXT_PUBLIC_DEV_CHANNEL 或启动脚本。`}</Text>
+        </Content>
+      </Layout>
     );
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="min-h-0 flex-1 overflow-y-auto p-6">
-        <div className="mx-auto max-w-4xl">
+    <Layout style={{ height: "100%", minHeight: 0, overflow: "hidden" }}>
+      <Content style={{ flex: 1, minHeight: 0, overflow: "auto", padding: 24 }}>
+        <div style={{ maxWidth: 896, margin: "0 auto" }}>
           <ChannelsHeader
             addOpen={addOpen}
             devChannel={devChannel}
@@ -263,7 +295,7 @@ export function Channels() {
             />
           ) : null}
         </div>
-      </div>
-    </div>
+      </Content>
+    </Layout>
   );
 }

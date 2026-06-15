@@ -1,51 +1,103 @@
 "use client";
 
-import { Bot } from "lucide-react";
+import { IconSemiLogo } from "@douyinfe/semi-icons";
+import { Avatar, Card, Empty, Layout, Typography } from "@douyinfe/semi-ui-19";
+import type { ReactNode } from "react";
 
-import { cn } from "@supportflow/shared";
+const { Header, Content } = Layout;
+const { Title, Text, Paragraph } = Typography;
 
-export function ConsoleBrandMark({ className }: { className?: string }) {
+export function ConsoleBrandMark({ size = 48 }: { size?: number; className?: string }) {
   return (
-    <div
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-xl bg-[#35A85B] shadow-lg shadow-[#35A85B]/20",
-        className
-      )}
+    <Avatar
+      size="large"
+      style={{
+        width: size,
+        height: size,
+        background: "#35A85B",
+        color: "#fff",
+        boxShadow: "0 10px 24px rgb(53 168 91 / 0.2)"
+      }}
     >
-      <Bot className="size-[55%] text-white" />
-    </div>
+      <IconSemiLogo />
+    </Avatar>
   );
 }
 
-export function ConsoleBrandMarkSmall({ className }: { className?: string }) {
+export function ConsoleBrandMarkSmall({ size = 32 }: { size?: number; className?: string }) {
   return (
-    <div
-      className={cn("flex shrink-0 items-center justify-center rounded-lg bg-[#35A85B]", className)}
+    <Avatar
+      size="small"
+      style={{ width: size, height: size, background: "#35A85B", color: "#fff" }}
     >
-      <Bot className="size-[55%] text-white" />
-    </div>
+      <IconSemiLogo />
+    </Avatar>
   );
 }
 
 export function ViewShell({
   title,
   description,
-  children
+  children,
+  extra,
+  className
 }: {
-  title: string;
+  title?: string;
   description?: string;
-  children: React.ReactNode;
+  children: ReactNode;
+  extra?: ReactNode;
+  className?: string;
 }) {
+  const showHeader = Boolean(title || description || extra);
+
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="border-b border-slate-200 p-3 dark:border-white/10">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
-        {description ? (
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>
-        ) : null}
-      </div>
-      <div className="min-h-0 flex-1 overflow-auto p-6">{children}</div>
-    </div>
+    <Layout
+      className={["agent-console-view-shell", className].filter(Boolean).join(" ")}
+      style={{ height: "100%", minHeight: 0, overflow: "hidden" }}
+    >
+      {showHeader ? (
+        <Header
+          className="agent-console-view-header"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            height: "auto",
+            lineHeight: "inherit",
+            padding: "12px 24px",
+            borderBottom: "1px solid var(--semi-color-border)"
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            {title ? (
+              <Title heading={5} style={{ margin: 0 }}>
+                {title}
+              </Title>
+            ) : null}
+            {description ? (
+              <Text
+                type="tertiary"
+                size="small"
+                style={{ display: "block", marginTop: title ? 4 : 0 }}
+              >
+                {description}
+              </Text>
+            ) : null}
+          </div>
+          {extra}
+        </Header>
+      ) : null}
+      <Content
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflow: "auto",
+          padding: showHeader ? 24 : "16px 24px 24px"
+        }}
+      >
+        {children}
+      </Content>
+    </Layout>
   );
 }
 
@@ -54,7 +106,33 @@ export function PlaceholderView({ title, description }: { title: string; descrip
 
   return (
     <ViewShell title={title} description={text}>
-      <div className="text-muted-foreground text-sm">{text}</div>
+      <Empty description={text} />
     </ViewShell>
+  );
+}
+
+export function SectionCard({
+  title,
+  children,
+  style,
+  className
+}: {
+  title?: string;
+  children: ReactNode;
+  style?: React.CSSProperties;
+  className?: string;
+}) {
+  return (
+    <Card className={className} style={style} title={title}>
+      {children}
+    </Card>
+  );
+}
+
+export function MutedHint({ children }: { children: ReactNode }) {
+  return (
+    <Paragraph type="tertiary" size="small" style={{ marginTop: 24 }}>
+      {children}
+    </Paragraph>
   );
 }

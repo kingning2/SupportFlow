@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { ChevronDown, Plus } from "lucide-react";
+import { useState } from "react";
+import { Avatar, Button, Card, Select, Space, Typography } from "@douyinfe/semi-ui-19";
+import { IconPlus } from "@douyinfe/semi-icons";
 
 import {
   channelAction,
@@ -10,7 +11,8 @@ import {
 } from "@supportflow/shared/tauri-bridge/cmd/channel-python-channels";
 import { draftsFromChannel, type ChannelFieldDrafts } from "./channel-fields";
 import { WeworkConnectPanel } from "./wework-connect-panel";
-import { Button } from "@supportflow/ui/button";
+
+const { Title } = Typography;
 
 interface ChannelAddPanelProps {
   catalog: ChannelCatalogEntry[];
@@ -41,118 +43,72 @@ export function ChannelAddPanel({
   onConnected
 }: ChannelAddPanelProps) {
   const [selected, setSelected] = useState(fixedChannel ?? "");
-  const [open, setOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
-  const [drafts, setDrafts] = useState<ChannelFieldDrafts>(() =>
-    resolveDrafts(catalog, fixedChannel)
-  );
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [, setDrafts] = useState<ChannelFieldDrafts>(() => resolveDrafts(catalog, fixedChannel));
 
   const activeNames = new Set(catalog.filter((c) => c.active).map((c) => c.name));
   const available = catalog.filter((c) => !activeNames.has(c.name));
   const selectedChannel = fixedChannel ?? selected;
   const ch = catalog.find((c) => c.name === selectedChannel);
 
-  const pickChannel = useCallback(
-    (name: string) => {
-      setSelected(name);
-      setOpen(false);
-      setDrafts(resolveDrafts(catalog, name));
-    },
-    [catalog]
-  );
-
-  useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
+  const pickChannel = (name: string) => {
+    setSelected(name);
+    setDrafts(resolveDrafts(catalog, name));
+  };
 
   if (available.length === 0) {
     return (
-      <div className="bg-card border-border mt-4 rounded-xl border p-6 text-center">
-        <p className="text-muted-foreground text-sm">{"所有可用通道均已接入"}</p>
-        <Button
-          type="button"
-          variant="ghost"
-          className="text-muted-foreground mt-3 text-xs"
-          onClick={onClose}
-        >
-          {"取消"}
-        </Button>
-      </div>
+      <Card style={{ marginTop: 16, textAlign: "center" }}>
+        <Typography.Text type="tertiary">所有可用通道均已接入</Typography.Text>
+        <div style={{ marginTop: 12 }}>
+          <Button theme="borderless" type="tertiary" size="small" onClick={onClose}>
+            取消
+          </Button>
+        </div>
+      </Card>
     );
   }
 
   const showWeworkPanel = selectedChannel === "wework" && ch;
 
-  const selectLabel =
-    selectedChannel && ch
-      ? `${localizeChannelText(ch.label, lang)} (${ch.name})`
-      : "选择要接入的通道…";
-
   return (
-    <div className="border-primary/30 bg-card mt-4 rounded-xl border p-6">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="bg-primary/10 flex size-9 items-center justify-center rounded-lg">
-          <Plus className="text-primary size-4" />
-        </div>
-        <h3 className="text-foreground font-semibold">{"接入通道"}</h3>
-      </div>
+    <Card
+      style={{ marginTop: 16, borderColor: "var(--semi-color-primary-light-active)" }}
+      bodyStyle={{ padding: 24 }}
+    >
+      <Space spacing="medium" style={{ marginBottom: 20 }}>
+        <Avatar
+          size="small"
+          style={{
+            background: "var(--semi-color-primary-light-default)",
+            color: "var(--semi-color-primary)"
+          }}
+        >
+          <IconPlus />
+        </Avatar>
+        <Title heading={6} style={{ margin: 0 }}>
+          接入通道
+        </Title>
+      </Space>
 
       {fixedChannel ? null : (
-        <div className="mb-4">
-          <div
-            ref={dropdownRef}
-            className={`cfg-dropdown ${open ? "open" : ""}`}
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                setOpen(false);
-              }
-            }}
+        <div style={{ marginBottom: 16 }}>
+          <Select
+            placeholder="选择要接入的通道…"
+            value={selected || undefined}
+            style={{ width: "100%" }}
+            onChange={(value) => pickChannel(String(value ?? ""))}
           >
-            <div
-              className="cfg-dropdown-selected"
-              onClick={() => setOpen((v) => !v)}
-              onKeyDown={(e) => e.key === "Enter" && setOpen((v) => !v)}
-              role="button"
-              tabIndex={0}
-            >
-              <span className="truncate text-sm">{selectLabel}</span>
-              <ChevronDown className="cfg-dropdown-arrow text-muted-foreground size-3" />
-            </div>
-            <div className="cfg-dropdown-menu">
-              <div
-                className={`cfg-dropdown-item ${!selected ? "active" : ""}`}
-                onClick={() => pickChannel("")}
-                onKeyDown={() => {}}
-                role="option"
-                aria-selected={!selected}
-              >
-                {"选择要接入的通道…"}
-              </div>
-              {available.map((item) => (
-                <div
-                  key={item.name}
-                  className={`cfg-dropdown-item ${selected === item.name ? "active" : ""}`}
-                  onClick={() => pickChannel(item.name)}
-                  role="option"
-                  aria-selected={selected === item.name}
-                >
-                  {localizeChannelText(item.label, lang)} ({item.name})
-                </div>
-              ))}
-            </div>
-          </div>
+            {available.map((item) => (
+              <Select.Option key={item.name} value={item.name}>
+                {localizeChannelText(item.label, lang)} ({item.name})
+              </Select.Option>
+            ))}
+          </Select>
         </div>
       )}
 
-      <div className="space-y-4">
+      <Space vertical spacing="medium" style={{ width: "100%" }}>
         {showWeworkPanel ? (
           <WeworkConnectPanel
             channel={ch}
@@ -172,7 +128,7 @@ export function ChannelAddPanel({
             }}
           />
         ) : null}
-      </div>
-    </div>
+      </Space>
+    </Card>
   );
 }

@@ -1,17 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
-
-import { Button } from "@supportflow/ui/button";
-import { Checkbox } from "@supportflow/ui/checkbox";
-import { Input } from "@supportflow/ui/input";
+import { Button, Checkbox, Input, Space, Typography } from "@douyinfe/semi-ui-19";
 import {
   channelFieldValueString,
   localizeChannelText,
   type ChannelCatalogEntry,
   type ChannelFieldDrafts
 } from "@supportflow/shared";
+
+const { Text } = Typography;
 
 const WEWORK_DEFAULT_VERSION = "4.0.8.6027";
 const WEWORK_DEFAULT_INIT_WAIT_SECONDS = 60;
@@ -72,59 +70,50 @@ export function WeworkConnectPanel({
     drafts.strings.wework_exe_path ?? (pathField ? channelFieldValueString(pathField.value) : "");
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* <p className="text-xs leading-relaxed text-slate-500">{"请先手动打开并登录企业微信 PC，保持客户端在运行，再点击「接入」。"}</p> */}
-
-      <div>
-        <label
-          htmlFor="wework-exe-path"
-          className="text-foreground mb-1.5 block text-sm font-medium"
-        >
-          {pathLabel}
-        </label>
+    <Space vertical align="start" spacing="medium" style={{ width: "100%" }}>
+      <Space vertical align="start" spacing="tight" style={{ width: "100%" }}>
+        <Text strong>{pathLabel}</Text>
         <Input
           id="wework-exe-path"
-          type="text"
           value={pathValue}
           placeholder={pathPlaceholder}
-          onChange={(e) =>
+          style={{ width: "100%" }}
+          onChange={(value) =>
             setDrafts((prev) => ({
               ...prev,
-              strings: { ...prev.strings, wework_exe_path: e.target.value }
+              strings: { ...prev.strings, wework_exe_path: String(value) }
             }))
           }
         />
-      </div>
+      </Space>
 
-      <label className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm">
-        <Checkbox
-          checked={drafts.bools.wework_smart ?? true}
-          onChange={(e) =>
-            setDrafts((prev) => ({
-              ...prev,
-              bools: { ...prev.bools, wework_smart: Boolean(e.target.checked) }
-            }))
-          }
-        />
-        {"复用已登录的企业微信（推荐）"}
-      </label>
+      <Checkbox
+        checked={drafts.bools.wework_smart ?? true}
+        onChange={(e) =>
+          setDrafts((prev) => ({
+            ...prev,
+            bools: { ...prev.bools, wework_smart: Boolean(e.target?.checked) }
+          }))
+        }
+      >
+        <Text>复用已登录的企业微信（推荐）</Text>
+      </Checkbox>
 
-      <div className="border-border flex shrink-0 items-center justify-end gap-2 pt-4">
+      <Space style={{ width: "100%", justifyContent: "flex-end" }}>
         {onCancel ? (
-          <Button type="button" variant="ghost" disabled={connecting} onClick={onCancel}>
-            {"取消"}
+          <Button theme="borderless" type="tertiary" disabled={connecting} onClick={onCancel}>
+            取消
           </Button>
         ) : null}
         <Button
-          type="button"
+          type="primary"
           disabled={connecting || !pathValue.trim()}
           loading={connecting}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-22"
           onClick={() => void onConnect(buildWeworkConnectConfig(drafts))}
         >
-          {"接入"}
+          接入
         </Button>
-      </div>
-    </div>
+      </Space>
+    </Space>
   );
 }

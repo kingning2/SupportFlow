@@ -1,65 +1,85 @@
 "use client";
 
-import { ViewShell } from "../shared/console-brand";
+import { Col, Descriptions, Row, Typography } from "@douyinfe/semi-ui-19";
+
 import type { AgentConsoleState } from "@supportflow/shared/contracts";
+
+import { MutedHint, SectionCard, ViewShell } from "../shared/console-brand";
+
+const { Text } = Typography;
+
+export function RuntimeConfigPanel({ state }: { state: AgentConsoleState | null }) {
+  return (
+    <>
+      <Row gutter={24}>
+        <Col span={12}>
+          <SectionCard title="路径">
+            <Descriptions
+              align="left"
+              row
+              data={[
+                {
+                  key: "工作区",
+                  value: (
+                    <Text code style={{ wordBreak: "break-all" }}>
+                      {state?.workspaceDir ?? "—"}
+                    </Text>
+                  )
+                },
+                {
+                  key: "配置源 (resources)",
+                  value: (
+                    <Text code style={{ wordBreak: "break-all" }}>
+                      {state?.configPath ?? "—"}
+                    </Text>
+                  )
+                }
+              ]}
+            />
+          </SectionCard>
+        </Col>
+        <Col span={12}>
+          <SectionCard title="采样参数">
+            <Descriptions
+              align="left"
+              row
+              data={[
+                { key: "temperature", value: state?.temperature ?? "默认" },
+                { key: "top_p", value: state?.topP ?? "默认" },
+                { key: "请求超时", value: state?.requestTimeout ?? "默认" }
+              ]}
+            />
+          </SectionCard>
+        </Col>
+      </Row>
+
+      {state?.mcpStatus && Object.keys(state.mcpStatus).length > 0 ? (
+        <SectionCard title="MCP" style={{ marginTop: 16 }}>
+          <Descriptions
+            align="left"
+            row
+            data={Object.entries(state.mcpStatus).map(([name, status]) => ({
+              key: name,
+              value: status
+            }))}
+          />
+        </SectionCard>
+      ) : null}
+    </>
+  );
+}
 
 export function Config({ state }: { state: AgentConsoleState | null }) {
   return (
     <ViewShell
-      title={"运行配置"}
-      description={"工作区路径、采样参数与 MCP；模型厂商请在「模型」页查看。"}
+      className="agent-console-interactive agent-console-page-enter"
+      title="运行配置"
+      description="工作区路径、采样参数与 MCP；模型厂商请在「供应商配置」中管理。"
     >
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-slate-200 p-4 dark:border-white/10">
-          <h3 className="mb-3 text-sm font-semibold">{"路径"}</h3>
-          <dl className="space-y-2 text-sm">
-            <div>
-              <dt className="text-muted-foreground">{"工作区"}</dt>
-              <dd className="font-mono text-xs break-all">{state?.workspaceDir ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">{"配置源 (resources)"}</dt>
-              <dd className="font-mono text-xs break-all">{state?.configPath ?? "—"}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section className="rounded-xl border border-slate-200 p-4 dark:border-white/10">
-          <h3 className="mb-3 text-sm font-semibold">{"采样参数"}</h3>
-          <dl className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <dt className="text-muted-foreground">{"temperature"}</dt>
-              <dd>{state?.temperature ?? "默认"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">top_p</dt>
-              <dd>{state?.topP ?? "默认"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">{"请求超时"}</dt>
-              <dd>{state?.requestTimeout ?? "默认"}</dd>
-            </div>
-          </dl>
-        </section>
-      </div>
-
-      {state?.mcpStatus && Object.keys(state.mcpStatus).length > 0 ? (
-        <section className="mt-6 rounded-xl border border-slate-200 p-4 dark:border-white/10">
-          <h3 className="mb-3 text-sm font-semibold">MCP</h3>
-          <ul className="space-y-1 text-sm">
-            {Object.entries(state.mcpStatus).map(([name, status]) => (
-              <li key={name} className="flex justify-between gap-4">
-                <span className="font-mono text-xs">{name}</span>
-                <span className="text-muted-foreground">{status}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <p className="text-muted-foreground mt-6 text-xs">
-        {"配置源文件：src-tauri/resources/config.json（随 Tauri 打包）。修改后需重启应用。"}
-      </p>
+      <RuntimeConfigPanel state={state} />
+      <MutedHint>
+        配置源文件：src-tauri/resources/config.json（随 Tauri 打包）。修改后需重启应用。
+      </MutedHint>
     </ViewShell>
   );
 }

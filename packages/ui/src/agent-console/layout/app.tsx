@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { Empty, Layout, Spin, Typography } from "@douyinfe/semi-ui-19";
 
 import { Chat } from "../chat/chat";
 import {
@@ -9,7 +10,7 @@ import {
   PLACEHOLDER_CONSOLE_VIEWS,
   SidebarGroupId
 } from "../constants/sidebar-nav";
-import { Header } from "../layout/header";
+import { ConsoleHeader } from "../layout/header";
 import { Sidebar } from "../layout/sidebar";
 import { Sessions } from "../layout/sessions";
 import { PlaceholderView } from "../shared/console-brand";
@@ -21,7 +22,6 @@ import { Memory } from "../views/memory";
 import { Models } from "../views/models";
 import { Skills } from "../views/skills";
 import { Tasks } from "../views/tasks";
-import { TooltipProvider } from "@supportflow/ui/tooltip";
 import { newAgentSession } from "@supportflow/shared/tauri-bridge/cmd/agent";
 import { ConsoleView, LocalCacheKey } from "@supportflow/shared/tauri-bridge/enums";
 import { useAgentConsoleState } from "../hooks/use-agent-console-state";
@@ -32,6 +32,9 @@ import {
   toggleConsoleTheme,
   type ConsoleTheme
 } from "../lib/agent-console/theme-sync";
+
+const { Content } = Layout;
+const { Text } = Typography;
 
 const DEFAULT_OPEN_GROUPS: Record<SidebarGroupId, boolean> = {
   [SidebarGroupId.Chat]: true,
@@ -78,11 +81,13 @@ export function AgentConsoleApp() {
   const viewContent = useMemo(() => {
     if (activeView === ConsoleView.Chat) {
       return (
-        <Chat
-          sessionId={state?.sessionId}
-          consoleState={state}
-          onNewSession={() => void handleNewSession()}
-        />
+        <div className="agent-chat-page">
+          <Chat
+            sessionId={state?.sessionId}
+            consoleState={state}
+            onNewSession={() => void handleNewSession()}
+          />
+        </div>
       );
     }
     if (activeView === ConsoleView.Config) {
@@ -126,57 +131,61 @@ export function AgentConsoleApp() {
 
   if (loading) {
     return (
-      <TooltipProvider>
-        <div className="agent-console flex flex-1 items-center justify-center text-sm text-slate-500">
-          正在加载 Agent...
-        </div>
-      </TooltipProvider>
+      <Layout
+        className="agent-console"
+        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+      >
+        <Spin tip="正在加载 Agent..." />
+      </Layout>
     );
   }
 
   if (error) {
     return (
-      <TooltipProvider>
-        <div className="agent-console flex flex-1 flex-col items-center justify-center gap-2 p-6 text-sm text-red-500">
-          <p>无法初始化 Agent</p>
-          <p className="text-muted-foreground max-w-md text-center text-xs">{error}</p>
-        </div>
-      </TooltipProvider>
+      <Layout
+        className="agent-console"
+        style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}
+      >
+        <Empty title="无法初始化 Agent" description={error} />
+      </Layout>
     );
   }
 
   return (
-    <TooltipProvider>
-      <div className="agent-console relative flex h-full min-h-0 flex-1 overflow-hidden bg-gray-50 font-sans text-slate-800 dark:bg-[#111111] dark:text-slate-200">
-        <Sidebar
-          navGroups={sidebarNavGroups}
+    <Layout
+      className="agent-console"
+      style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden" }}
+    >
+      <Sidebar
+        navGroups={sidebarNavGroups}
+        activeView={activeView}
+        onNavigate={setActiveView}
+        openGroups={openGroups}
+        onToggleGroup={toggleGroup}
+        mobileOpen={mobileNavOpen}
+        onCloseMobile={() => setMobileNavOpen(false)}
+      />
+
+      <Sessions
+        open={sessionsOpen}
+        sessionId={state?.sessionId}
+        onClose={() => setSessionsOpen(false)}
+        onNewChat={() => void handleNewSession()}
+      />
+
+      <Layout
+        style={{ minHeight: 0, minWidth: 0, flex: 1, display: "flex", flexDirection: "column" }}
+      >
+        <ConsoleHeader
           activeView={activeView}
-          onNavigate={setActiveView}
-          openGroups={openGroups}
-          onToggleGroup={toggleGroup}
-          mobileOpen={mobileNavOpen}
-          onCloseMobile={() => setMobileNavOpen(false)}
+          devChannel={devChannel}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+          onToggleSessions={() => setSessionsOpen((v) => !v)}
+          onToggleMobileSidebar={() => setMobileNavOpen((v) => !v)}
         />
-
-        <Sessions
-          open={sessionsOpen}
-          sessionId={state?.sessionId}
-          onClose={() => setSessionsOpen(false)}
-          onNewChat={() => void handleNewSession()}
-        />
-
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <Header
-            activeView={activeView}
-            devChannel={devChannel}
-            theme={theme}
-            onToggleTheme={handleToggleTheme}
-            onToggleSessions={() => setSessionsOpen((v) => !v)}
-            onToggleMobileSidebar={() => setMobileNavOpen((v) => !v)}
-          />
-          <div className="min-h-0 flex-1 overflow-hidden">{viewContent}</div>
-        </div>
-      </div>
-    </TooltipProvider>
+        <Content style={{ minHeight: 0, flex: 1, overflow: "hidden" }}>{viewContent}</Content>
+      </Layout>
+    </Layout>
   );
 }

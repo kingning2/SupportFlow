@@ -1,20 +1,21 @@
+import type { ReactNode } from "react";
+import {
+  IconBolt,
+  IconBookStroked,
+  IconBookmark,
+  IconClock,
+  IconCommentStroked,
+  IconConfigStroked,
+  IconConnectionPoint2,
+  IconServer,
+  IconTerminal
+} from "@douyinfe/semi-icons";
+
 import {
   ConsoleView,
   channelLabel,
   type ChannelCatalogEntryId
 } from "@supportflow/shared/tauri-bridge/enums";
-import {
-  BookOpen,
-  Brain,
-  Clock,
-  Cpu,
-  MessageSquare,
-  Radio,
-  SlidersHorizontal,
-  Terminal,
-  Zap,
-  type LucideIcon
-} from "lucide-react";
 
 export enum SidebarGroupId {
   Chat = "chat",
@@ -24,7 +25,7 @@ export enum SidebarGroupId {
 
 export interface SidebarNavItem {
   view: ConsoleView;
-  icon: LucideIcon;
+  icon: ReactNode;
   label: string;
 }
 
@@ -37,7 +38,7 @@ export interface SidebarNavGroup {
 function channelNavItem(devChannel: ChannelCatalogEntryId): SidebarNavItem {
   return {
     view: ConsoleView.Channels,
-    icon: Radio,
+    icon: <IconConnectionPoint2 />,
     label: channelLabel(devChannel)
   };
 }
@@ -45,31 +46,31 @@ function channelNavItem(devChannel: ChannelCatalogEntryId): SidebarNavItem {
 export function getSidebarNavGroups(devChannel: ChannelCatalogEntryId | null): SidebarNavGroup[] {
   const channelItem: SidebarNavItem = devChannel
     ? channelNavItem(devChannel)
-    : { view: ConsoleView.Channels, icon: Radio, label: "通道" };
+    : { view: ConsoleView.Channels, icon: <IconConnectionPoint2 />, label: "通道" };
 
   return [
     {
       id: SidebarGroupId.Chat,
       label: "对话",
-      items: [{ view: ConsoleView.Chat, icon: MessageSquare, label: "聊天" }]
+      items: [{ view: ConsoleView.Chat, icon: <IconCommentStroked />, label: "聊天" }]
     },
     {
       id: SidebarGroupId.Manage,
       label: "管理",
       items: [
-        { view: ConsoleView.Config, icon: SlidersHorizontal, label: "配置" },
-        { view: ConsoleView.Models, icon: Cpu, label: "模型" },
-        { view: ConsoleView.Skills, icon: Zap, label: "技能" },
-        { view: ConsoleView.Memory, icon: Brain, label: "记忆" },
-        { view: ConsoleView.Knowledge, icon: BookOpen, label: "知识库" },
+        { view: ConsoleView.Config, icon: <IconConfigStroked />, label: "配置" },
+        { view: ConsoleView.Models, icon: <IconServer />, label: "模型" },
+        { view: ConsoleView.Skills, icon: <IconBolt />, label: "技能" },
+        { view: ConsoleView.Memory, icon: <IconBookmark />, label: "记忆" },
+        { view: ConsoleView.Knowledge, icon: <IconBookStroked />, label: "知识库" },
         channelItem,
-        { view: ConsoleView.Tasks, icon: Clock, label: "任务" }
+        { view: ConsoleView.Tasks, icon: <IconClock />, label: "任务" }
       ]
     },
     {
       id: SidebarGroupId.Monitor,
       label: "监控",
-      items: [{ view: ConsoleView.Logs, icon: Terminal, label: "日志" }]
+      items: [{ view: ConsoleView.Logs, icon: <IconTerminal />, label: "日志" }]
     }
   ];
 }

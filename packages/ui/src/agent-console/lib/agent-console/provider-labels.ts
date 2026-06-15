@@ -13,6 +13,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   dashscope: "DashScope",
   minimax: "MiniMax",
   linkai: "LinkAI",
+  ollama: "Ollama（本地）",
   custom: "自定义",
   baidu: "百度千帆",
   qianfan: "百度千帆",

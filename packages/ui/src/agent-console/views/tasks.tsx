@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock3 } from "lucide-react";
+import { Card, Empty, Space, Spin, Tag, Typography } from "@douyinfe/semi-ui-19";
+import { IconClock } from "@douyinfe/semi-icons";
 
 import { listAgentTasks, type AgentTaskSummary } from "@supportflow/shared/tauri-bridge/cmd/agent";
+
 import { ViewShell } from "../shared/console-brand";
+
+const { Text } = Typography;
 
 export function Tasks() {
   const [loading, setLoading] = useState(true);
@@ -19,13 +23,9 @@ export function Tasks() {
           setTasks(data.filter((task) => task.enabled !== false));
         }
       } catch {
-        if (mounted) {
-          setTasks([]);
-        }
+        if (mounted) setTasks([]);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
     };
     void load();
@@ -35,39 +35,32 @@ export function Tasks() {
   }, []);
 
   return (
-    <ViewShell title={"定时任务"} description={"查看和管理定时任务"}>
-      <div className="mx-auto w-full max-w-4xl">
-        {loading || tasks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 py-20 dark:border-white/10">
-            <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-900/20">
-              <Clock3 className="size-7 text-rose-400" />
-            </div>
-            <p className="font-medium text-slate-500 dark:text-slate-400">{"定时任务"}</p>
-            <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">
-              {loading ? "加载定时任务中..." : "暂无定时任务"}
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {tasks.map((task) => (
-              <div
-                key={task.id}
-                className="rounded-xl border border-slate-200 p-4 dark:border-white/10 dark:bg-[#1A1A1A]"
-              >
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="size-2 rounded-full bg-[#35A85B]" />
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                    {task.name || task.id}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {"下次执行"}: {task.nextRunAt ?? "—"}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+    <ViewShell title="定时任务" description="查看和管理定时任务">
+      {loading ? (
+        <Spin tip="加载定时任务中..." style={{ display: "block", margin: "48px auto" }} />
+      ) : tasks.length === 0 ? (
+        <Empty
+          image={<IconClock size="extra-large" />}
+          title="定时任务"
+          description="暂无定时任务"
+        />
+      ) : (
+        <Space vertical style={{ width: "100%" }} spacing="medium">
+          {tasks.map((task) => (
+            <Card key={task.id} bodyStyle={{ padding: 16 }}>
+              <Space>
+                <Tag color="green" size="small">
+                  启用
+                </Tag>
+                <Text strong>{task.name || task.id}</Text>
+              </Space>
+              <Text type="tertiary" size="small" style={{ display: "block", marginTop: 8 }}>
+                下次执行: {task.nextRunAt ?? "—"}
+              </Text>
+            </Card>
+          ))}
+        </Space>
+      )}
     </ViewShell>
   );
 }

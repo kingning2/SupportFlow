@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { Avatar, Button, Card, Space, Tag, Typography } from "@douyinfe/semi-ui-19";
 
 import {
   channelAction,
@@ -15,8 +15,9 @@ import {
   draftsFromChannel,
   type ChannelFieldDrafts
 } from "./channel-fields";
-import { CHANNEL_ICON_MAP, channelColorClasses } from "./channel-theme";
-import { Button } from "@supportflow/ui/button";
+import { channelColorStyle, channelIconNode } from "./channel-theme";
+
+const { Text } = Typography;
 
 interface ActiveChannelCardProps {
   channel: ChannelCatalogEntry;
@@ -27,10 +28,9 @@ interface ActiveChannelCardProps {
 
 function ChannelStatusBadge() {
   return (
-    <>
-      <span className="bg-success size-2 rounded-full" />
-      <span className="text-success text-xs">已接入</span>
-    </>
+    <Tag color="green" size="small" type="light">
+      已接入
+    </Tag>
   );
 }
 
@@ -45,8 +45,8 @@ export function ActiveChannelCard({
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [statusError, setStatusError] = useState(false);
 
-  const colors = channelColorClasses(channel.color);
-  const Icon = CHANNEL_ICON_MAP[channel.icon ?? ""] ?? MessageCircle;
+  const colors = channelColorStyle(channel.color);
+  const icon = channelIconNode(channel.icon);
   const label = localizeChannelText(channel.label, lang);
 
   const hasFields = channel.fields.length > 0;
@@ -73,60 +73,64 @@ export function ActiveChannelCard({
     }
   };
 
-  const headerMb = hasFields ? "mb-5" : "";
-
   return (
-    <div
-      id={`channel-card-${channel.name}`}
-      className="bg-card border-border rounded-xl border p-6"
-    >
-      <div className={`flex items-center gap-4${headerMb ? ` ${headerMb}` : ""}`}>
-        <div
-          className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${colors.iconBox}`}
-        >
-          <Icon className={`size-4 ${colors.icon}`} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-foreground font-semibold">{label}</span>
-            <ChannelStatusBadge />
+    <div id={`channel-card-${channel.name}`}>
+      <Card bodyStyle={{ padding: 24 }}>
+        <Space style={{ width: "100%", marginBottom: showSaveBlock ? 20 : 0 }}>
+          <Avatar
+            size="medium"
+            style={{
+              background: colors.iconBox,
+              color: colors.icon,
+              flexShrink: 0
+            }}
+          >
+            {icon}
+          </Avatar>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <Space spacing="tight">
+              <Text strong>{label}</Text>
+              <ChannelStatusBadge />
+            </Space>
+            <Text type="tertiary" size="small" code style={{ display: "block", marginTop: 2 }}>
+              {channel.name}
+            </Text>
           </div>
-          <p className="text-muted-foreground mt-0.5 font-mono text-xs">{channel.name}</p>
-        </div>
-        <Button
-          type="button"
-          variant="destructive"
-          className="h-auto px-3 py-1.5 text-xs"
-          onClick={() => onDisconnect(channel.name)}
-        >
-          断开
-        </Button>
-      </div>
+          <Button
+            type="danger"
+            theme="solid"
+            size="small"
+            onClick={() => onDisconnect(channel.name)}
+          >
+            断开
+          </Button>
+        </Space>
 
-      {showSaveBlock ? (
-        <div className="space-y-4">
-          {channel.hint ? <ChannelHint hint={channel.hint} lang={lang} /> : null}
-          <ChannelFields
-            channelName={channel.name}
-            fields={channel.fields}
-            lang={lang}
-            drafts={drafts}
-            onChange={setDrafts}
-          />
-          <div className="flex items-center justify-end gap-3 pt-1">
-            <span
-              className={`text-xs transition-opacity duration-300 ${
-                statusMsg ? "opacity-100" : "opacity-0"
-              } ${statusError ? "text-destructive" : "text-success"}`}
-            >
-              {statusMsg}
-            </span>
-            <Button type="button" disabled={saving} onClick={() => void handleSave()}>
-              {saving ? "保存中..." : "保存配置"}
-            </Button>
-          </div>
-        </div>
-      ) : null}
+        {showSaveBlock ? (
+          <Space vertical spacing="medium" style={{ width: "100%" }}>
+            {channel.hint ? <ChannelHint hint={channel.hint} lang={lang} /> : null}
+            <ChannelFields
+              channelName={channel.name}
+              fields={channel.fields}
+              lang={lang}
+              drafts={drafts}
+              onChange={setDrafts}
+            />
+            <Space style={{ width: "100%", justifyContent: "flex-end" }}>
+              <Text
+                size="small"
+                type={statusError ? "danger" : "success"}
+                style={{ opacity: statusMsg ? 1 : 0, transition: "opacity 0.3s" }}
+              >
+                {statusMsg}
+              </Text>
+              <Button loading={saving} onClick={() => void handleSave()}>
+                {saving ? "保存中..." : "保存配置"}
+              </Button>
+            </Space>
+          </Space>
+        ) : null}
+      </Card>
     </div>
   );
 }

@@ -2,16 +2,34 @@
 
 import { Graphin } from "@antv/graphin";
 import { CanvasEvent, type Graph, NodeEvent } from "@antv/g6";
-import { Network, RotateCcw, Search, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import {
+  Button,
+  Card,
+  Col,
+  Empty,
+  Input,
+  List,
+  Row,
+  Space,
+  Spin,
+  Tag,
+  Typography
+} from "@douyinfe/semi-ui-19";
+import {
+  IconBolt,
+  IconClear,
+  IconRefresh,
+  IconSearch,
+  IconTreeTriangleDown
+} from "@douyinfe/semi-icons";
 
 import type {
   AgentKnowledgeGraphLink,
   AgentKnowledgeGraphNode
 } from "@supportflow/shared/tauri-bridge/cmd/agent";
-import { cn } from "@supportflow/shared";
-import { Button } from "@supportflow/ui/button";
-import { Input } from "@supportflow/ui/input";
+
+const { Text, Title, Paragraph } = Typography;
 
 interface KnowledgeGraphPanelProps {
   links: AgentKnowledgeGraphLink[];
@@ -185,9 +203,18 @@ function buildGraphState(params: {
 
 function LoadingState({ text }: { text: string }) {
   return (
-    <div className="bg-card border-border flex h-full min-h-0 items-center justify-center rounded-2xl border">
-      <p className="text-muted-foreground text-sm">{text}</p>
-    </div>
+    <Card
+      style={{
+        height: "100%",
+        minHeight: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}
+      bodyStyle={{ width: "100%", textAlign: "center" }}
+    >
+      <Spin tip={text} />
+    </Card>
   );
 }
 
@@ -201,13 +228,22 @@ function EmptyState({
   uploading: boolean;
 }) {
   return (
-    <div className="bg-card border-border flex h-full min-h-0 flex-col items-center justify-center gap-3 rounded-2xl border p-8 text-center">
-      <Network className="text-muted-foreground size-10" />
-      <p className="text-muted-foreground max-w-md text-sm">{hint}</p>
-      <Button type="button" size="sm" variant="secondary" disabled={uploading} onClick={onUpload}>
-        Upload
-      </Button>
-    </div>
+    <Card
+      style={{
+        height: "100%",
+        minHeight: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}
+      bodyStyle={{ width: "100%" }}
+    >
+      <Empty image={<IconTreeTriangleDown size="extra-large" />} description={hint}>
+        <Button loading={uploading} onClick={onUpload}>
+          上传文档
+        </Button>
+      </Empty>
+    </Card>
   );
 }
 
@@ -224,54 +260,63 @@ function GraphCanvasSection(props: {
 }) {
   const { graphState, linksCount, nodesCount, onInit, onQueryChange, onReset, query, summary } =
     props;
+
   return (
-    <section className="bg-card border-border flex min-h-0 flex-col overflow-hidden rounded-2xl border">
-      <div className="border-border flex flex-col gap-3 border-b px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h3 className="text-foreground text-sm font-semibold">{"知识图谱"}</h3>
-          <p className="text-muted-foreground mt-1 text-xs">
-            {`根据文档之间的引用关系，当前共显示 ${nodesCount} 个节点和 ${linksCount} 条关系。`}
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="relative min-w-[220px] flex-1">
-            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-            <Input
-              value={query}
-              onChange={(event) => onQueryChange(event.target.value)}
-              placeholder={"按标题、路径或分类搜索节点"}
-              className="bg-background border-border pl-9"
-            />
-          </div>
-          <Button type="button" size="sm" variant="outline" onClick={onReset}>
-            <RotateCcw className="mr-1.5 size-3.5" />
-            {"重置视图"}
-          </Button>
-        </div>
+    <Card
+      style={{ minHeight: 0, height: "100%", display: "flex", flexDirection: "column" }}
+      bodyStyle={{ padding: 0, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}
+    >
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--semi-color-border)" }}>
+        <Row type="flex" align="middle" justify="space-between" gutter={12}>
+          <Col xs={24} lg={12}>
+            <Title heading={6} style={{ margin: 0 }}>
+              知识图谱
+            </Title>
+            <Text type="tertiary" size="small" style={{ display: "block", marginTop: 4 }}>
+              {`根据文档之间的引用关系，当前共显示 ${nodesCount} 个节点和 ${linksCount} 条关系。`}
+            </Text>
+          </Col>
+          <Col xs={24} lg={12}>
+            <Space style={{ width: "100%", justifyContent: "flex-end" }} wrap>
+              <Input
+                prefix={<IconSearch />}
+                value={query}
+                onChange={onQueryChange}
+                placeholder="按标题、路径或分类搜索节点"
+                style={{ minWidth: 220, flex: 1 }}
+              />
+              <Button icon={<IconRefresh />} theme="light" onClick={onReset}>
+                重置视图
+              </Button>
+            </Space>
+          </Col>
+        </Row>
       </div>
 
-      <div className="border-border bg-muted/25 flex items-center gap-2 border-b px-4 py-2 text-xs">
-        <span className="text-foreground font-medium">
-          {"节点"} {summary}
-        </span>
-        <span className="text-muted-foreground">|</span>
-        <span className="text-muted-foreground">
-          {"引用关系"} {linksCount}
-        </span>
-        <span className="text-muted-foreground">|</span>
-        <span className="text-muted-foreground">{"点击节点可查看关联文档"}</span>
-      </div>
+      <Space
+        spacing="tight"
+        style={{
+          padding: "8px 16px",
+          borderBottom: "1px solid var(--semi-color-border)",
+          fontSize: 12
+        }}
+      >
+        <Text strong>节点 {summary}</Text>
+        <Text type="tertiary">|</Text>
+        <Text type="tertiary">引用关系 {linksCount}</Text>
+        <Text type="tertiary">|</Text>
+        <Text type="tertiary">点击节点可查看关联文档</Text>
+      </Space>
 
-      <div className="relative flex-1 bg-[hsl(var(--surface-0,var(--background)))]">
+      <div style={{ position: "relative", flex: 1, minHeight: 0, background: GRAPH_THEME.canvas }}>
         <Graphin
-          className="h-full w-full"
-          style={{ background: GRAPH_THEME.canvas }}
+          style={{ width: "100%", height: "100%", background: GRAPH_THEME.canvas }}
           options={graphState.options}
           onInit={onInit}
           onDestroy={() => undefined}
         />
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -280,112 +325,137 @@ function GraphDetailsPanel(props: {
   selectedNode: GraphPanelNode | null;
 }) {
   const { onNeighborSelect, selectedNode } = props;
+
   return (
-    <aside className="bg-card border-border flex min-h-0 flex-col overflow-hidden rounded-2xl border">
-      <div className="border-border border-b px-4 py-3">
-        <h3 className="text-foreground text-sm font-semibold">{"节点详情"}</h3>
-        <p className="text-muted-foreground mt-1 text-xs">
+    <Card
+      style={{ minHeight: 0, height: "100%", display: "flex", flexDirection: "column" }}
+      bodyStyle={{ padding: 0, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}
+    >
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--semi-color-border)" }}>
+        <Title heading={6} style={{ margin: 0 }}>
+          节点详情
+        </Title>
+        <Text type="tertiary" size="small" style={{ display: "block", marginTop: 4 }}>
           {selectedNode
             ? "正在查看当前选中的文档节点。"
             : "请在图谱中选择一个节点，查看其关联详情。"}
-        </p>
+        </Text>
       </div>
 
       {selectedNode ? (
-        <div className="flex flex-1 flex-col overflow-y-auto p-4">
-          <div className="bg-muted/50 rounded-xl p-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-foreground truncate text-sm font-semibold">
+        <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+          <div
+            style={{
+              background: "var(--semi-color-fill-0)",
+              borderRadius: 12,
+              padding: 12
+            }}
+          >
+            <Space style={{ width: "100%", justifyContent: "space-between" }} align="start">
+              <div style={{ minWidth: 0 }}>
+                <Text strong ellipsis={{ showTooltip: true }} style={{ display: "block" }}>
                   {selectedNode.label}
-                </p>
-                <p className="text-muted-foreground mt-1 font-mono text-[11px] break-all">
+                </Text>
+                <Text
+                  type="tertiary"
+                  size="small"
+                  code
+                  style={{ display: "block", marginTop: 4, wordBreak: "break-all" }}
+                >
                   {selectedNode.id}
-                </p>
+                </Text>
               </div>
-              <span className="bg-primary/10 text-primary rounded-full px-2 py-1 text-[11px] font-medium">
+              <Tag color="blue" size="small">
                 {selectedNode.category}
-              </span>
-            </div>
+              </Tag>
+            </Space>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="bg-background border-border rounded-xl border p-3">
-              <p className="text-muted-foreground text-[11px]">{"连接度"}</p>
-              <p className="text-foreground mt-1 text-lg font-semibold">{selectedNode.degree}</p>
-            </div>
-            <div className="bg-background border-border rounded-xl border p-3">
-              <p className="text-muted-foreground text-[11px]">{"关联数量"}</p>
-              <p className="text-foreground mt-1 text-lg font-semibold">
-                {selectedNode.neighbors.length}
-              </p>
-            </div>
-          </div>
+          <Row gutter={12} style={{ marginTop: 16 }}>
+            <Col span={12}>
+              <Card bodyStyle={{ padding: 12 }}>
+                <Text type="tertiary" size="small">
+                  连接度
+                </Text>
+                <Title heading={4} style={{ margin: "4px 0 0" }}>
+                  {selectedNode.degree}
+                </Title>
+              </Card>
+            </Col>
+            <Col span={12}>
+              <Card bodyStyle={{ padding: 12 }}>
+                <Text type="tertiary" size="small">
+                  关联数量
+                </Text>
+                <Title heading={4} style={{ margin: "4px 0 0" }}>
+                  {selectedNode.neighbors.length}
+                </Title>
+              </Card>
+            </Col>
+          </Row>
 
-          <div className="mt-4">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-foreground text-sm font-medium">{"关联文档"}</p>
+          <div style={{ marginTop: 16 }}>
+            <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 8 }}>
+              <Text strong>关联文档</Text>
               <Button
-                type="button"
-                size="sm"
-                variant="ghost"
+                icon={<IconClear />}
+                theme="borderless"
+                type="tertiary"
+                size="small"
                 onClick={() => onNeighborSelect(null)}
               >
-                {"清除"}
+                清除
               </Button>
-            </div>
-            <div className="space-y-2">
-              {selectedNode.neighbors.length > 0 ? (
-                selectedNode.neighbors.map((neighbor) => (
-                  <button
-                    key={neighbor.id}
-                    type="button"
-                    className={cn(
-                      "bg-background border-border hover:border-primary/40 hover:bg-accent/35 flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors"
-                    )}
+            </Space>
+            {selectedNode.neighbors.length > 0 ? (
+              <List
+                dataSource={selectedNode.neighbors}
+                renderItem={(neighbor) => (
+                  <List.Item
                     onClick={() => onNeighborSelect(neighbor.id)}
-                  >
-                    <div className="min-w-0">
-                      <p className="text-foreground truncate text-sm font-medium">
-                        {neighbor.label}
-                      </p>
-                      <p className="text-muted-foreground mt-0.5 truncate font-mono text-[11px]">
-                        {neighbor.id}
-                      </p>
-                    </div>
-                    <span className="text-muted-foreground shrink-0 text-[11px]">
-                      {neighbor.category}
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <div className="bg-muted/35 rounded-xl px-3 py-4 text-center">
-                  <p className="text-muted-foreground text-sm">{"当前文档暂无关联链接。"}</p>
-                </div>
-              )}
-            </div>
+                    style={{ cursor: "pointer", borderRadius: 8, marginBottom: 4 }}
+                    main={
+                      <Space vertical align="start" spacing={2} style={{ minWidth: 0 }}>
+                        <Text strong ellipsis={{ showTooltip: true }}>
+                          {neighbor.label}
+                        </Text>
+                        <Text type="tertiary" size="small" code ellipsis={{ showTooltip: true }}>
+                          {neighbor.id}
+                        </Text>
+                      </Space>
+                    }
+                    extra={
+                      <Text type="tertiary" size="small">
+                        {neighbor.category}
+                      </Text>
+                    }
+                  />
+                )}
+              />
+            ) : (
+              <Empty description="当前文档暂无关联链接。" style={{ padding: "16px 0" }} />
+            )}
           </div>
 
-          <div className="mt-4 rounded-xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--surface-1,var(--muted)))]/50 p-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="text-primary size-4" />
-              <p className="text-foreground text-sm font-medium">{"使用提示"}</p>
-            </div>
-            <p className="text-muted-foreground mt-2 text-xs leading-5">
-              {"在 Markdown 文档之间补充链接，可以让知识图谱更密集、更有用。"}
-            </p>
-          </div>
+          <Card style={{ marginTop: 16, borderStyle: "dashed" }} bodyStyle={{ padding: 12 }}>
+            <Space spacing="tight">
+              <IconBolt style={{ color: "var(--semi-color-primary)" }} />
+              <Text strong>使用提示</Text>
+            </Space>
+            <Paragraph type="tertiary" size="small" style={{ margin: "8px 0 0" }}>
+              在 Markdown 文档之间补充链接，可以让知识图谱更密集、更有用。
+            </Paragraph>
+          </Card>
         </div>
       ) : (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-          <Network className="text-muted-foreground size-8" />
-          <p className="text-foreground text-sm font-medium">{"请选择节点"}</p>
-          <p className="text-muted-foreground max-w-[240px] text-xs leading-5">
-            {"在图中点击一个文档节点，可查看分类、连接度和关联文档。"}
-          </p>
-        </div>
+        <Empty
+          style={{ margin: "auto", padding: 24 }}
+          image={<IconTreeTriangleDown size="large" />}
+          title="请选择节点"
+          description="在图中点击一个文档节点，可查看分类、连接度和关联文档。"
+        />
       )}
-    </aside>
+    </Card>
   );
 }
 
@@ -417,15 +487,13 @@ export function KnowledgeGraphPanel({
   }, [graphInstance, selectedNodeId]);
 
   if (loading) {
-    return <LoadingState text={"加载知识库中…"} />;
+    return <LoadingState text="加载知识库中…" />;
   }
 
   if (nodes.length === 0) {
     return (
       <EmptyState
-        hint={
-          "暂无知识文档。点击「上传文档」导入 PDF、Word 等，或在工作区 knowledge/ 添加 Markdown。"
-        }
+        hint="暂无知识文档。点击「上传文档」导入 PDF、Word 等，或在工作区 knowledge/ 添加 Markdown。"
         onUpload={onUpload}
         uploading={uploading}
       />
@@ -433,34 +501,38 @@ export function KnowledgeGraphPanel({
   }
 
   return (
-    <div className="grid h-full min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[3fr_1fr]">
-      <GraphCanvasSection
-        graphInstance={graphInstance}
-        graphState={graphState}
-        linksCount={links.length}
-        nodesCount={nodes.length}
-        onInit={(graph) => {
-          setGraphInstance(graph);
-          graph.on(NodeEvent.CLICK, (event) => {
-            const targetId = (event as GraphNodeClickEvent).target?.id;
-            if (targetId !== undefined && targetId !== null) {
-              setSelectedNodeId(String(targetId));
-            }
-          });
-          graph.on(CanvasEvent.CLICK, () => setSelectedNodeId(null));
-        }}
-        onQueryChange={setQuery}
-        onReset={() => {
-          setSelectedNodeId(null);
-          void graphInstance?.fitView();
-        }}
-        query={query}
-        summary={`${graphState.filteredNodeCount}/${nodes.length}`}
-      />
-      <GraphDetailsPanel
-        onNeighborSelect={setSelectedNodeId}
-        selectedNode={graphState.selectedNode}
-      />
-    </div>
+    <Row gutter={16} style={{ height: "100%", minHeight: 0, flex: 1 }}>
+      <Col span={18} xs={24} lg={18} style={{ minHeight: 0, height: "100%" }}>
+        <GraphCanvasSection
+          graphInstance={graphInstance}
+          graphState={graphState}
+          linksCount={links.length}
+          nodesCount={nodes.length}
+          onInit={(graph) => {
+            setGraphInstance(graph);
+            graph.on(NodeEvent.CLICK, (event) => {
+              const targetId = (event as GraphNodeClickEvent).target?.id;
+              if (targetId !== undefined && targetId !== null) {
+                setSelectedNodeId(String(targetId));
+              }
+            });
+            graph.on(CanvasEvent.CLICK, () => setSelectedNodeId(null));
+          }}
+          onQueryChange={setQuery}
+          onReset={() => {
+            setSelectedNodeId(null);
+            void graphInstance?.fitView();
+          }}
+          query={query}
+          summary={`${graphState.filteredNodeCount}/${nodes.length}`}
+        />
+      </Col>
+      <Col span={6} xs={24} lg={6} style={{ minHeight: 0, height: "100%" }}>
+        <GraphDetailsPanel
+          onNeighborSelect={setSelectedNodeId}
+          selectedNode={graphState.selectedNode}
+        />
+      </Col>
+    </Row>
   );
 }

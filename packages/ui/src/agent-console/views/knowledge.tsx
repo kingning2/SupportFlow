@@ -1,7 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, FolderTree, Network, Upload } from "lucide-react";
+import {
+  Banner,
+  Button,
+  Col,
+  Empty,
+  List,
+  Row,
+  Space,
+  Spin,
+  Tabs,
+  Typography
+} from "@douyinfe/semi-ui-19";
+import { IconBookOpenStroked, IconUpload } from "@douyinfe/semi-icons";
 
 import {
   getAgentKnowledgeGraph,
@@ -12,13 +24,20 @@ import {
   type AgentKnowledgeGraphLink,
   type AgentKnowledgeGraphNode
 } from "@supportflow/shared/tauri-bridge/cmd/agent";
-import { cn } from "@supportflow/shared";
-import { Button } from "@supportflow/ui/button";
 
 import { ViewShell } from "../shared/console-brand";
 import { KnowledgeGraphPanel } from "./knowledge-graph-panel";
 
+const { Text, Paragraph } = Typography;
+const { TabPane } = Tabs;
+
 type KnowledgeTab = "docs" | "graph";
+
+function statusBannerType(tone: "success" | "error" | "info"): "success" | "danger" | "info" {
+  if (tone === "success") return "success";
+  if (tone === "error") return "danger";
+  return "info";
+}
 
 export function Knowledge() {
   const [tab, setTab] = useState<KnowledgeTab>("docs");
@@ -90,7 +109,6 @@ export function Knowledge() {
     }
   };
 
-  // Opens the system file dialog from Rust side. Rust reads the files directly and performs ingest.
   const handleUploadClick = async () => {
     setUploading(true);
     setStatusMessage("正在导入…");
@@ -102,7 +120,7 @@ export function Knowledge() {
       if (result.count > 0) {
         let msg = `已导入 ${result.count} 个文档`;
         if (result.memorySynced) {
-          msg += ` / ${"记忆索引已更新"}`;
+          msg += " / 记忆索引已更新";
         }
         setStatusMessage(msg);
         setStatusTone("success");
@@ -129,152 +147,178 @@ export function Knowledge() {
       }
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
-      setStatusMessage(`${"导入失败"}: ${detail}`);
+      setStatusMessage(`导入失败: ${detail}`);
       setStatusTone("error");
     } finally {
       setUploading(false);
     }
   };
 
+  const toolbarExtra = (
+    <Space spacing="tight">
+      <Button icon={<IconUpload />} loading={uploading} onClick={() => void handleUploadClick()}>
+        {uploading ? "正在导入…" : "上传文档"}
+      </Button>
+      <Tabs type="button" activeKey={tab} onChange={(key) => setTab(key as KnowledgeTab)}>
+        <TabPane tab="文档" itemKey="docs" />
+        <TabPane tab="图谱" itemKey="graph" />
+      </Tabs>
+    </Space>
+  );
+
   return (
-    <ViewShell title={"知识库"} description={"浏览和探索你的知识库"}>
-      <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col gap-4">
-        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-          <div className="min-h-5 flex-1">
-            {statusMessage ? (
-              <p
-                className={cn(
-                  "text-xs whitespace-pre-wrap",
-                  statusTone === "success" && "text-success",
-                  statusTone === "error" && "text-destructive",
-                  statusTone === "info" && "text-muted-foreground"
-                )}
-              >
-                {statusMessage}
-              </p>
-            ) : null}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              className="h-8"
-              variant="outline"
-              disabled={uploading}
-              onClick={handleUploadClick}
+    <ViewShell
+      title="知识库"
+      description={statusMessage ? undefined : "浏览和探索你的知识库"}
+      extra={toolbarExtra}
+    >
+      {statusMessage ? (
+        <Banner
+          fullMode={false}
+          bordered={false}
+          closeIcon={null}
+          type={statusBannerType(statusTone)}
+          description={<span style={{ whiteSpace: "pre-wrap" }}>{statusMessage}</span>}
+          style={{ marginBottom: 16 }}
+        />
+      ) : null}
+
+      {tab === "docs" ? (
+        <Row gutter={16} style={{ minHeight: 0, flex: 1 }}>
+          <Col span={7} xs={24} lg={7}>
+            <div
+              style={{
+                border: "1px solid var(--semi-color-border)",
+                borderRadius: 12,
+                overflow: "hidden",
+                height: "100%"
+              }}
             >
-              <Upload className="mr-1.5 size-3.5" />
-              {uploading ? "正在导入…" : "上传文档"}
-            </Button>
-            <div className="bg-muted flex items-center rounded-lg p-0.5">
-              <Button
-                type="button"
-                size="sm"
-                className={cn("h-8 px-3 text-xs", tab === "docs" && "bg-background")}
-                variant={tab === "docs" ? "default" : "ghost"}
-                onClick={() => setTab("docs")}
+              <div
+                style={{
+                  padding: "8px 12px",
+                  borderBottom: "1px solid var(--semi-color-border)",
+                  fontSize: 12,
+                  color: "var(--semi-color-text-2)"
+                }}
               >
-                <FolderTree className="mr-1.5 size-3.5" />
-                {"文档"}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className={cn("h-8 px-3 text-xs", tab === "graph" && "bg-background")}
-                variant={tab === "graph" ? "default" : "ghost"}
-                onClick={() => setTab("graph")}
-              >
-                <Network className="mr-1.5 size-3.5" />
-                {"图谱"}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {tab === "docs" ? (
-          <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[280px_1fr]">
-            <div className="bg-card border-border overflow-hidden rounded-xl border">
-              <div className="border-border text-muted-foreground border-b px-3 py-2 text-xs font-medium">
-                {"文档"} ({files.length})
+                文档 ({files.length})
               </div>
-              <div className="max-h-[calc(100vh-240px)] overflow-y-auto p-2">
+              <div style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto", padding: 8 }}>
                 {loading ? (
-                  <p className="text-muted-foreground px-2 py-4 text-sm">{"加载知识库中…"}</p>
-                ) : files.length === 0 ? (
-                  <div className="space-y-3 px-2 py-4">
-                    <p className="text-muted-foreground text-sm">
-                      {
-                        "暂无知识文档。点击「上传文档」导入 PDF、Word 等，或在工作区 knowledge/ 添加 Markdown。"
-                      }
-                    </p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      disabled={uploading}
-                      onClick={handleUploadClick}
-                    >
-                      <Upload className="mr-1.5 size-3.5" />
-                      {"上传文档"}
-                    </Button>
-                  </div>
+                  <Spin style={{ display: "block", margin: "24px auto" }} tip="加载知识库中…" />
                 ) : (
-                  files.map((file) => (
-                    <button
-                      key={file.path}
-                      type="button"
-                      className={cn(
-                        "hover:bg-accent/40 mb-1 flex w-full flex-col rounded-lg px-3 py-2 text-left text-sm transition-colors",
-                        activePath === file.path && "bg-accent/70"
-                      )}
-                      onClick={() => void openFile(file.path)}
-                    >
-                      <span className="text-foreground font-medium">{file.title}</span>
-                      <span className="text-muted-foreground font-mono text-xs">{file.path}</span>
-                    </button>
-                  ))
+                  <List
+                    split
+                    dataSource={files}
+                    emptyContent={
+                      <Empty description="暂无知识文档。点击「上传文档」导入 PDF、Word 等，或在工作区 knowledge/ 添加 Markdown。">
+                        <Button
+                          icon={<IconUpload />}
+                          disabled={uploading}
+                          onClick={() => void handleUploadClick()}
+                        >
+                          上传文档
+                        </Button>
+                      </Empty>
+                    }
+                    renderItem={(file) => {
+                      const isActive = activePath === file.path;
+                      return (
+                        <List.Item
+                          onClick={() => void openFile(file.path)}
+                          style={
+                            isActive
+                              ? {
+                                  backgroundColor: "var(--semi-color-primary-light-default)",
+                                  cursor: "pointer"
+                                }
+                              : { cursor: "pointer" }
+                          }
+                          main={
+                            <Space vertical align="start" spacing={4} style={{ width: "100%" }}>
+                              <Text strong>{file.title}</Text>
+                              <Text type="tertiary" size="small" code>
+                                {file.path}
+                              </Text>
+                            </Space>
+                          }
+                        />
+                      );
+                    }}
+                  />
                 )}
               </div>
             </div>
-
-            <div className="bg-card border-border flex min-h-[320px] flex-col overflow-hidden rounded-xl border">
+          </Col>
+          <Col span={17} xs={24} lg={17}>
+            <div
+              style={{
+                border: "1px solid var(--semi-color-border)",
+                borderRadius: 12,
+                overflow: "hidden",
+                minHeight: 320,
+                display: "flex",
+                flexDirection: "column",
+                height: "100%"
+              }}
+            >
               {activePath ? (
                 <>
-                  <div className="border-border text-muted-foreground border-b px-4 py-2 font-mono text-xs">
-                    {activePath}
+                  <div
+                    style={{
+                      padding: "8px 16px",
+                      borderBottom: "1px solid var(--semi-color-border)",
+                      fontSize: 12,
+                      color: "var(--semi-color-text-2)"
+                    }}
+                  >
+                    <Text type="tertiary" size="small" code>
+                      {activePath}
+                    </Text>
                   </div>
-                  <pre className="text-foreground max-h-[calc(100vh-272px)] flex-1 overflow-y-auto p-4 text-sm whitespace-pre-wrap">
+                  <Paragraph
+                    copyable
+                    style={{
+                      flex: 1,
+                      margin: 0,
+                      padding: 16,
+                      overflow: "auto",
+                      whiteSpace: "pre-wrap",
+                      maxHeight: "calc(100vh - 300px)"
+                    }}
+                  >
                     {content || "从左侧选择文档查看"}
-                  </pre>
+                  </Paragraph>
                 </>
               ) : (
-                <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-                  <BookOpen className="text-primary size-8" />
-                  <p className="text-muted-foreground text-sm">{"从左侧选择文档查看"}</p>
+                <Empty
+                  style={{ margin: "auto", padding: 32 }}
+                  image={<IconBookOpenStroked size="extra-large" />}
+                  title="从左侧选择文档查看"
+                >
                   <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
+                    icon={<IconUpload />}
+                    theme="light"
                     disabled={uploading}
-                    onClick={handleUploadClick}
+                    onClick={() => void handleUploadClick()}
                   >
-                    <Upload className="mr-1.5 size-3.5" />
-                    {"上传文档"}
+                    上传文档
                   </Button>
-                </div>
+                </Empty>
               )}
             </div>
-          </div>
-        ) : (
-          <KnowledgeGraphPanel
-            nodes={graphNodes}
-            links={graphLinks}
-            loading={graphLoading}
-            uploading={uploading}
-            onUpload={handleUploadClick}
-          />
-        )}
-      </div>
+          </Col>
+        </Row>
+      ) : (
+        <KnowledgeGraphPanel
+          nodes={graphNodes}
+          links={graphLinks}
+          loading={graphLoading}
+          uploading={uploading}
+          onUpload={handleUploadClick}
+        />
+      )}
     </ViewShell>
   );
 }
