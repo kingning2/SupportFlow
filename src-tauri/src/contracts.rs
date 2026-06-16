@@ -7,3 +7,4 @@ pub use crate::context::channel::{
 pub use crate::events::payloads::{
     AgentConsoleState, AgentRunFinished, AgentStreamChunk, SkillItem, ToolItem,
 };
+pub use crate::services::channel::{ChannelAdapterCapability, ChannelTypeId};

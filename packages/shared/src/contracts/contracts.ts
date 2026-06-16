@@ -426,6 +426,19 @@ export interface WorkflowStartResponse {
   runId: string;
 }
 
+export enum ChannelAdapterCapability {
+  Connect = "connect",
+  Disconnect = "disconnect",
+  ListConversations = "list_conversations",
+  Send = "send",
+  OnMessage = "on_message",
+  Health = "health"
+}
+
+export enum ChannelTypeId {
+  Wework = "wework"
+}
+
 /** 节点在 Run 内的瞬时状态（executor 内部使用，可选持久化）。 */
 export enum NodeState {
   Idle = "idle",

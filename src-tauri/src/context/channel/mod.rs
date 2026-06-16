@@ -17,7 +17,7 @@ pub use crate::services::channel::{
     should_restart_channel,
 };
 pub use bridge::ChannelBridge;
-pub use catalog::build_catalog;
+pub use catalog::{build_catalog, validate_channel_id};
 pub use console_api::dispatch;
 pub use inbox::{
     ChannelConversationSummaryDto, ChannelInboxMessagePayload, ChannelInboxSnapshotDto,

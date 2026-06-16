@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from channel import channel_manager
+from channel.registry import extension_rpc_handler
 
 
 def handle_rust_request(req: dict) -> dict:
@@ -51,18 +52,6 @@ def handle_rust_request(req: dict) -> dict:
 
             return {"status": "success", "channel": channel_name}
 
-        def handle_wework_sync_contacts(_: dict) -> dict:
-            mgr = channel_manager.get_channel_manager()
-            if not mgr:
-                return {"status": "error", "message": "wework channel not running"}
-
-            running_ch = mgr.get_channel("wework")
-            if not running_ch:
-                return {"status": "error", "message": "wework channel not running"}
-
-            started = running_ch.start_contacts_sync(force=True)
-            return {"status": "success", "started": started}
-
         def handle_ping(_: dict) -> dict:
             return {"status": "success", "pong": True}
 
@@ -70,13 +59,16 @@ def handle_rust_request(req: dict) -> dict:
             "channel.start": handle_channel_start,
             "channel.stop": handle_channel_stop,
             "channel.restart": handle_channel_restart,
-            "wework.sync_contacts": handle_wework_sync_contacts,
             "ping": handle_ping,
         }
 
         handler = handlers.get(method)
         if handler is None:
-            return {"id": req_id, "error": f"unknown method: {method}"}
+            ext = extension_rpc_handler(method)
+            if ext is not None:
+                handler = ext
+            else:
+                return {"id": req_id, "error": f"unknown method: {method}"}
 
         result = handler(params)
         if result.get("status") != "success":

@@ -140,6 +140,9 @@ impl AgentRuntime {
             .collect::<std::collections::HashMap<_, _>>();
 
         let sidecar = self.ensure_channel_sidecar().await?;
+        if action == "connect" || action == "save" {
+            crate::context::channel::validate_channel_id(&channel)?;
+        }
         let result = match action.as_str() {
             "save" => {
                 let applied = crate::context::channel::persist_channel_config(
@@ -181,7 +184,10 @@ impl AgentRuntime {
                 crate::context::channel::action_response(channel_type, true, Vec::new())
             }
             _ => {
-                return Err(format!("unknown channel action: {action}"));
+                return Err(format!(
+                    "{}: {action}",
+                    crate::services::channel::error_code::UNKNOWN_ACTION
+                ));
             }
         };
         Ok(result)

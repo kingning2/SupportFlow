@@ -4,24 +4,7 @@ use std::collections::{HashMap, HashSet};
 
 use serde_json::{json, Map, Value};
 
-const WEWORK_RESTART_KEYS: &[&str] = &[
-    "wework_exe_path",
-    "wework_version",
-    "wework_smart",
-    "wework_init_wait_seconds",
-];
-
-fn channel_field_defs(channel: &str) -> Option<&'static [(&'static str, &'static str)]> {
-    match channel {
-        "wework" => Some(&[
-            ("wework_exe_path", "text"),
-            ("wework_version", "text"),
-            ("wework_smart", "bool"),
-            ("wework_init_wait_seconds", "number"),
-        ]),
-        _ => None,
-    }
-}
+use super::registry::{channel_field_type_map, channel_restart_keys, is_known_channel};
 
 fn root_object(path: &std::path::Path) -> Result<Map<String, Value>, String> {
     let root = crate::config::provider_catalog::read_config_root(path)?;
@@ -52,8 +35,18 @@ fn normalized_updates(
     channel: &str,
     config: &HashMap<String, Value>,
 ) -> Result<Map<String, Value>, String> {
-    let defs = channel_field_defs(channel).ok_or_else(|| format!("unknown channel: {channel}"))?;
-    let field_map = defs.iter().copied().collect::<HashMap<_, _>>();
+    if !is_known_channel(channel) {
+        return Err(format!(
+            "{}: {channel}",
+            super::contract::error_code::UNKNOWN_CHANNEL
+        ));
+    }
+    let field_map = channel_field_type_map(channel).ok_or_else(|| {
+        format!(
+            "{}: {channel}",
+            super::contract::error_code::UNKNOWN_CHANNEL
+        )
+    })?;
     let mut updates = Map::new();
 
     for (key, value) in config {
@@ -101,7 +94,10 @@ pub fn persist_channel_config(
 ) -> Result<Vec<String>, String> {
     let updates = normalized_updates(channel, config)?;
     if updates.is_empty() {
-        return Err("no valid fields to update".into());
+        return Err(format!(
+            "{}: no valid fields to update",
+            super::contract::error_code::CONFIG_INVALID
+        ));
     }
     let mut root = root_object(config_path)?;
     for (key, value) in &updates {
@@ -153,6 +149,12 @@ pub fn connect_channel(
 ///
 /// * `String` - New `channel_type` string
 pub fn disconnect_channel(config_path: &std::path::Path, channel: &str) -> Result<String, String> {
+    if !is_known_channel(channel) {
+        return Err(format!(
+            "{}: {channel}",
+            super::contract::error_code::UNKNOWN_CHANNEL
+        ));
+    }
     let mut root = root_object(config_path)?;
     let channel_names = parse_channel_type(&root)
         .into_iter()
@@ -164,7 +166,7 @@ pub fn disconnect_channel(config_path: &std::path::Path, channel: &str) -> Resul
     Ok(channel_type)
 }
 
-/// Return whether a saved config patch should trigger WeWork restart.
+/// Return whether a saved config patch should trigger channel sidecar restart.
 ///
 /// # Arguments
 ///
@@ -175,14 +177,14 @@ pub fn disconnect_channel(config_path: &std::path::Path, channel: &str) -> Resul
 ///
 /// * `bool` - True when runtime restart is required
 pub fn should_restart_channel(channel: &str, applied_keys: &[String]) -> bool {
-    if channel != "wework" {
+    let Some(restart_keys) = channel_restart_keys(channel) else {
         return true;
-    }
+    };
     let applied = applied_keys
         .iter()
         .map(String::as_str)
         .collect::<HashSet<_>>();
-    WEWORK_RESTART_KEYS.iter().any(|key| applied.contains(key))
+    restart_keys.iter().any(|key| applied.contains(key))
 }
 
 /// Build a JSON response matching the frontend action contract.

@@ -4,10 +4,10 @@
 
 ## 当前执行位置
 
-| 字段        | 值                                                                                       |
-| ----------- | ---------------------------------------------------------------------------------------- |
-| **Current** | _（无）_ — M2 部分完成（T004–T005），待开始 T006                                         |
-| **Next**    | [`pending/T006-channel-adapter-contract.md`](./pending/T006-channel-adapter-contract.md) |
+| 字段        | 值                                                                                                       |
+| ----------- | -------------------------------------------------------------------------------------------------------- |
+| **Current** | _（无）_ — M3 部分完成（T006），待开始 T007                                                              |
+| **Next**    | [`pending/T007-channel-decouple-wework-hardcode.md`](./pending/T007-channel-decouple-wework-hardcode.md) |
 
 > 开始任务时：将文件从 `pending/` 移到 `in-progress/`，并更新本表 **Current**。  
 > 完成任务时：移到 `completed/`，把 **Next** 指向下一个 `pending/` 文件。
@@ -61,5 +61,5 @@ flowchart LR
 ## 参考文档
 
 - 成熟度审计结论：见对话记录（2026-06-15）
-- 结构治理 backlog：[`project-structure-refactor-backlog.md`](./project-structure-refactor-backlog.md)
+- Channel 适配器契约：[`docs/channel-adapter-contract.md`](../docs/channel-adapter-contract.md)
 - Sidecar IPC 草案：[`rust-sidecar-async-ipc-architecture.md`](./rust-sidecar-async-ipc-architecture.md)

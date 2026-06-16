@@ -6,6 +6,7 @@ from enum import Enum
 
 from bridge.context import Context, ContextType
 from bridge.reply import Reply, ReplyType
+from channel.adapter import ChannelAdapter
 from channel.rust_ipc import call_rust, notify_rust
 from common.log import logger
 from config import conf
@@ -69,13 +70,10 @@ def _reply_from_rust_result(result: dict) -> Reply:
     return reply
 
 
-class ChatChannel:
+class ChatChannel(ChannelAdapter):
     """通道适配壳，公共消息编排逻辑由 Rust 提供。"""
 
-    channel_type = ""
     NOT_SUPPORT_REPLYTYPE = [ReplyType.VOICE, ReplyType.IMAGE]
-    name = None
-    user_id = None
 
     def __init__(self):
         """初始化通道公共运行态。"""
@@ -122,7 +120,15 @@ class ChatChannel:
 
     def stop(self):
         """停止通道，由具体通道按需覆盖。"""
-        pass
+        super().stop()
+
+    def health(self) -> dict:
+        ready, err = self.wait_startup(timeout=0.01)
+        return {
+            "channel": self.channel_type,
+            "status": "ready" if ready and not err else "starting",
+            "error": err or None,
+        }
 
     def send(self, reply: Reply, context: Context):
         """发送消息，由具体通道实现。"""
