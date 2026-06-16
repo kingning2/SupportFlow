@@ -1,5 +1,6 @@
 ---
 name: search-first
+version: 1.0.0
 description: 编码与排障前先检索现有实现、配置与文档，避免重复造轮子。
 ---
 

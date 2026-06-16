@@ -46,6 +46,10 @@ pub struct Agent {
     pub mcp_registry: Option<Arc<McpToolRegistry>>,
     pub mcp_loader: Option<Arc<McpToolLoader>>,
     pub models_config: Option<Arc<ModelsConfig>>,
+    /// Optional profile injection into system prompt.
+    pub profile_store: Option<Arc<crate::services::agent::ProfileStore>>,
+    pub profile_scope: Option<crate::services::agent::SharedProfileScope>,
+    pub include_profile_in_context: bool,
     /// Messages added in the last `run_stream` call.
     pub last_run_new_messages: Mutex<Vec<Value>>,
     /// Files queued for channel send (from send tool).
@@ -105,6 +109,9 @@ impl Agent {
             mcp_registry,
             mcp_loader,
             models_config: tool_config.models_config.clone(),
+            profile_store: None,
+            profile_scope: None,
+            include_profile_in_context: false,
             last_run_new_messages: Mutex::new(Vec::new()),
             files_to_send: Mutex::new(Vec::new()),
         }
@@ -169,7 +176,8 @@ impl Agent {
             if let Some(sm) = guard.as_mut() {
                 sm.refresh_skills();
             }
-            build_agent_system_prompt(
+            let profile_section = self.build_profile_section();
+            let mut prompt = build_agent_system_prompt(
                 workspace,
                 &tools,
                 guard.as_ref(),
@@ -177,7 +185,14 @@ impl Agent {
                 true,
                 self.enable_knowledge,
                 runtime_model,
-            )
+            );
+            if let Some(section) = profile_section {
+                if !prompt.is_empty() {
+                    prompt.push('\n');
+                }
+                prompt.push_str(&section);
+            }
+            prompt
         };
 
         if built.trim().is_empty() {
@@ -185,6 +200,27 @@ impl Agent {
         } else {
             built
         }
+    }
+
+    fn build_profile_section(&self) -> Option<String> {
+        if !self.include_profile_in_context {
+            return None;
+        }
+        let store = self.profile_store.as_ref()?;
+        let scope = self.profile_scope.as_ref()?.lock().ok()?;
+        let user_id = scope.user_id.as_deref().filter(|s| !s.is_empty())?;
+        let channel = scope.channel.as_str();
+        if channel.is_empty() {
+            return None;
+        }
+        let traits = store.get_traits(user_id, channel).ok()?;
+        if traits.is_empty() {
+            return None;
+        }
+        let json = serde_json::to_string_pretty(&traits).ok()?;
+        Some(format!(
+            "## 👤 用户画像\n\n当前用户 `{user_id}`（渠道 `{channel}`）已知 traits:\n\n```json\n{json}\n```\n"
+        ))
     }
 
     pub async fn run_stream(

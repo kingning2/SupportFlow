@@ -13,5 +13,6 @@ pub use config::{
     skills_dir, SkillConfigEntry, SkillsConfigMap,
 };
 pub use installer::{install_skill_source, InstallSkillResult};
+pub use loader::SkillLoader;
 pub use manager::SkillManager;
 pub use types::{Skill, SkillEntry};

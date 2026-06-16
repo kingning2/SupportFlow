@@ -327,6 +327,8 @@ fn append_log(knowledge_dir: &Path, rel_path: &str, original_name: &str) -> Resu
 }
 
 /// Re-index `knowledge/*.md` for `memory_search` after ingest.
+///
+/// Syncs only `{workspace}/memory/long-term/index.db` (not the conversation DB).
 pub async fn trigger_memory_sync(
     workspace_root: &Path,
     models_config: &crate::config::ModelsConfig,

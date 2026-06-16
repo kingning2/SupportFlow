@@ -4,7 +4,7 @@
 | ---------- | --------------------- |
 | ID         | T011                  |
 | Priority   | P2                    |
-| Status     | pending               |
+| Status     | completed             |
 | Depends on | T009, T010            |
 | Blocks     | —                     |
 | Milestone  | M4 Memory and Profile |
@@ -22,9 +22,9 @@
 
 ## Acceptance criteria
 
-- [ ] 超长会话触发后，`memory_search` 可命中摘要
-- [ ] 摘要不覆盖原始会话记录（可追溯）
-- [ ] 配置可关闭自动总结
+- [x] 超长会话触发后，`memory_search` 可命中摘要
+- [x] 摘要不覆盖原始会话记录（可追溯）
+- [x] 配置可关闭自动总结
 
 ## Key files
 

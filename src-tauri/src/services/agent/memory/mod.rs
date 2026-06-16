@@ -8,8 +8,10 @@ mod embedding;
 mod eval;
 mod factory;
 mod manager;
+mod migrate_conversations;
 mod rerank;
 mod storage;
+mod summarizer;
 
 pub use config::MemoryConfig;
 pub use conversation_store::{
@@ -21,5 +23,7 @@ pub use eval::{
 };
 pub use factory::create_memory_manager;
 pub use manager::DbMemoryManager;
+pub use migrate_conversations::{migrate_conversations_for_workspace, MigrationReport};
 pub use rerank::{create_rerank_provider, LexicalRerankProvider, RerankProvider};
 pub use storage::{MemoryChunk, MemoryStorage, SearchResult};
+pub use summarizer::maybe_summarize_conversation;

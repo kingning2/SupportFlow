@@ -12,6 +12,7 @@ pub mod license_verifier_exe;
 pub mod log;
 pub mod path;
 pub mod platform;
+pub mod trace;
 #[cfg(feature = "desktop")]
 pub mod window;
 

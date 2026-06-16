@@ -4,7 +4,7 @@
 | ---------- | ----------------------- |
 | ID         | T015                    |
 | Priority   | P2                      |
-| Status     | pending                 |
+| Status     | completed               |
 | Depends on | T003                    |
 | Blocks     | —                       |
 | Milestone  | M5 Production Hardening |
@@ -22,9 +22,9 @@
 
 ## Acceptance criteria
 
-- [ ] 一次完整 agent 回复可在日志中按 trace_id 串联
-- [ ] 至少 4 个指标可在 dev 环境查看（日志或简单 counter 文件）
-- [ ] `docs/project-architecture.md` 运维小节更新
+- [x] 一次完整 agent 回复可在日志中按 trace_id 串联
+- [x] 至少 4 个指标可在 dev 环境查看（日志或简单 counter 文件）
+- [x] `docs/project-architecture.md` 运维小节更新
 
 ## Key files
 

@@ -88,10 +88,15 @@ impl InboundRpcHandler for ChannelInboundHandler {
                     "result": { "status": "success" }
                 })
             }
-            "channel.message" => json!({
-                "id": id,
-                "result": { "status": "success" }
-            }),
+            "channel.message" => {
+                if let Ok(rt) = self.runtime_handle().await {
+                    rt.handle_channel_message(&params);
+                }
+                json!({
+                    "id": id,
+                    "result": { "status": "success" }
+                })
+            }
             "wework.contacts_synced" => match self.runtime_handle().await {
                 Ok(rt) => {
                     let wework_user_id = params

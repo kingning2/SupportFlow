@@ -4,7 +4,7 @@
 | ---------- | ----------------------- |
 | ID         | T013                    |
 | Priority   | P2                      |
-| Status     | pending                 |
+| Status     | completed               |
 | Depends on | —                       |
 | Blocks     | —                       |
 | Milestone  | M5 Production Hardening |
@@ -26,9 +26,9 @@
 
 ## Acceptance criteria
 
-- [ ] 同一 skill 两个版本可共存，agent 可指定版本
-- [ ] 参数校验失败有明确错误
-- [ ] 现有 5 个 bundled skills 迁移 frontmatter 不破坏加载
+- [x] 同一 skill 两个版本可共存，agent 可指定版本
+- [x] 参数校验失败有明确错误
+- [x] 现有 5 个 bundled skills 迁移 frontmatter 不破坏加载
 
 ## Key files
 

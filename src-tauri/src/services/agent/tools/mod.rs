@@ -9,6 +9,8 @@ mod labels_zh;
 pub mod ls;
 pub mod mcp;
 pub mod memory;
+mod profile_get;
+mod profile_update;
 pub mod read;
 pub mod send;
 mod tool_manager;
@@ -33,6 +35,8 @@ pub use mcp::{
 pub use memory::{
     FileKeywordMemoryManager, MemoryGetTool, MemoryManager, MemorySearchHit, MemorySearchTool,
 };
+pub use profile_get::ProfileGetTool;
+pub use profile_update::ProfileUpdateTool;
 pub use read::ReadTool;
 pub use send::{noop_uploader, SendFileUploader, SendTool};
 pub use tool_manager::{load_builtin_tools, ToolManagerConfig};

@@ -108,6 +108,7 @@ fn node_kind_to_str(kind: NodeKind) -> &'static str {
         NodeKind::HumanAndsign => "human_andsign",
         NodeKind::Branch => "branch",
         NodeKind::Delay => "delay",
+        NodeKind::DelegateToRole => "delegate_to_role",
     }
 }
 
@@ -118,6 +119,7 @@ fn node_kind_from_str(raw: &str) -> Option<NodeKind> {
         "human_andsign" => Some(NodeKind::HumanAndsign),
         "branch" => Some(NodeKind::Branch),
         "delay" => Some(NodeKind::Delay),
+        "delegate_to_role" => Some(NodeKind::DelegateToRole),
         _ => None,
     }
 }

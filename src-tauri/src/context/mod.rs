@@ -2,5 +2,6 @@
 pub mod agent_runtime;
 pub mod channel;
 pub mod license_store;
+pub mod metrics;
 #[cfg(feature = "desktop")]
 pub mod process_hub;

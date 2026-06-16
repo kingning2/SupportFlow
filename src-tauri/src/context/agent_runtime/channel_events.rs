@@ -10,6 +10,17 @@ use crate::events::payloads::ChannelStatusChangedPayload;
 use super::AgentRuntime;
 
 impl AgentRuntime {
+    pub fn handle_channel_message(&self, params: &serde_json::Value) {
+        if let Some(store) = self
+            .app
+            .try_state::<crate::context::channel::ChannelInboxStore>()
+        {
+            if let Err(e) = store.ingest_sidecar_message(params) {
+                crate::log_warn!("channel.message ingest failed: {e}");
+            }
+        }
+    }
+
     pub fn handle_channel_notification(&self, params: &serde_json::Value) {
         let channel = params
             .get("channel")

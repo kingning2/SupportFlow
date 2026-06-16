@@ -4,7 +4,7 @@
 | ---------- | ----------------------- |
 | ID         | T012                    |
 | Priority   | P2                      |
-| Status     | pending                 |
+| Status     | completed               |
 | Depends on | T008                    |
 | Blocks     | —                       |
 | Milestone  | M5 Production Hardening |
@@ -26,16 +26,17 @@
 
 ## Acceptance criteria
 
-- [ ] ADR 文档：选定方案 + 不做时的产品限制
-- [ ] 若实现：两个 mock channel 同时 RPC 无串线
-- [ ] 若不做：T008 文档标明「单活跃渠道」限制
+- [x] ADR 文档：选定方案 + 不做时的产品限制
+- [ ] 若实现：两个 mock channel 同时 RPC 无串线（**未实现 — ADR 推迟多进程**）
+- [x] 若不做：T008 文档标明「单活跃渠道」限制
 
 ## Key files
 
 - `src-tauri/src/context/process_hub.rs`
 - `src-tauri/src/python/sidecar/`
 - `plan/rust-sidecar-async-ipc-architecture.md`
+- [`docs/sidecar-multislot-adr.md`](../../docs/sidecar-multislot-adr.md)
 
 ## Notes
 
-可与 T008 spike 合并验证；本任务偏架构决策。
+可与 T008 spike 合并验证；本任务偏架构决策。**Outcome:** 方案 C（单活跃渠道）。

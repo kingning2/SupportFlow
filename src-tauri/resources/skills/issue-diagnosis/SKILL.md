@@ -1,5 +1,6 @@
 ---
 name: issue-diagnosis
+version: 1.0.0
 description: 问题排查：复现路径、日志分析、最小修复与验证步骤。
 ---
 

@@ -1,4 +1,4 @@
-﻿//! Factory for workspace memory backends.
+//! Factory for workspace memory backends.
 
 use std::sync::Arc;
 
@@ -25,6 +25,10 @@ pub fn create_memory_manager(
     mem_config.embedding_dimensions = models_config.embedding_dimensions;
     mem_config.rerank_provider = models_config.rerank_provider.clone();
     mem_config.rerank_model = models_config.rerank_model.clone();
+    mem_config.auto_conversation_summary = models_config.auto_conversation_summary.unwrap_or(false);
+    if let Some(threshold) = models_config.summary_message_threshold {
+        mem_config.summary_message_threshold = threshold.max(10);
+    }
 
     let db_path = mem_config.db_path();
     let storage = match MemoryStorage::open(&db_path) {

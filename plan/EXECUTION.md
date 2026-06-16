@@ -4,10 +4,10 @@
 
 ## 当前执行位置
 
-| 字段        | 值                                                                                               |
-| ----------- | ------------------------------------------------------------------------------------------------ |
-| **Current** | _（无）_ — T007 完成，待开始 T008                                                                |
-| **Next**    | [`pending/T008-channel-second-adapter-spike.md`](./pending/T008-channel-second-adapter-spike.md) |
+| 字段        | 值                                                    |
+| ----------- | ----------------------------------------------------- |
+| **Current** | _（无）_ — T010–T015 已完成                           |
+| **Next**    | _（队列已清空）_ — 见 `pending/` 新增任务或里程碑回顾 |
 
 > 开始任务时：将文件从 `pending/` 移到 `in-progress/`，并更新本表 **Current**。  
 > 完成任务时：移到 `completed/`，把 **Next** 指向下一个 `pending/` 文件。
@@ -62,4 +62,6 @@ flowchart LR
 
 - 成熟度审计结论：见对话记录（2026-06-15）
 - Channel 适配器契约：[`docs/channel-adapter-contract.md`](../docs/channel-adapter-contract.md)
+- Sidecar 多槽 ADR：[`docs/sidecar-multislot-adr.md`](../docs/sidecar-multislot-adr.md)
+- 多 Agent 角色模型：[`docs/multi-agent-role-model.md`](../docs/multi-agent-role-model.md)
 - Sidecar IPC 草案：[`rust-sidecar-async-ipc-architecture.md`](./rust-sidecar-async-ipc-architecture.md)

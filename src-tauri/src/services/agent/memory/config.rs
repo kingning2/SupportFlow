@@ -18,6 +18,10 @@ pub struct MemoryConfig {
     pub keyword_weight: f64,
     pub sync_on_search: bool,
     pub enable_knowledge: bool,
+    /// Auto-summarize long conversations into long-term memory (default off).
+    pub auto_conversation_summary: bool,
+    /// Message count threshold before triggering auto summary.
+    pub summary_message_threshold: u32,
 }
 
 impl MemoryConfig {
@@ -37,6 +41,8 @@ impl MemoryConfig {
             keyword_weight: 0.3,
             sync_on_search: true,
             enable_knowledge: true,
+            auto_conversation_summary: false,
+            summary_message_threshold: 40,
         }
     }
 
@@ -48,7 +54,13 @@ impl MemoryConfig {
         self.workspace_root.join("memory")
     }
 
+    /// Long-term memory vector index (`chunks`, `files`, FTS5).
     pub fn db_path(&self) -> PathBuf {
         self.memory_dir().join("long-term").join("index.db")
+    }
+
+    /// Conversation persistence (`sessions`, `messages`).
+    pub fn conversation_db_path(&self) -> PathBuf {
+        self.workspace_root.join("conversations").join("index.db")
     }
 }

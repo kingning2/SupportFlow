@@ -52,18 +52,21 @@ pub mod event {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum ChannelTypeId {
+    Mock,
     Wework,
 }
 
 impl ChannelTypeId {
     pub fn as_str(&self) -> &'static str {
         match self {
+            Self::Mock => "mock",
             Self::Wework => "wework",
         }
     }
 
     pub fn parse(raw: &str) -> Option<Self> {
         match raw {
+            "mock" => Some(Self::Mock),
             "wework" => Some(Self::Wework),
             _ => None,
         }

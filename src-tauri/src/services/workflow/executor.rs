@@ -384,7 +384,54 @@ impl WorkflowExecutor {
             NodeKind::Branch => Self::handle_branch(node, run),
             NodeKind::HumanAndsign => Self::handle_human_andsign(node),
             NodeKind::Delay => Ok(json!({"delayed": true})),
+            NodeKind::DelegateToRole => Self::handle_delegate_to_role(bridge, node, run).await,
         }
+    }
+
+    async fn handle_delegate_to_role(
+        bridge: &Arc<BridgeRuntime>,
+        node: &WorkflowNode,
+        run: &WorkflowRun,
+    ) -> Result<Value, String> {
+        let cfg = node
+            .config
+            .delegate_to_role
+            .as_ref()
+            .ok_or_else(|| "delegate_to_role config missing".to_string())?;
+        let binding = cfg.binding.clone().unwrap_or_else(|| match cfg.role {
+            crate::services::agent::AgentRole::Planner => {
+                crate::services::agent::RoleBinding::planner_default()
+            }
+            crate::services::agent::AgentRole::Executor => {
+                crate::services::agent::RoleBinding::executor_default()
+            }
+            crate::services::agent::AgentRole::Reviewer => {
+                crate::services::agent::RoleBinding::reviewer_default()
+            }
+        });
+        let mut prompt = render_template(&cfg.prompt_template, &run.context);
+        if let Some(suffix) = &binding.system_prompt_suffix {
+            prompt = format!("{prompt}\n\n{suffix}");
+        }
+
+        let mut ctx = Context::default();
+        if let Some(sid) = &run.session_id {
+            ctx.set("session_id", sid);
+        }
+        ctx.set("request_id", &format!("wf-{}-{}", run.id, node.id));
+        ctx.set("channel_type", "web");
+        ctx.set("workflow_run_id", &run.id);
+        ctx.set("agent_role", binding.role.as_str());
+
+        let reply = bridge
+            .agent_bridge
+            .agent_reply(&prompt, Some(ctx), None, false)
+            .await;
+
+        if reply.ty == ReplyType::Error {
+            return Err(reply.content);
+        }
+        Ok(json!({"reply": reply.content, "role": binding.role.as_str()}))
     }
 
     async fn handle_agent_reply(
@@ -509,6 +556,11 @@ fn node_output_key(node: &WorkflowNode) -> Option<String> {
         NodeKind::ToolCall => node
             .config
             .tool_call
+            .as_ref()
+            .and_then(|c| c.output_key.clone()),
+        NodeKind::DelegateToRole => node
+            .config
+            .delegate_to_role
             .as_ref()
             .and_then(|c| c.output_key.clone()),
         _ => None,

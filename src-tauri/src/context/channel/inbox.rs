@@ -54,6 +54,10 @@ impl ChannelInboxStore {
         let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
         crate::utils::fs::create_dir_all(&dir)?;
         let path = dir.join("channel_inbox.db");
+        Self::open_path(path)
+    }
+
+    pub fn open_path(path: std::path::PathBuf) -> Result<Self, String> {
         let conn = Connection::open(path).map_err(|e| e.to_string())?;
         conn.execute_batch(
             r#"
@@ -94,6 +98,96 @@ impl ChannelInboxStore {
             conversations,
             messages,
         })
+    }
+
+    /// Persist one sidecar `channel.message` notify payload into inbox tables.
+    pub fn ingest_sidecar_message(&self, params: &serde_json::Value) -> Result<(), String> {
+        let channel = params
+            .get("channel")
+            .and_then(|v| v.as_str())
+            .filter(|s| !s.is_empty())
+            .ok_or_else(|| "channel.message: channel required".to_string())?;
+        let conversation_id = params
+            .get("conversation_id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "channel.message: conversation_id required".to_string())?;
+        let message_id = params
+            .get("message_id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "channel.message: message_id required".to_string())?;
+        let session_id = params
+            .get("session_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or(conversation_id);
+        let title = params
+            .get("title")
+            .and_then(|v| v.as_str())
+            .unwrap_or(conversation_id);
+        let kind = params
+            .get("kind")
+            .and_then(|v| v.as_str())
+            .unwrap_or("direct");
+        let role = params
+            .get("role")
+            .and_then(|v| v.as_str())
+            .unwrap_or("customer");
+        let content = params
+            .get("content")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "channel.message: content required".to_string())?;
+        let created_at = params
+            .get("created_at")
+            .and_then(|v| v.as_i64())
+            .unwrap_or_else(|| {
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_millis() as i64)
+                    .unwrap_or(0)
+            });
+        let sender_name = params
+            .get("sender_name")
+            .and_then(|v| v.as_str())
+            .map(str::to_string);
+
+        let guard = crate::utils::err::lock_mutex(&self.conn)?;
+        guard
+            .execute(
+                r#"INSERT INTO conversations (channel, conversation_id, session_id, title, kind, last_active, preview, unread)
+                   VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL)
+                   ON CONFLICT(channel, conversation_id) DO UPDATE SET
+                     session_id = excluded.session_id,
+                     title = excluded.title,
+                     kind = excluded.kind,
+                     last_active = excluded.last_active,
+                     preview = excluded.preview"#,
+                params![
+                    channel,
+                    conversation_id,
+                    session_id,
+                    title,
+                    kind,
+                    created_at,
+                    content,
+                ],
+            )
+            .map_err(|e| e.to_string())?;
+        guard
+            .execute(
+                r#"INSERT OR REPLACE INTO messages
+                   (channel, id, conversation_id, role, sender_name, content, created_at)
+                   VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"#,
+                params![
+                    channel,
+                    message_id,
+                    conversation_id,
+                    role,
+                    sender_name,
+                    content,
+                    created_at,
+                ],
+            )
+            .map_err(|e| e.to_string())?;
+        Ok(())
     }
 }
 
@@ -190,4 +284,35 @@ fn load_messages(
         }
     }
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+    use tempfile::TempDir;
+
+    #[test]
+    fn ingest_sidecar_message_persists_by_channel() {
+        let dir = TempDir::new().unwrap();
+        let store = ChannelInboxStore::open_path(dir.path().join("inbox.db")).unwrap();
+        store
+            .ingest_sidecar_message(&json!({
+                "channel": "mock",
+                "conversation_id": "c1",
+                "session_id": "mock:c1",
+                "message_id": "m1",
+                "title": "Mock Customer",
+                "kind": "direct",
+                "role": "customer",
+                "content": "hello mock",
+                "created_at": 1_700_000_000_000_i64,
+            }))
+            .unwrap();
+        let snap = store.snapshot(Some("mock")).unwrap();
+        assert_eq!(snap.conversations.len(), 1);
+        assert_eq!(snap.messages.len(), 1);
+        let wework = store.snapshot(Some("wework")).unwrap();
+        assert!(wework.conversations.is_empty());
+    }
 }

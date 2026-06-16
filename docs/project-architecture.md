@@ -77,6 +77,16 @@ Rust 与 Python 的**唯一**对接层为 `src-tauri/src/python/`；`services/`�
 - **桌面编排**：`context/agent_runtime` + `services/bridge`（`AgentBridge`、Bot 路由、配置同步）
 - **工作区**：skills、memory、mcp 等目录，可通过 `SUPPORT_FLOW_WORKSPACE` 指定
 
+### 5. 工作区数据层（SQLite）
+
+| 路径                                    | 用途                                        |
+| --------------------------------------- | ------------------------------------------- |
+| `{workspace}/memory/long-term/index.db` | 长期记忆向量索引（`chunks`、`files`、FTS5） |
+| `{workspace}/conversations/index.db`    | 会话持久化（`sessions`、`messages`）        |
+| `{workspace}/workflows/index.db`        | 工作流状态（独立库，见 T002）               |
+
+新安装默认会话库与记忆库分离。旧安装若会话表仍在记忆库中，可运行 `sf migrate-conversations` 幂等迁移。
+
 ### 4. 渠道运行时
 
 - **编排与状态**：`context/channel/`（sidecar 协调、收件箱、账号、控制台 API）
@@ -160,3 +170,42 @@ Tauri 配置：`tauri.conf.json`（默认）、`tauri.wework.conf.json`（企业
 | TypeScript | [ts-architecture.md](./ts-architecture.md)         | [ts-folder-structure.md](./ts-folder-structure.md)           | [ts-coding-rules.md](./ts-coding-rules.md)         |
 
 协作入口：[AGENTS.md](../AGENTS.md)
+
+---
+
+## 运维与可观测性（MVP）
+
+### Trace ID
+
+一次 agent 回复的日志可通过 `trace_id` 串联：
+
+| 来源       | `trace_id` 格式                               |
+| ---------- | --------------------------------------------- |
+| 工作流节点 | `wf-{workflow_run_id}`                        |
+| 渠道会话   | `{session_id}` 或 `{session_id}:{request_id}` |
+
+实现：`src-tauri/src/utils/trace.rs`；`AgentBridge::agent_reply` 在 `tracing` 日志中输出 `trace_id=…`。
+
+前端 **Agent 控制台 → 日志** 在存在 `trace_id=` 字段时显示独立列（`packages/ui/.../logs.tsx`）。
+
+### 本地指标
+
+MVP 指标写入工作区 `{workspace}/.supportflow/metrics.json`（计数器 + 延迟累计）：
+
+| 指标                     | 含义                         |
+| ------------------------ | ---------------------------- |
+| `agent_reply_total`      | agent 回复次数               |
+| `agent_reply_errors`     | agent 回复失败次数           |
+| `agent_reply_latency_ms` | 回复延迟（累计 ms / 样本数） |
+
+实现：`src-tauri/src/context/metrics.rs`。
+
+### 敏感信息
+
+- 日志与工具输出中的 API Key、token 应在 agent system prompt 中要求脱敏
+- 勿将 `.env`、`config.json` 密钥提交版本库
+
+### 架构决策
+
+- 多 sidecar 并发：见 [`sidecar-multislot-adr.md`](./sidecar-multislot-adr.md)（当前 **单活跃渠道**）
+- 多 Agent 角色：见 [`multi-agent-role-model.md`](./multi-agent-role-model.md)

@@ -33,6 +33,13 @@ function lineLevel(line: string): LogLevel | null {
   return null;
 }
 
+function parseTraceId(line: string): string | null {
+  const structured = line.match(/trace_id=([^\s]+)/);
+  if (structured?.[1]) return structured[1];
+  const bracketed = line.match(/\[trace:([^\]]+)\]/);
+  return bracketed?.[1] ?? null;
+}
+
 function levelColor(level: LogLevel | null): string {
   switch (level) {
     case "critical":
@@ -101,15 +108,18 @@ export function Logs() {
 
   const lines = useMemo(() => {
     const rows = raw.split("\n");
-    const filtered: { text: string; level: LogLevel | null }[] = [];
+    const filtered: { text: string; level: LogLevel | null; traceId: string | null }[] = [];
     let inherited: LogLevel | null = null;
+    let inheritedTrace: string | null = null;
 
     for (const row of rows) {
       if (!row) continue;
       const lv = lineLevel(row) ?? inherited;
       if (lineLevel(row)) inherited = lineLevel(row);
+      const traceId = parseTraceId(row) ?? inheritedTrace;
+      if (parseTraceId(row)) inheritedTrace = parseTraceId(row);
       if (lv && !enabledLevels[lv]) continue;
-      filtered.push({ text: row, level: lv });
+      filtered.push({ text: row, level: lv, traceId });
     }
     return filtered;
   }, [enabledLevels, raw]);
@@ -210,11 +220,39 @@ export function Logs() {
           ) : lines.length === 0 ? (
             <Text type="tertiary">暂无日志输出</Text>
           ) : (
-            lines.map((line, idx) => (
-              <div key={`${idx}-${line.text}`} style={{ color: levelColor(line.level) }}>
-                {line.text}
+            <>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(120px, 160px) 1fr",
+                  gap: 8,
+                  marginBottom: 8,
+                  color: "var(--semi-color-text-2)",
+                  fontSize: 11,
+                  borderBottom: "1px solid var(--semi-color-border)",
+                  paddingBottom: 8
+                }}
+              >
+                <span>trace_id</span>
+                <span>message</span>
               </div>
-            ))
+              {lines.map((line, idx) => (
+                <div
+                  key={`${idx}-${line.text}`}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "minmax(120px, 160px) 1fr",
+                    gap: 8,
+                    color: levelColor(line.level)
+                  }}
+                >
+                  <span style={{ color: "var(--semi-color-text-2)", wordBreak: "break-all" }}>
+                    {line.traceId ?? "—"}
+                  </span>
+                  <span>{line.text}</span>
+                </div>
+              ))}
+            </>
           )}
         </div>
       </Card>

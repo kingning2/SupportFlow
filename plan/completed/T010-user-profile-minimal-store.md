@@ -4,7 +4,7 @@
 | ---------- | --------------------- |
 | ID         | T010                  |
 | Priority   | P1                    |
-| Status     | pending               |
+| Status     | completed             |
 | Depends on | T009                  |
 | Blocks     | T011                  |
 | Milestone  | M4 Memory and Profile |
@@ -22,9 +22,9 @@
 
 ## Acceptance criteria
 
-- [ ] 同一用户跨会话可读到上次写入的 trait
-- [ ] Tool 有权限边界（仅当前会话关联 user）
-- [ ] 无 profile 时不影响现有对话
+- [x] 同一用户跨会话可读到上次写入的 trait
+- [x] Tool 有权限边界（仅当前会话关联 user）
+- [x] 无 profile 时不影响现有对话
 
 ## Key files
 

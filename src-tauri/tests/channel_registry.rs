@@ -18,7 +18,7 @@ fn wework_is_registered_with_full_capabilities() {
     assert_eq!(schema["channel_type"], "wework");
     assert!(schema["fields"].as_array().unwrap().len() >= 1);
 
-    assert_eq!(all_channel_defs().len(), 1);
+    assert_eq!(all_channel_defs().len(), 2);
 }
 
 #[test]

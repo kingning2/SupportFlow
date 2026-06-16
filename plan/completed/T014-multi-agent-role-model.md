@@ -4,7 +4,7 @@
 | ---------- | ----------------------- |
 | ID         | T014                    |
 | Priority   | P2                      |
-| Status     | pending                 |
+| Status     | completed               |
 | Depends on | T003                    |
 | Blocks     | —                       |
 | Milestone  | M5 Production Hardening |
@@ -22,16 +22,17 @@
 
 ## Acceptance criteria
 
-- [ ] 设计文档 + 类型定义
-- [ ] 一个 demo workflow：planner 出计划 → executor 调 tool → reviewer 汇总
-- [ ] 取消/超时在子 session 可传播
+- [x] 设计文档 + 类型定义
+- [x] 一个 demo workflow：planner 出计划 → executor 调 tool → reviewer 汇总
+- [x] 取消/超时在子 session 可传播（子 `request_id` + `timeout_secs`）
 
 ## Key files
 
 - `src-tauri/src/services/bridge/agent_bridge.rs`
 - `src-tauri/src/context/agent_runtime/`
 - `src-tauri/src/services/workflow/`（依赖 T003）
+- [`docs/multi-agent-role-model.md`](../../docs/multi-agent-role-model.md)
 
 ## Notes
 
-成熟度审计中 multi-agent 为明显缺口；依赖 workflow 骨架。
+成熟度审计中 multi-agent 为明显缺口；依赖 workflow 骨架。Demo id: `demo-multi-agent`。

@@ -5,8 +5,8 @@ use std::sync::Arc;
 
 use crate::config::ModelsConfig;
 use crate::services::agent::{
-    build_agent_system_prompt, create_memory_manager, restore_agent_messages, Agent,
-    LlmBridgeConfig, McpToolLoader, ToolManagerConfig,
+    build_agent_system_prompt, create_memory_manager, new_profile_scope, restore_agent_messages,
+    Agent, LlmBridgeConfig, McpToolLoader, ProfileStore, ToolManagerConfig,
 };
 use tracing::info;
 
@@ -46,6 +46,9 @@ impl AgentInitializer {
 
         let max_steps = opts.config.agent_max_steps.unwrap_or(20);
 
+        let profile_store = ProfileStore::for_workspace(&opts.workspace).ok();
+        let profile_scope = new_profile_scope(opts.channel_type.clone());
+
         let mut agent = Agent::with_tool_config(
             "You are SupportFlow, a helpful desktop assistant.",
             bridge_cfg,
@@ -54,6 +57,8 @@ impl AgentInitializer {
                 memory_manager: Some(memory_manager),
                 enable_knowledge,
                 models_config: Some(config_arc),
+                profile_store: profile_store.clone(),
+                profile_scope: Some(profile_scope.clone()),
                 ..Default::default()
             },
         );
@@ -63,6 +68,9 @@ impl AgentInitializer {
         agent.session_id = opts.session_id.clone();
         agent.mcp_registry = Some(opts.mcp_loader.registry.clone());
         agent.mcp_loader = Some(opts.mcp_loader.clone());
+        agent.profile_store = profile_store;
+        agent.profile_scope = Some(profile_scope);
+        agent.include_profile_in_context = opts.config.include_profile_in_context();
 
         let full_prompt = build_agent_system_prompt(
             &opts.workspace,

@@ -1,5 +1,6 @@
 ---
 name: knowledge-curator
+version: 1.0.0
 description: 知识库整理：归类文档、提炼摘要、维护交叉引用与检索友好标题。
 ---
 

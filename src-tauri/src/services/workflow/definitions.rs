@@ -3,8 +3,10 @@
 use serde_json::json;
 
 use super::types::{
-    AgentReplyNodeConfig, NodeConfig, NodeKind, Transition, WorkflowDefinition, WorkflowNode,
+    AgentReplyNodeConfig, DelegateToRoleNodeConfig, NodeConfig, NodeKind, Transition,
+    WorkflowDefinition, WorkflowNode,
 };
+use crate::services::agent::roles::{AgentRole, RoleBinding};
 
 /// 三步线性 demo：`agent_reply` × 3。
 pub fn demo_linear_definition() -> WorkflowDefinition {
@@ -24,6 +26,7 @@ pub fn demo_linear_definition() -> WorkflowDefinition {
                         skill_filter: None,
                         clear_history: true,
                         output_key: Some("reply_1".into()),
+                        role: None,
                     }),
                     ..Default::default()
                 },
@@ -38,6 +41,7 @@ pub fn demo_linear_definition() -> WorkflowDefinition {
                         skill_filter: None,
                         clear_history: false,
                         output_key: Some("reply_2".into()),
+                        role: None,
                     }),
                     ..Default::default()
                 },
@@ -53,6 +57,7 @@ pub fn demo_linear_definition() -> WorkflowDefinition {
                         skill_filter: None,
                         clear_history: false,
                         output_key: Some("summary".into()),
+                        role: None,
                     }),
                     ..Default::default()
                 },
@@ -79,7 +84,82 @@ pub fn demo_linear_definition() -> WorkflowDefinition {
 pub fn builtin_definition(definition_id: &str) -> Option<WorkflowDefinition> {
     match definition_id {
         "demo-linear" => Some(demo_linear_definition()),
+        "demo-multi-agent" => Some(demo_multi_agent_definition()),
         _ => None,
+    }
+}
+
+/// Planner → executor → reviewer demo (role delegation, MVP).
+pub fn demo_multi_agent_definition() -> WorkflowDefinition {
+    WorkflowDefinition {
+        id: "demo-multi-agent".into(),
+        name: "Demo Multi-Agent Flow".into(),
+        version: 1,
+        entry_node_id: "plan".into(),
+        nodes: vec![
+            WorkflowNode {
+                id: "plan".into(),
+                kind: NodeKind::DelegateToRole,
+                label: Some("Planner".into()),
+                config: NodeConfig {
+                    delegate_to_role: Some(DelegateToRoleNodeConfig {
+                        role: AgentRole::Planner,
+                        prompt_template:
+                            "分析用户输入「{{input}}」，输出 3 步以内的执行计划（纯文本）。".into(),
+                        binding: Some(RoleBinding::planner_default()),
+                        output_key: Some("plan".into()),
+                        timeout_secs: Some(120),
+                    }),
+                    ..Default::default()
+                },
+            },
+            WorkflowNode {
+                id: "execute".into(),
+                kind: NodeKind::DelegateToRole,
+                label: Some("Executor".into()),
+                config: NodeConfig {
+                    delegate_to_role: Some(DelegateToRoleNodeConfig {
+                        role: AgentRole::Executor,
+                        prompt_template: "按计划执行：{{plan}}。可调用工具，输出执行结果。".into(),
+                        binding: Some(RoleBinding::executor_default()),
+                        output_key: Some("execution".into()),
+                        timeout_secs: Some(300),
+                    }),
+                    ..Default::default()
+                },
+            },
+            WorkflowNode {
+                id: "review".into(),
+                kind: NodeKind::DelegateToRole,
+                label: Some("Reviewer".into()),
+                config: NodeConfig {
+                    delegate_to_role: Some(DelegateToRoleNodeConfig {
+                        role: AgentRole::Reviewer,
+                        prompt_template:
+                            "审查计划「{{plan}}」与执行结果「{{execution}}」，输出面向用户的最终答复。"
+                                .into(),
+                        binding: Some(RoleBinding::reviewer_default()),
+                        output_key: Some("final_reply".into()),
+                        timeout_secs: Some(120),
+                    }),
+                    ..Default::default()
+                },
+            },
+        ],
+        transitions: vec![
+            Transition {
+                from: "plan".into(),
+                to: "execute".into(),
+                condition: None,
+                label: None,
+            },
+            Transition {
+                from: "execute".into(),
+                to: "review".into(),
+                condition: None,
+                label: None,
+            },
+        ],
     }
 }
 

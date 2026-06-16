@@ -70,7 +70,31 @@ const DESKTOP_CAPABILITIES: &[ChannelCapability] = &[
     ChannelCapability::Health,
 ];
 
+const MOCK_FIELDS: &[ChannelFieldDef] = &[ChannelFieldDef {
+    key: "mock_inbound_text",
+    label_zh: "模拟入站消息",
+    label_en: "Mock inbound text",
+    field_type: "text",
+    default_value: Value::Null,
+    placeholder_zh: Some("启动后自动注入的测试消息"),
+    placeholder_en: Some("Test message injected on startup"),
+}];
+
+const MOCK_RESTART_KEYS: &[&str] = &["mock_inbound_text"];
+
 const CHANNEL_DEFS: &[ChannelDef] = &[
+    ChannelDef {
+        name: "mock",
+        label_zh: "模拟渠道",
+        label_en: "Mock Channel",
+        icon: "fa-flask",
+        color: "violet",
+        hint_zh: "开发用模拟渠道，无需外部 SDK，启动后自动注入一条测试消息。",
+        hint_en: "Dev mock channel; injects a test inbound message on startup.",
+        fields: MOCK_FIELDS,
+        restart_keys: MOCK_RESTART_KEYS,
+        capabilities: DESKTOP_CAPABILITIES,
+    },
     #[cfg(feature = "channel-wework")]
     ChannelDef {
         name: "wework",

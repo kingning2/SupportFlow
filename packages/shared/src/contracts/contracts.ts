@@ -211,11 +211,19 @@ export interface AgentReadLogsResult {
   content: string;
 }
 
+/** Fixed collaboration roles for workflow delegation (MVP). */
+export enum AgentRole {
+  Planner = "planner",
+  Executor = "executor",
+  Reviewer = "reviewer"
+}
+
 export interface AgentReplyNodeConfig {
   promptTemplate: string;
   skillFilter?: string[];
   clearHistory?: boolean;
   outputKey?: string;
+  role?: AgentRole;
 }
 
 export interface AgentRunFinished {
@@ -298,6 +306,23 @@ export interface DelayNodeConfig {
   untilKey?: string;
 }
 
+/** Binds a role to model/tools/skills for a workflow node or sub-session. */
+export interface RoleBinding {
+  role: AgentRole;
+  model?: string;
+  tools?: string[];
+  skills?: string[];
+  systemPromptSuffix?: string;
+}
+
+export interface DelegateToRoleNodeConfig {
+  role: AgentRole;
+  promptTemplate: string;
+  binding?: RoleBinding;
+  outputKey?: string;
+  timeoutSecs?: number;
+}
+
 export interface HumanAndsignNodeConfig {
   prompt: string;
   timeoutSecs?: number;
@@ -327,6 +352,7 @@ export interface NodeConfig {
   humanAndsign?: HumanAndsignNodeConfig;
   branch?: BranchNodeConfig;
   delay?: DelayNodeConfig;
+  delegateToRole?: DelegateToRoleNodeConfig;
 }
 
 export interface SkillDetail {
@@ -345,7 +371,8 @@ export enum NodeKind {
   ToolCall = "tool_call",
   HumanAndsign = "human_andsign",
   Branch = "branch",
-  Delay = "delay"
+  Delay = "delay",
+  DelegateToRole = "delegate_to_role"
 }
 
 /** 节点单次执行状态（Step 内）。 */
@@ -454,6 +481,7 @@ export enum ChannelAdapterCapability {
 }
 
 export enum ChannelTypeId {
+  Mock = "mock",
   Wework = "wework"
 }
 

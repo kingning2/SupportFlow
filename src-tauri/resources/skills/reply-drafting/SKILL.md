@@ -1,5 +1,6 @@
 ---
 name: reply-drafting
+version: 1.0.0
 description: 根据上下文起草对外回复草稿，支持多版本语气与长度控制。
 ---
 

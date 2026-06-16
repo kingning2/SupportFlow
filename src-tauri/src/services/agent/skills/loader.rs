@@ -2,7 +2,9 @@
 
 use std::path::{Path, PathBuf};
 
-use super::frontmatter::{body_after_frontmatter, parse_frontmatter};
+use super::frontmatter::{
+    body_after_frontmatter, parse_frontmatter, parse_parameters, parse_version,
+};
 use super::types::{LoadSkillsResult, Skill, SkillEntry};
 
 pub struct SkillLoader;
@@ -125,6 +127,19 @@ impl SkillLoader {
             .map(|v| v == "true")
             .unwrap_or(false);
 
+        let version = parse_version(&fm);
+        let parameters = match parse_parameters(&fm) {
+            Ok(p) => p,
+            Err(e) => {
+                tracing::warn!(
+                    path = %path.display(),
+                    error = %e,
+                    "Skipping skill with invalid parameters frontmatter"
+                );
+                return None;
+            }
+        };
+
         let base_dir = path
             .parent()
             .map(|p| p.to_string_lossy().into_owned())
@@ -133,11 +148,13 @@ impl SkillLoader {
         Some(SkillEntry {
             skill: Skill {
                 name,
+                version,
                 description,
                 file_path: path.to_string_lossy().into_owned(),
                 base_dir,
                 source: source.to_string(),
                 disable_model_invocation: disable,
+                parameters,
             },
             enabled: true,
         })

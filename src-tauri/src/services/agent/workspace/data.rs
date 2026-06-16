@@ -207,7 +207,7 @@ pub fn remove_knowledge_file(workspace: &Path, rel_path: &str) -> Result<(), Str
     let svc = crate::services::agent::knowledge::KnowledgeService::new(workspace);
     svc.remove_file(rel_path)?;
 
-    let db_path = workspace.join("memory/long-term/index.db");
+    let db_path = crate::services::agent::memory::MemoryConfig::new(workspace).db_path();
     if db_path.is_file() {
         match crate::services::agent::memory::MemoryStorage::open(&db_path) {
             Ok(storage) => {

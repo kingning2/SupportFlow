@@ -110,6 +110,11 @@ pub struct ModelsConfig {
     /// Optional rerank vendor: local | jina | cohere | dashscope | openai | …
     pub rerank_provider: Option<String>,
     pub rerank_model: Option<String>,
+    /// Inject user profile traits into agent system prompt when enabled.
+    pub include_profile_in_context: Option<bool>,
+    /// Auto-summarize long conversations into memory markdown.
+    pub auto_conversation_summary: Option<bool>,
+    pub summary_message_threshold: Option<u32>,
     pub tools: Option<ToolsConfig>,
 }
 
@@ -166,6 +171,10 @@ impl ModelsConfig {
 
     pub fn agent_enabled(&self) -> bool {
         self.agent.unwrap_or(true)
+    }
+
+    pub fn include_profile_in_context(&self) -> bool {
+        self.include_profile_in_context.unwrap_or(false)
     }
 
     pub fn enable_thinking(&self) -> bool {

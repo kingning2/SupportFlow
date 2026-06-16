@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use typeshare::typeshare;
 
+use crate::services::agent::roles::{AgentRole, RoleBinding};
+
 /// 工作流定义：静态节点图。
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -41,6 +43,7 @@ pub enum NodeKind {
     HumanAndsign,
     Branch,
     Delay,
+    DelegateToRole,
 }
 
 /// 节点类型相关配置（按 `kind` 选用对应字段）。
@@ -58,6 +61,8 @@ pub struct NodeConfig {
     pub branch: Option<BranchNodeConfig>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub delay: Option<DelayNodeConfig>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delegate_to_role: Option<DelegateToRoleNodeConfig>,
 }
 
 #[typeshare]
@@ -71,6 +76,22 @@ pub struct AgentReplyNodeConfig {
     pub clear_history: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub output_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<AgentRole>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct DelegateToRoleNodeConfig {
+    pub role: AgentRole,
+    pub prompt_template: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub binding: Option<RoleBinding>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub output_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout_secs: Option<u32>,
 }
 
 #[typeshare]

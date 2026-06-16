@@ -2,6 +2,8 @@
 
 use std::collections::HashMap;
 
+use serde_json::Value;
+
 pub fn parse_frontmatter(content: &str) -> HashMap<String, String> {
     let mut map = HashMap::new();
     let Some(body) = content.strip_prefix("---") else {
@@ -39,4 +41,35 @@ pub fn body_after_frontmatter(content: &str) -> &str {
         return content.get(start..).unwrap_or("").trim_start();
     }
     content
+}
+
+/// Parse optional JSON Schema parameters from frontmatter `parameters` field.
+pub fn parse_parameters(fm: &HashMap<String, String>) -> Result<Option<Value>, String> {
+    let Some(raw) = fm.get("parameters").filter(|s| !s.trim().is_empty()) else {
+        return Ok(None);
+    };
+    let value: Value =
+        serde_json::from_str(raw).map_err(|e| format!("invalid parameters JSON: {e}"))?;
+    if !value.is_object() && !value.is_array() {
+        return Err("parameters must be a JSON object or array schema".into());
+    }
+    Ok(Some(value))
+}
+
+/// Resolve skill version from frontmatter (default `1.0.0`).
+pub fn parse_version(fm: &HashMap<String, String>) -> String {
+    fm.get("version")
+        .filter(|v| !v.trim().is_empty())
+        .cloned()
+        .unwrap_or_else(|| "1.0.0".to_string())
+}
+
+/// Split `name@version` spec into parts.
+pub fn parse_skill_ref(spec: &str) -> (&str, Option<&str>) {
+    if let Some((name, ver)) = spec.rsplit_once('@') {
+        if !ver.is_empty() {
+            return (name, Some(ver));
+        }
+    }
+    (spec, None)
 }

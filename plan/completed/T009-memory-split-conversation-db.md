@@ -4,7 +4,7 @@
 | ---------- | --------------------- |
 | ID         | T009                  |
 | Priority   | P1                    |
-| Status     | pending               |
+| Status     | completed             |
 | Depends on | —                     |
 | Blocks     | T010, T011            |
 | Milestone  | M4 Memory and Profile |
@@ -26,9 +26,9 @@
 
 ## Acceptance criteria
 
-- [ ] 新安装默认分离；旧安装迁移可幂等
-- [ ] 会话列表 / 恢复 / memory_search 均正常
-- [ ] `docs/project-architecture.md` 数据层描述更新
+- [x] 新安装默认分离；旧安装迁移可幂等
+- [x] 会话列表 / 恢复 / memory_search 均正常
+- [x] `docs/project-architecture.md` 数据层描述更新
 
 ## Key files
 

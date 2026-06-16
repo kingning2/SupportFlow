@@ -23,6 +23,7 @@ Commands:
   config            Show paths and model config.
   context           Conversation context (clear session DB).
   rag-eval              RAG retrieval eval (Recall@K / MRR@K)
+  migrate-conversations Migrate legacy sessions to conversation DB
   install-browser   Browser tool setup.
 
 Tip: Memory index management lives in chat — send /memory status or
@@ -92,6 +93,9 @@ enum TopCommand {
     /// RAG retrieval evaluation baseline
     #[command(name = "rag-eval")]
     RagEval(commands::rag_eval::RagEvalArgs),
+    /// Migrate legacy conversation tables into the dedicated conversation DB
+    #[command(name = "migrate-conversations")]
+    MigrateConversations(commands::migrate_conversations::MigrateConversationsArgs),
 }
 
 #[tokio::main]
@@ -121,6 +125,9 @@ async fn main() -> Result<()> {
         Some(TopCommand::Context { command }) => commands::context::run(command)?,
         Some(TopCommand::InstallBrowser(a)) => commands::install_browser::run(a)?,
         Some(TopCommand::RagEval(a)) => commands::rag_eval::run(a).await?,
+        Some(TopCommand::MigrateConversations(a)) => {
+            commands::migrate_conversations::run(a)?;
+        }
     }
     Ok(())
 }

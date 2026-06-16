@@ -1,6 +1,6 @@
 //! SQLite conversation persistence (`agent/memory/conversation_store.py`).
 //!
-//! Shares the memory DB at `{workspace}/memory/long-term/index.db`.
+//! Uses `{workspace}/conversations/index.db` (separate from the memory index).
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -11,6 +11,7 @@ use tracing::{debug, info, warn};
 
 use super::config::MemoryConfig;
 use super::conversation_restore::{filter_text_only_messages, strip_thinking_blocks};
+use super::summarizer::maybe_summarize_conversation;
 
 const DDL: &str = r"
 CREATE TABLE IF NOT EXISTS sessions (
@@ -20,7 +21,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     context_start_seq INTEGER NOT NULL DEFAULT 0,
     created_at        INTEGER NOT NULL,
     last_active       INTEGER NOT NULL,
-    msg_count         INTEGER NOT NULL DEFAULT 0
+    msg_count         INTEGER NOT NULL DEFAULT 0,
+    last_summary_msg_count INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS messages (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,7 +98,7 @@ impl ConversationStore {
     }
 
     pub fn for_workspace(workspace: &Path) -> Result<Arc<Self>, String> {
-        let db_path = MemoryConfig::new(workspace).db_path();
+        let db_path = MemoryConfig::new(workspace).conversation_db_path();
         conversation_store_for_path(&db_path)
     }
 
@@ -139,6 +141,49 @@ impl ConversationStore {
                 [],
             );
         }
+        if !cols.iter().any(|c| c == "last_summary_msg_count") {
+            let _ = conn.execute(
+                "ALTER TABLE sessions ADD COLUMN last_summary_msg_count INTEGER NOT NULL DEFAULT 0",
+                [],
+            );
+        }
+        Ok(())
+    }
+
+    pub fn session_msg_count(&self, session_id: &str) -> Result<i64, String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        conn.query_row(
+            "SELECT msg_count FROM sessions WHERE session_id = ?1",
+            params![session_id],
+            |r| r.get(0),
+        )
+        .map_err(|e| e.to_string())
+    }
+
+    pub fn last_summary_checkpoint(&self, session_id: &str) -> Result<i64, String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        match conn.query_row(
+            "SELECT last_summary_msg_count FROM sessions WHERE session_id = ?1",
+            params![session_id],
+            |r| r.get(0),
+        ) {
+            Ok(v) => Ok(v),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(0),
+            Err(e) => Err(e.to_string()),
+        }
+    }
+
+    pub fn set_last_summary_checkpoint(
+        &self,
+        session_id: &str,
+        msg_count: i64,
+    ) -> Result<(), String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE sessions SET last_summary_msg_count = ?1 WHERE session_id = ?2",
+            params![msg_count, session_id],
+        )
+        .map_err(|e| e.to_string())?;
         Ok(())
     }
 
@@ -429,5 +474,36 @@ pub fn persist_agent_run(
     };
     if let Err(e) = store.append_messages(session_id, &to_store, channel_type) {
         warn!("[AgentBridge] append_messages failed session={session_id}: {e}");
+        return;
+    }
+
+    let mut mem_config = MemoryConfig::new(workspace);
+    let auto_summary = config
+        .auto_conversation_summary
+        .unwrap_or(mem_config.auto_conversation_summary);
+    if !auto_summary {
+        return;
+    }
+    mem_config.auto_conversation_summary = true;
+    if let Some(threshold) = config.summary_message_threshold {
+        mem_config.summary_message_threshold = threshold.max(10);
+    }
+    let workspace_owned = workspace.to_path_buf();
+    let config_owned = config.clone();
+    let session_owned = session_id.to_string();
+    let channel_owned = channel_type.to_string();
+    let store_clone = store.clone();
+    if let Ok(handle) = tokio::runtime::Handle::try_current() {
+        handle.spawn(async move {
+            maybe_summarize_conversation(
+                &workspace_owned,
+                &config_owned,
+                &mem_config,
+                &store_clone,
+                &session_owned,
+                &channel_owned,
+            )
+            .await;
+        });
     }
 }

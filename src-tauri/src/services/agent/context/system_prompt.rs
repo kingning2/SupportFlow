@@ -94,6 +94,8 @@ fn build_tooling_section(tools: &[std::sync::Arc<dyn AgentTool>]) -> Vec<String>
         ("bash", "执行shell命令"),
         ("memory_search", "搜索记忆"),
         ("memory_get", "读取记忆内容"),
+        ("profile_get", "读取用户画像"),
+        ("profile_update", "更新用户画像"),
         ("send", "发送本地文件给用户"),
         ("env_config", "管理API密钥和技能配置"),
         ("web_search", "网络搜索"),

@@ -3,6 +3,7 @@ pub mod config_cmd;
 pub mod context;
 pub mod install_browser;
 pub mod knowledge;
+pub mod migrate_conversations;
 pub mod process;
 pub mod rag_eval;
 pub mod skill;

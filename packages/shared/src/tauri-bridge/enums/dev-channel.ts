@@ -1,5 +1,5 @@
 /** SupportFlow Agent channel ids (must match Python `ChannelsHandler.CHANNEL_DEFS`). */
-export const CHANNEL_IDS = ["wework"] as const;
+export const CHANNEL_IDS = ["wework", "mock"] as const;
 
 export type ChannelCatalogEntryId = (typeof CHANNEL_IDS)[number];
 
@@ -7,7 +7,8 @@ const CHANNEL_ID_SET = new Set<string>(CHANNEL_IDS);
 
 /** CLI / npm script aliases to canonical channel id. */
 export const DEV_CHANNEL_ALIASES: Record<string, ChannelCatalogEntryId> = {
-  wework: "wework"
+  wework: "wework",
+  mock: "mock"
 };
 
 export function isChannelCatalogEntryId(value: string): value is ChannelCatalogEntryId {
@@ -34,6 +35,8 @@ export function channelLabel(channelId: ChannelCatalogEntryId): string {
   switch (channelId) {
     case "wework":
       return "企业微信";
+    case "mock":
+      return "模拟渠道";
     default:
       return channelId;
   }

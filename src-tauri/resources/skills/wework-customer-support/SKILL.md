@@ -1,5 +1,6 @@
 ---
 name: wework-customer-support
+version: 1.0.0
 description: 企业微信客服场景：理解客户意图、检索知识库、起草专业回复并遵守话术规范。
 ---
 

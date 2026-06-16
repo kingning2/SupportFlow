@@ -1,10 +1,11 @@
-﻿//! `agent/tools/tool_manager.py` — built-in tool registration.
+//! `agent/tools/tool_manager.py` — built-in tool registration.
 
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::config::ModelsConfig;
 
+use crate::services::agent::profile::{ProfileStore, SharedProfileScope};
 use crate::services::agent::tools::bash::{BashConfig, BashTool};
 use crate::services::agent::tools::browser::BrowserTool;
 use crate::services::agent::tools::edit::EditTool;
@@ -13,6 +14,8 @@ use crate::services::agent::tools::ls::LsTool;
 use crate::services::agent::tools::memory::{
     FileKeywordMemoryManager, MemoryGetTool, MemoryManager, MemorySearchTool,
 };
+use crate::services::agent::tools::profile_get::ProfileGetTool;
+use crate::services::agent::tools::profile_update::ProfileUpdateTool;
 use crate::services::agent::tools::read::ReadTool;
 use crate::services::agent::tools::send::{noop_uploader, SendFileUploader, SendTool};
 use crate::services::agent::tools::vision::VisionTool;
@@ -35,6 +38,9 @@ pub struct ToolManagerConfig {
     /// Model/config.json snapshot for optional tools (`web_search`).
     pub models_config: Option<Arc<ModelsConfig>>,
     pub env_config: EnvConfigToolConfig,
+    /// Profile store + session scope for profile_get / profile_update tools.
+    pub profile_store: Option<Arc<ProfileStore>>,
+    pub profile_scope: Option<SharedProfileScope>,
     /// Called after env_config set/delete (e.g. refresh skills).
     pub on_env_changed: Option<Arc<dyn Fn() + Send + Sync>>,
 }
@@ -51,6 +57,8 @@ impl Default for ToolManagerConfig {
             send_uploader: None,
             models_config: None,
             env_config: EnvConfigToolConfig::default(),
+            profile_store: None,
+            profile_scope: None,
             on_env_changed: None,
         }
     }
@@ -98,12 +106,21 @@ pub fn load_builtin_tools(config: &ToolManagerConfig) -> Vec<Arc<dyn AgentTool>>
                 .clone()
                 .or(config.env_config.on_change.clone()),
         })),
-        Arc::new(if let Some(models) = &config.models_config {
-            WebFetchTool::with_models_config(cwd.clone(), models)
-        } else {
-            WebFetchTool::new(cwd.clone())
-        }),
     ];
+
+    if let (Some(store), Some(scope)) = (&config.profile_store, &config.profile_scope) {
+        tools.push(Arc::new(ProfileGetTool::new(store.clone(), scope.clone())));
+        tools.push(Arc::new(ProfileUpdateTool::new(
+            store.clone(),
+            scope.clone(),
+        )));
+    }
+
+    tools.push(Arc::new(if let Some(models) = &config.models_config {
+        WebFetchTool::with_models_config(cwd.clone(), models)
+    } else {
+        WebFetchTool::new(cwd.clone())
+    }));
 
     if let Some(models) = &config.models_config {
         if WebSearchTool::is_available(models) {

@@ -119,6 +119,29 @@ impl AgentBridge {
             }
         };
 
+        if let Some(scope) = agent.profile_scope.as_ref() {
+            if let Ok(mut guard) = scope.lock() {
+                guard.channel = channel_type.clone();
+                guard.user_id = context
+                    .as_ref()
+                    .and_then(|c| c.get("from_user_id"))
+                    .map(str::to_string);
+            }
+        }
+
+        let trace_id = crate::utils::trace::resolve_trace_id(
+            session_id.as_deref(),
+            context.as_ref().and_then(|c| c.get("workflow_run_id")),
+            request_id.as_deref(),
+        );
+        let reply_started = std::time::Instant::now();
+        info!(
+            trace_id = %trace_id,
+            session_id = ?session_id,
+            channel = %channel_type,
+            "[AgentBridge] agent_reply start"
+        );
+
         let handler = Arc::new(std::sync::Mutex::new(AgentEventHandler::new(
             context.clone(),
             on_event.clone(),
@@ -143,10 +166,32 @@ impl AgentBridge {
 
         handler.lock().expect("handler").log_summary();
 
+        let elapsed_ms = reply_started.elapsed().as_millis();
+        if let Ok(metrics) = crate::context::metrics::MetricsStore::for_workspace(&self.workspace) {
+            let _ = metrics.increment("agent_reply_total");
+            let _ = metrics.record_latency_ms("agent_reply_latency_ms", elapsed_ms);
+        }
+
         let response = match run_result {
-            Ok(r) => r,
+            Ok(r) => {
+                info!(
+                    trace_id = %trace_id,
+                    elapsed_ms,
+                    "[AgentBridge] agent_reply ok"
+                );
+                r
+            }
             Err(e) => {
-                error!("[AgentBridge] agent_reply error: {e}");
+                error!(
+                    trace_id = %trace_id,
+                    elapsed_ms,
+                    "[AgentBridge] agent_reply error: {e}"
+                );
+                if let Ok(metrics) =
+                    crate::context::metrics::MetricsStore::for_workspace(&self.workspace)
+                {
+                    let _ = metrics.increment("agent_reply_errors");
+                }
                 if let Some(ref sid) = session_id {
                     if agent.messages.lock().expect("messages").is_empty() {
                         if let Ok(store) = conversation_store_for_workspace(&self.workspace) {

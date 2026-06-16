@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 
 use tracing::{debug, warn};
 
+use super::frontmatter::parse_skill_ref;
 use super::loader::SkillLoader;
 use super::types::{Skill, SkillEntry};
 use crate::services::agent::context::format_skills_for_prompt;
@@ -34,7 +35,8 @@ impl SkillManager {
         let result = loader.load_all_skills(&self.builtin_dir, &self.custom_dir);
         self.skills.clear();
         for entry in result.skills {
-            self.skills.insert(entry.skill.name.clone(), entry);
+            let key = Self::skill_key(&entry.skill.name, &entry.skill.version);
+            self.skills.insert(key, entry);
         }
         for d in result.diagnostics {
             debug!(%d, "SkillLoader diagnostic");
@@ -47,7 +49,31 @@ impl SkillManager {
     }
 
     pub fn get_skill(&self, name: &str) -> Option<&SkillEntry> {
-        self.skills.get(name)
+        self.resolve_skill(name)
+    }
+
+    /// Resolve `name` or `name@version` (custom overrides builtin on same version).
+    pub fn resolve_skill(&self, spec: &str) -> Option<&SkillEntry> {
+        let (name, version) = parse_skill_ref(spec);
+        if let Some(ver) = version {
+            return self.skills.get(&Self::skill_key(name, ver));
+        }
+        self.latest_by_name(name)
+    }
+
+    fn skill_key(name: &str, version: &str) -> String {
+        format!("{name}@{version}")
+    }
+
+    fn latest_by_name(&self, name: &str) -> Option<&SkillEntry> {
+        let prefix = format!("{name}@");
+        self.skills
+            .iter()
+            .filter(|(k, _)| k.as_str() == name || k.starts_with(&prefix))
+            .max_by(|(ka, a), (kb, b)| {
+                version_cmp(&a.skill.version, &b.skill.version).then_with(|| ka.cmp(kb))
+            })
+            .map(|(_, e)| e)
     }
 
     pub fn filter_skills(&self, skill_filter: Option<&[String]>) -> Vec<&SkillEntry> {
@@ -74,4 +100,24 @@ impl SkillManager {
         }
         result
     }
+}
+
+fn version_cmp(a: &str, b: &str) -> std::cmp::Ordering {
+    let parse = |s: &str| {
+        s.split('.')
+            .map(|p| p.parse::<u32>().unwrap_or(0))
+            .collect::<Vec<_>>()
+    };
+    let av = parse(a);
+    let bv = parse(b);
+    let len = av.len().max(bv.len());
+    for i in 0..len {
+        let ai = av.get(i).copied().unwrap_or(0);
+        let bi = bv.get(i).copied().unwrap_or(0);
+        match ai.cmp(&bi) {
+            std::cmp::Ordering::Equal => continue,
+            other => return other,
+        }
+    }
+    std::cmp::Ordering::Equal
 }
