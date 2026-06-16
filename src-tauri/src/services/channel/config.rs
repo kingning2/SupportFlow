@@ -4,7 +4,10 @@ use std::collections::{HashMap, HashSet};
 
 use serde_json::{json, Map, Value};
 
-use super::registry::{channel_field_type_map, channel_restart_keys, is_known_channel};
+use super::registry::{
+    apply_channel_defaults, channel_field_type_map, channel_restart_keys, is_known_channel,
+    sync_channel_specific_block,
+};
 
 fn root_object(path: &std::path::Path) -> Result<Map<String, Value>, String> {
     let root = crate::config::provider_catalog::read_config_root(path)?;
@@ -61,17 +64,7 @@ fn normalized_updates(
         updates.insert(key.clone(), normalized);
     }
 
-    if channel == "wework" {
-        updates
-            .entry("wework_version")
-            .or_insert_with(|| Value::String("4.0.8.6027".into()));
-        updates
-            .entry("wework_init_wait_seconds")
-            .or_insert_with(|| Value::Number(serde_json::Number::from(60)));
-        updates
-            .entry("wework_smart")
-            .or_insert_with(|| Value::Bool(true));
-    }
+    apply_channel_defaults(channel, &mut updates);
 
     Ok(updates)
 }
@@ -103,6 +96,7 @@ pub fn persist_channel_config(
     for (key, value) in &updates {
         root.insert(key.clone(), value.clone());
     }
+    sync_channel_specific_block(&mut root, channel);
     write_root(config_path, root)?;
     Ok(updates.keys().cloned().collect())
 }
@@ -134,6 +128,7 @@ pub fn connect_channel(
     }
     let channel_type = channel_names.join(",");
     root.insert("channel_type".into(), Value::String(channel_type.clone()));
+    sync_channel_specific_block(&mut root, channel);
     write_root(config_path, root)?;
     Ok((channel_type, updates.keys().cloned().collect()))
 }

@@ -1,4 +1,5 @@
 pub mod agent_ipc;
+pub mod channel_accounts;
 pub mod channel_inbox;
 pub mod license;
 pub mod log;

@@ -3,7 +3,9 @@
 use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
 
-use crate::services::channel::{all_channel_defs, is_known_channel, ChannelDef};
+use crate::services::channel::{
+    all_channel_defs, is_known_channel, read_channel_config_value, ChannelDef,
+};
 
 use super::bridge::ChannelBridge;
 use super::status::ChannelStatusStore;
@@ -14,10 +16,20 @@ fn localized(zh: &str, en: &str) -> Value {
     json!({ "zh": zh, "en": en })
 }
 
-fn read_config_value(config_path: &std::path::Path, key: &str) -> Option<Value> {
-    let raw = crate::utils::fs::read_to_string(config_path).ok()?;
-    let root: Value = crate::utils::json::from_str(&raw).ok()?;
-    root.get(key).cloned()
+fn read_config_value(
+    config_path: &std::path::Path,
+    channel: &str,
+    key: &str,
+    default: &Value,
+) -> Value {
+    let raw = crate::utils::fs::read_to_string(config_path).ok();
+    let root: Option<Value> = raw
+        .as_ref()
+        .and_then(|s| crate::utils::json::from_str(s).ok());
+    root.as_ref()
+        .and_then(|v| v.as_object())
+        .and_then(|obj| read_channel_config_value(obj, channel, key))
+        .unwrap_or_else(|| default.clone())
 }
 
 fn active_channel_names(config_path: &std::path::Path) -> Result<Vec<String>, String> {
@@ -48,8 +60,7 @@ fn catalog_row(
         .fields
         .iter()
         .map(|field| {
-            let value = read_config_value(config_path, field.key)
-                .unwrap_or_else(|| field.default_value.clone());
+            let value = read_config_value(config_path, def.name, field.key, &field.default_value);
             let mut row = json!({
                 "key": field.key,
                 "label": localized(field.label_zh, field.label_en),
@@ -118,8 +129,7 @@ fn catalog_row(
         .fields
         .iter()
         .map(|field| {
-            let value = read_config_value(config_path, field.key)
-                .unwrap_or_else(|| field.default_value.clone());
+            let value = read_config_value(config_path, def.name, field.key, &field.default_value);
             let mut row = json!({
                 "key": field.key,
                 "label": localized(field.label_zh, field.label_en),

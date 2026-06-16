@@ -22,6 +22,29 @@ fn wework_is_registered_with_full_capabilities() {
 }
 
 #[test]
+fn channel_specific_block_roundtrip() {
+    use serde_json::json;
+    use std::collections::HashMap;
+    use tauri_app_lib::services::channel::{persist_channel_config, read_channel_config_value};
+    use tempfile::TempDir;
+
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("config.json");
+    std::fs::write(&path, r#"{"channel_type":""}"#).unwrap();
+
+    let mut cfg = HashMap::new();
+    cfg.insert("wework_exe_path".into(), json!("D:\\WXWork\\WXWork.exe"));
+    persist_channel_config(&path, "wework", &cfg).unwrap();
+
+    let raw = std::fs::read_to_string(&path).unwrap();
+    let root = serde_json::from_str::<serde_json::Value>(&raw).unwrap();
+    let obj = root.as_object().expect("object");
+    let value = read_channel_config_value(obj, "wework", "wework_exe_path").unwrap();
+    assert_eq!(value, json!("D:\\WXWork\\WXWork.exe"));
+    assert!(obj.get("channel_specific").is_some());
+}
+
+#[test]
 fn unknown_channel_config_returns_error_code() {
     use std::collections::HashMap;
     use tauri_app_lib::services::channel::persist_channel_config;

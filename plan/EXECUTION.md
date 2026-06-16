@@ -4,10 +4,10 @@
 
 ## 当前执行位置
 
-| 字段        | 值                                                                                                       |
-| ----------- | -------------------------------------------------------------------------------------------------------- |
-| **Current** | _（无）_ — M3 部分完成（T006），待开始 T007                                                              |
-| **Next**    | [`pending/T007-channel-decouple-wework-hardcode.md`](./pending/T007-channel-decouple-wework-hardcode.md) |
+| 字段        | 值                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------ |
+| **Current** | _（无）_ — T007 完成，待开始 T008                                                                |
+| **Next**    | [`pending/T008-channel-second-adapter-spike.md`](./pending/T008-channel-second-adapter-spike.md) |
 
 > 开始任务时：将文件从 `pending/` 移到 `in-progress/`，并更新本表 **Current**。  
 > 完成任务时：移到 `completed/`，把 **Next** 指向下一个 `pending/` 文件。

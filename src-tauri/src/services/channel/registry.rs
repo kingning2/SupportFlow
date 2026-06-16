@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 
 /// Adapter capability matrix (see `docs/channel-adapter-contract.md`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -157,4 +157,57 @@ fn capability_name(cap: &ChannelCapability) -> &'static str {
         ChannelCapability::OnMessage => "on_message",
         ChannelCapability::Health => "health",
     }
+}
+
+/// Apply channel-specific default field values when absent from submitted config.
+pub fn apply_channel_defaults(channel: &str, updates: &mut Map<String, Value>) {
+    match channel {
+        #[cfg(feature = "channel-wework")]
+        "wework" => {
+            updates
+                .entry("wework_version".to_string())
+                .or_insert_with(|| Value::String("4.0.8.6027".into()));
+            updates
+                .entry("wework_init_wait_seconds".to_string())
+                .or_insert_with(|| Value::Number(serde_json::Number::from(60)));
+            updates
+                .entry("wework_smart".to_string())
+                .or_insert_with(|| Value::Bool(true));
+        }
+        _ => {}
+    }
+}
+
+/// Mirror flat channel fields into `channel_specific.{channel}` for channel-agnostic reads.
+pub fn sync_channel_specific_block(root: &mut Map<String, Value>, channel: &str) {
+    let Some(def) = channel_def(channel) else {
+        return;
+    };
+    let mut block = Map::new();
+    for field in def.fields {
+        if let Some(value) = root.get(field.key) {
+            block.insert(field.key.to_string(), value.clone());
+        }
+    }
+    apply_channel_defaults(channel, &mut block);
+    let mut specific = root
+        .get("channel_specific")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    specific.insert(channel.to_string(), Value::Object(block));
+    root.insert("channel_specific".into(), Value::Object(specific));
+}
+
+/// Read a channel field from `channel_specific` block or legacy flat root key.
+pub fn read_channel_config_value(
+    root: &Map<String, Value>,
+    channel: &str,
+    key: &str,
+) -> Option<Value> {
+    root.get("channel_specific")
+        .and_then(|v| v.get(channel))
+        .and_then(|v| v.get(key))
+        .cloned()
+        .or_else(|| root.get(key).cloned())
 }

@@ -275,6 +275,24 @@ export interface BranchNodeConfig {
   conditionKey: string;
 }
 
+export interface ChannelAccountConfigDto {
+  /** Channel-specific settings (e.g. wework_exe_path). */
+  settings?: Value;
+}
+
+export interface ChannelSavedAccountDto {
+  id: string;
+  channel: string;
+  label: string;
+  config: ChannelAccountConfigDto;
+  createdAt: number;
+  lastConnectedAt?: number;
+  /** External user id on the channel (wework user_id, telegram chat id, …). */
+  externalUserId?: string;
+  contactsSynced?: boolean;
+  contactsSyncedAt?: number;
+}
+
 export interface DelayNodeConfig {
   durationSecs?: number;
   untilKey?: string;

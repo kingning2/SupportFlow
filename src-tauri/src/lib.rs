@@ -97,6 +97,12 @@ pub fn run() {
             cmd::agent_ipc::agent_stop_log_stream,
             cmd::channel_inbox::channel_get_inbox,
             #[cfg(feature = "channel-wework")]
+            cmd::channel_accounts::channel_list_accounts,
+            #[cfg(feature = "channel-wework")]
+            cmd::channel_accounts::channel_get_active_account_id,
+            #[cfg(feature = "channel-wework")]
+            cmd::channel_accounts::channel_set_active_account_id,
+            #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_list_accounts,
             #[cfg(feature = "channel-wework")]
             cmd::wework_accounts::wework_upsert_account,

@@ -4,7 +4,7 @@
 | ---------- | ---------------- |
 | ID         | T007             |
 | Priority   | P1               |
-| Status     | pending          |
+| Status     | completed        |
 | Depends on | T006             |
 | Blocks     | T008             |
 | Milestone  | M3 Multi-Channel |
@@ -22,17 +22,16 @@
 
 ## Acceptance criteria
 
-- [ ] 配置读写对 `channel_type=wework` 与将来 `channel_type=xxx` 同路径
-- [ ] grep `wework` 在 `channel_runtime` 核心层显著减少
-- [ ] 企微端到端：登录、收件箱、发消息仍可用
+- [x] 配置读写对 `channel_type=wework` 与将来 `channel_type=xxx` 同路径
+- [x] grep `wework` 在 `channel_runtime` 核心层显著减少
+- [x] 企微端到端：登录、收件箱、发消息仍可用
 
 ## Key files
 
-- `src-tauri/src/services/channel/config.rs`
-- `src-tauri/src/cmd/wework_accounts.rs`
-- `channel_agent/channel/channel_manager.py`
-- `packages/shared/src/channel-core/`
+- `src-tauri/src/services/channel/registry.rs` — `channel_specific` 读写
+- `src-tauri/src/cmd/channel_accounts.rs` — 通用账号 IPC
+- `packages/shared/src/tauri-bridge/cmd/channel-accounts.ts`
 
 ## Notes
 
-可与前端 wework 壳并行；Rust/Python 契约优先。
+`wework_*` IPC 保留向后兼容；新代码优先 `channel_*`。
