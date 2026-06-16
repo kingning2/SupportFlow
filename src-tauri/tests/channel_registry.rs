@@ -16,7 +16,7 @@ fn wework_is_registered_with_full_capabilities() {
 
     let schema = config_schema_for("wework").expect("schema");
     assert_eq!(schema["channel_type"], "wework");
-    assert!(schema["fields"].as_array().unwrap().len() >= 1);
+    assert!(!schema["fields"].as_array().unwrap().is_empty());
 
     assert_eq!(all_channel_defs().len(), 2);
 }

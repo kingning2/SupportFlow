@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct MetricsSnapshot {
+pub(crate) struct MetricsSnapshot {
     #[serde(default)]
     counters: HashMap<String, u64>,
     #[serde(default)]
@@ -54,11 +54,6 @@ impl MetricsStore {
         *guard.latency_totals_ms.entry(name.to_string()).or_insert(0) += ms as u64;
         *guard.latency_samples.entry(name.to_string()).or_insert(0) += 1;
         self.flush(&guard)
-    }
-
-    pub fn snapshot(&self) -> Result<MetricsSnapshot, String> {
-        let guard = self.inner.lock().map_err(|e| e.to_string())?;
-        Ok(guard.clone())
     }
 
     fn flush(&self, guard: &MetricsSnapshot) -> Result<(), String> {

@@ -1,7 +1,7 @@
 //! Workflow 执行器：加载定义 → 按节点执行 → 持久化 → 发事件。
 
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
 
 use chrono::Utc;
@@ -177,7 +177,7 @@ impl WorkflowExecutor {
 
     async fn run_loop(
         app: &AppHandle,
-        workspace: &PathBuf,
+        workspace: &Path,
         bridge: &Arc<BridgeRuntime>,
         definition: &WorkflowDefinition,
         run_id: &str,
@@ -418,7 +418,7 @@ impl WorkflowExecutor {
         if let Some(sid) = &run.session_id {
             ctx.set("session_id", sid);
         }
-        ctx.set("request_id", &format!("wf-{}-{}", run.id, node.id));
+        ctx.set("request_id", format!("wf-{}-{}", run.id, node.id));
         ctx.set("channel_type", "web");
         ctx.set("workflow_run_id", &run.id);
         ctx.set("agent_role", binding.role.as_str());
@@ -450,7 +450,7 @@ impl WorkflowExecutor {
         if let Some(sid) = &run.session_id {
             ctx.set("session_id", sid);
         }
-        ctx.set("request_id", &format!("wf-{}", run.id));
+        ctx.set("request_id", format!("wf-{}", run.id));
         ctx.set("channel_type", "web");
 
         let reply = bridge
