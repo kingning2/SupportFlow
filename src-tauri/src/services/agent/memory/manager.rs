@@ -10,6 +10,7 @@ use async_trait::async_trait;
 use super::chunker::{TextChunk, TextChunker};
 use super::config::MemoryConfig;
 use super::embedding::EmbeddingProvider;
+use super::rerank::RerankProvider;
 use super::storage::{MemoryChunk, MemoryStorage, SearchResult};
 use crate::services::agent::{MemoryManager, MemorySearchHit};
 
@@ -18,6 +19,7 @@ pub struct DbMemoryManager {
     storage: Arc<MemoryStorage>,
     chunker: TextChunker,
     embedding: Option<Arc<dyn EmbeddingProvider>>,
+    rerank: Option<Arc<dyn RerankProvider>>,
     embedding_cache: std::sync::Mutex<HashMap<String, Vec<f32>>>,
     dirty: AtomicBool,
 }
@@ -27,6 +29,7 @@ impl DbMemoryManager {
         config: MemoryConfig,
         storage: Arc<MemoryStorage>,
         embedding: Option<Arc<dyn EmbeddingProvider>>,
+        rerank: Option<Arc<dyn RerankProvider>>,
     ) -> Self {
         if let Some(parent) = config.memory_dir().parent() {
             let _ = std::fs::create_dir_all(parent);
@@ -37,6 +40,7 @@ impl DbMemoryManager {
             config,
             storage,
             embedding,
+            rerank,
             embedding_cache: std::sync::Mutex::new(HashMap::new()),
             dirty: AtomicBool::new(true),
         }
@@ -103,6 +107,43 @@ impl DbMemoryManager {
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
         out
+    }
+
+    async fn apply_rerank(&self, query: &str, merged: Vec<SearchResult>) -> Vec<SearchResult> {
+        let Some(reranker) = &self.rerank else {
+            return merged;
+        };
+        let before_top: Vec<(String, f64)> = merged
+            .iter()
+            .take(3)
+            .map(|r| (r.path.clone(), r.score))
+            .collect();
+        let fallback = merged.clone();
+        match reranker.rerank(query, merged).await {
+            Ok(ranked) => {
+                let after_top: Vec<(String, f64)> = ranked
+                    .iter()
+                    .take(3)
+                    .map(|r| (r.path.clone(), r.score))
+                    .collect();
+                if before_top != after_top {
+                    tracing::info!(
+                        target: "memory_rerank",
+                        query = %query,
+                        provider = reranker.provider_name(),
+                        model = reranker.model_name(),
+                        ?before_top,
+                        ?after_top,
+                        "top-3 rerank reorder"
+                    );
+                }
+                ranked
+            }
+            Err(e) => {
+                tracing::warn!("[MemoryRerank] failed, using hybrid order: {e}");
+                fallback
+            }
+        }
     }
 
     fn rel_path_from_workspace(workspace: &Path, file_path: &Path) -> String {
@@ -404,6 +445,7 @@ impl MemoryManager for DbMemoryManager {
         }
 
         let merged = self.merge_results(vector_results, keyword_results);
+        let merged = self.apply_rerank(query, merged).await;
         Ok(merged
             .into_iter()
             .filter(|r| r.score >= min_score)
@@ -441,7 +483,7 @@ mod tests {
 
         let cfg = MemoryConfig::new(&ws);
         let storage = Arc::new(MemoryStorage::open(&cfg.db_path()).expect("open db"));
-        let manager = DbMemoryManager::new(cfg, storage.clone(), None);
+        let manager = DbMemoryManager::new(cfg, storage.clone(), None, None);
         manager.sync_index().await.expect("sync");
 
         let hits = storage

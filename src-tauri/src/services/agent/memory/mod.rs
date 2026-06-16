@@ -7,6 +7,7 @@ mod conversation_store;
 mod embedding;
 mod factory;
 mod manager;
+mod rerank;
 mod storage;
 
 pub use config::MemoryConfig;
@@ -15,4 +16,5 @@ pub use conversation_store::{
 };
 pub use factory::create_memory_manager;
 pub use manager::DbMemoryManager;
-pub use storage::{MemoryChunk, MemoryStorage};
+pub use rerank::{create_rerank_provider, LexicalRerankProvider, RerankProvider};
+pub use storage::{MemoryChunk, MemoryStorage, SearchResult};

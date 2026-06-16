@@ -7,6 +7,7 @@ use crate::config::ModelsConfig;
 use super::config::MemoryConfig;
 use super::embedding::create_embedding_provider;
 use super::manager::DbMemoryManager;
+use super::rerank::create_rerank_provider;
 use super::storage::MemoryStorage;
 use crate::services::agent::tools::memory::FileKeywordMemoryManager;
 use crate::services::agent::MemoryManager;
@@ -22,6 +23,8 @@ pub fn create_memory_manager(
     mem_config.embedding_provider = models_config.embedding_provider.clone();
     mem_config.embedding_model = models_config.embedding_model.clone();
     mem_config.embedding_dimensions = models_config.embedding_dimensions;
+    mem_config.rerank_provider = models_config.rerank_provider.clone();
+    mem_config.rerank_model = models_config.rerank_model.clone();
 
     let db_path = mem_config.db_path();
     let storage = match MemoryStorage::open(&db_path) {
@@ -44,7 +47,16 @@ pub fn create_memory_manager(
         );
     }
 
-    let manager = DbMemoryManager::new(mem_config, storage, embedding);
+    let rerank = create_rerank_provider(models_config)?;
+    if let Some(ref r) = rerank {
+        tracing::info!(
+            "[MemoryManager] Rerank enabled: {} / {}",
+            r.provider_name(),
+            r.model_name()
+        );
+    }
+
+    let manager = DbMemoryManager::new(mem_config, storage, embedding, rerank);
     manager.set_dirty();
     Ok(Arc::new(manager))
 }

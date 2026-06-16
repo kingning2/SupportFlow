@@ -4,7 +4,7 @@
 | ---------- | -------------- |
 | ID         | T004           |
 | Priority   | P0             |
-| Status     | pending        |
+| Status     | completed      |
 | Depends on | —              |
 | Blocks     | T005           |
 | Milestone  | M2 RAG Quality |
@@ -26,9 +26,9 @@
 
 ## Acceptance criteria
 
-- [ ] 无 rerank 配置时行为与现网一致（向后兼容）
-- [ ] 开启 rerank 后，同一 query 的 top-3 顺序可变化且可日志对比
-- [ ] `memory_search` 工具路径走同一套检索栈
+- [x] 无 rerank 配置时行为与现网一致（向后兼容）
+- [x] 开启 rerank 后，同一 query 的 top-3 顺序可变化且可日志对比
+- [x] `memory_search` 工具路径走同一套检索栈
 
 ## Key files
 

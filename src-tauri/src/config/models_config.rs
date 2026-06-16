@@ -107,6 +107,9 @@ pub struct ModelsConfig {
     pub embedding_provider: Option<String>,
     pub embedding_model: Option<String>,
     pub embedding_dimensions: Option<u32>,
+    /// Optional rerank vendor: local | jina | cohere | dashscope | openai | …
+    pub rerank_provider: Option<String>,
+    pub rerank_model: Option<String>,
     pub tools: Option<ToolsConfig>,
 }
 
