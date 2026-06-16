@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "k": 5,
+  "cases": [
+    {
+      "id": "dark-mode",
+      "query": "dark mode UI preference",
+      "relevant_paths": ["MEMORY.md"]
+    },
+    {
+      "id": "api-key-rotation",
+      "query": "rotate API keys schedule",
+      "relevant_paths": ["memory/2026-01-15.md"]
+    },
+    {
+      "id": "customer-acme",
+      "query": "Acme Corp account manager",
+      "relevant_paths": ["MEMORY.md"]
+    },
+    {
+      "id": "refund-policy",
+      "query": "refund within 7 days",
+      "relevant_paths": ["knowledge/refund-policy.md"]
+    },
+    {
+      "id": "support-hours",
+      "query": "customer support business hours",
+      "relevant_paths": ["knowledge/support-hours.md"]
+    },
+    {
+      "id": "python-version",
+      "query": "Python runtime version requirement",
+      "relevant_paths": ["memory/2026-02-01.md"]
+    },
+    {
+      "id": "email-digest",
+      "query": "weekly email digest notification",
+      "relevant_paths": ["memory/2026-01-20.md"]
+    },
+    {
+      "id": "project-deadline",
+      "query": "Q2 release deadline milestone",
+      "relevant_paths": ["memory/2026-03-01.md"]
+    },
+    {
+      "id": "billing-address",
+      "query": "invoice billing address Shanghai",
+      "relevant_paths": ["MEMORY.md"]
+    },
+    {
+      "id": "language-zh",
+      "query": "preferred reply language Chinese",
+      "relevant_paths": ["MEMORY.md"]
+    },
+    {
+      "id": "timezone",
+      "query": "timezone UTC+8 Beijing",
+      "relevant_paths": ["memory/2026-02-01.md"]
+    },
+    {
+      "id": "onboarding-checklist",
+      "query": "new employee onboarding steps",
+      "relevant_paths": ["knowledge/onboarding.md"]
+    }
+  ]
+}

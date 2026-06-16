@@ -4,4 +4,5 @@ pub mod context;
 pub mod install_browser;
 pub mod knowledge;
 pub mod process;
+pub mod rag_eval;
 pub mod skill;

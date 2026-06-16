@@ -4,7 +4,7 @@
 | ---------- | -------------- |
 | ID         | T005           |
 | Priority   | P1             |
-| Status     | pending        |
+| Status     | completed      |
 | Depends on | T004           |
 | Blocks     | —              |
 | Milestone  | M2 RAG Quality |
@@ -22,9 +22,9 @@
 
 ## Acceptance criteria
 
-- [ ] 至少 10 条标注样例
-- [ ] 一条命令输出 before/after rerank 对比表
-- [ ] README 或 plan 内记录如何新增样例
+- [x] 至少 10 条标注样例
+- [x] 一条命令输出 before/after rerank 对比表
+- [x] README 或 plan 内记录如何新增样例
 
 ## Key files
 
